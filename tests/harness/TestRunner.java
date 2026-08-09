@@ -25,6 +25,7 @@ public class TestRunner {
 	private static String modRoot;
 	private static final List<String> loadFiles = new ArrayList<String>();
 	private static List<String> moodleTypes = new ArrayList<String>();
+	private static int translationFailures = 0;
 
 	public static void main(String[] args) throws Exception {
 		if (args.length < 3) {
@@ -67,7 +68,7 @@ public class TestRunner {
 		}
 
 		System.out.println();
-		int total = failures + staticFailures;
+		int total = failures + staticFailures + translationFailures;
 		System.out.println(total == 0
 			? "ALL " + names.size() + " TEST(S) PASSED"
 			: total + " FAILURE(S)");
@@ -137,7 +138,16 @@ public class TestRunner {
 			while ((line = r.readLine()) != null) {
 				java.util.regex.Matcher m = entry.matcher(line);
 				if (m.find()) {
-					table.rawset(m.group(1), m.group(2));
+					// The game runs every translation through String.format, so a bare
+					// percent is an invalid conversion and the whole string fails to
+					// render. Vanilla writes a literal percent as %%.
+					String value = m.group(2);
+					if (value.replace("%%", "").indexOf('%') >= 0) {
+						System.out.println("  FAIL  unescaped % in translation \"" + m.group(1)
+							+ "\"  (" + f.getName() + "), vanilla writes it as %%");
+						translationFailures++;
+					}
+					table.rawset(m.group(1), value);
 					entries++;
 				}
 			}

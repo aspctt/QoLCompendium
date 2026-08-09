@@ -25,6 +25,10 @@ or turn it off.
 propane tank refills it 30 times instead of 7. Topping up a half full torch only
 costs half a tank's worth, rather than a full charge.
 
+**Ammo Icons** - Every ammo box and magazine gets its own inventory icon. The
+base game draws all five handgun ammo boxes identically, which makes sorting
+ammo needlessly fiddly.
+
 **Rifle Sling** - Wear a rifle, shovel or big weapon on a sling, worn at the
 front or across your back. Craftable at Tailoring 4, or found in gun stores and
 military lockers.
@@ -51,8 +55,8 @@ config.
 Building on other people's work
 -------------------------------
 
-Every mod below inspired a feature here. **With one exception, no files or code
-were taken from any of them.** Each was read to understand what it did, then
+Every mod below inspired a feature here. **With two exceptions, no files or
+code were taken from any of them.** Each was read to understand what it did, then
 written from scratch against build 42, usually because the original no longer
 ran at all.
 
@@ -62,11 +66,13 @@ ran at all.
 | Bigger Character Avatar | [Bigger Character Avatar](https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570) | Rewritten. The original replaced a whole vanilla file; this changes two numbers. |
 | Welding Torch Capacity | [Propane Torch Fix](https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057) | Rewritten. Build 42 already fixed the original bug, so only the economy changed. |
 | Rifle Sling | [Actual Realistic Rifle Sling](https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977) | **Bundles the original models and hotbar code.** See below. |
+| Ammo Icons | [Ammo & Magazine icon MOD](https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813) by falcon33jp | **Bundles 12 original icons.** Code written from scratch. |
 
-The exception is the rifle sling. A 3D model cannot be rewritten from a
-description, so its models, texture and hotbar code are the originals, by
-**Akyet** and **Noir**. Its recipe and spawn tables were rewritten. Full detail
-is in [NOTICE](NOTICE).
+The exceptions are artwork. A 3D model or an icon cannot be rewritten from a
+description, so the sling's models and hotbar code are the originals by **Akyet**
+and **Noir**, and the ammo icons are by **falcon33jp**. The sling's recipe and
+spawn tables, and all of the ammo icon code, were written for this project. Full
+detail is in [NOTICE](NOTICE).
 
 Mods whose authors ask that their work not be redistributed are not included
 here, and will not be.

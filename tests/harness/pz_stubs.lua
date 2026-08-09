@@ -296,6 +296,23 @@ end
 Harness.ScriptItems = {
 	["Base.BlowTorch"] = { UseDelta = 0.1 },
 	["Base.PropaneTank"] = { UseDelta = 0.0002 },
+	-- Ammo boxes and magazines, seeded with the icons vanilla actually ships. Note how
+	-- many share one, that duplication is the thing the compendium fixes.
+	["Base.Bullets9mmBox"] = { Icon = "HandgunAmmoBox" },
+	["Base.Bullets45Box"] = { Icon = "HandgunAmmoBox" },
+	["Base.Bullets44Box"] = { Icon = "HandgunAmmoBox" },
+	["Base.Bullets38Box"] = { Icon = "HandgunAmmoBox" },
+	["Base.Bullets357Box"] = { Icon = "HandgunAmmoBox" },
+	["Base.ShotgunShellsBox"] = { Icon = "ShotgunAmmoBox" },
+	["Base.308Box"] = { Icon = "RifleAmmo308" },
+	["Base.556Box"] = { Icon = "RifleAmmo308" },
+	["Base.3030Box"] = { Icon = "RifleAmmo308" },
+	["Base.9mmClip"] = { Icon = "BerettaClip" },
+	["Base.45Clip"] = { Icon = "BerettaClip" },
+	["Base.44Clip"] = { Icon = "BerettaClip" },
+	["Base.556Clip"] = { Icon = "m16clip" },
+	["Base.M14Clip"] = { Icon = "M14Clip" },
+
 	["Base.SlingAFront"] = { BodyLocation = nil },
 	["Base.SlingABack"] = { BodyLocation = nil },
 }
@@ -307,6 +324,7 @@ local function NewScriptItem(Name)
 	local Item = {}
 	function Item:getUseDelta() return Definition.UseDelta end
 	function Item:getBodyLocation() return Definition.BodyLocation end
+	function Item:getIcon() return Definition.Icon end
 
 	function Item:setBodyLocation(Location)
 		if type(Location) ~= "table" or not Location.IsItemBodyLocation then

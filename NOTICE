@@ -19,6 +19,19 @@ Everything here is original work except where listed below. Where a component
 is bundled, it remains the property of its author and is not covered by this
 project's licence.
 
+  Ammo and Magazine Icons
+    Workshop 1904952813, by falcon33jp
+    Stated terms: none.
+
+    Bundled: twelve inventory icons for ammo boxes and magazines. Build 42
+    draws five handgun ammo boxes with one icon, three rifle boxes with
+    another and three pistol magazines with a third, so these give each item
+    its own. Artwork cannot be reimplemented from a description, so unlike the
+    rest of this project these files are the originals.
+
+    Not taken: the loose ammo icons and every world model. Vanilla's are fine.
+    The code that applies them was written for this project.
+
   Rifle Sling
     Models and textures: Akyet
     Hotbar and attachment code: Noir
