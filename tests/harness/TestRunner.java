@@ -48,7 +48,8 @@ public class TestRunner {
 		int staticFailures = checkConstantUsage("MoodleType.", moodleTypes)
 			+ checkConstantUsage("CharacterStat.", characterStats)
 			+ checkItemScripts()
-			+ checkSandboxOptions();
+			+ checkSandboxOptions()
+			+ checkTexturePaths();
 
 		// Discovery pass: load everything once just to learn the test names.
 		List<String> names;
@@ -508,6 +509,67 @@ public class TestRunner {
 		}
 		if (bad > 0) System.out.println();
 		return bad;
+	}
+
+	/**
+	 * Resolves every getTexture path in shipped mod source against the files that
+	 * actually exist, in the mod first and then the game install. A wrong path is not an
+	 * error at runtime: getTexture returns null and the image simply never draws, which
+	 * is easy to miss on a small icon and impossible to miss on a full screen overlay.
+	 *
+	 * Mod textures live under common/media or 42/media, and the game resolves a path
+	 * like "media/textures/GUI/x.png" against both.
+	 */
+	private static int checkTexturePaths() throws IOException {
+		java.util.regex.Pattern call = java.util.regex.Pattern
+			.compile("getTexture\\s*\\(\\s*\"([^\"]+)\"");
+		int bad = 0;
+
+		for (String path : loadFiles) {
+			File f = new File(path);
+			if (!f.getName().endsWith(".lua")) continue;
+			if (!f.getCanonicalPath().startsWith(modRoot)) continue;
+
+			BufferedReader r = new BufferedReader(new FileReader(f));
+			String line;
+			int n = 0;
+			try {
+				while ((line = r.readLine()) != null) {
+					n++;
+					int comment = line.indexOf("--");
+					if (comment >= 0) line = line.substring(0, comment);
+
+					java.util.regex.Matcher m = call.matcher(line);
+					while (m.find()) {
+						String texture = m.group(1);
+						if (resolveTexture(texture)) continue;
+						bad++;
+						System.out.println("  FAIL  texture not found: " + texture
+							+ "  (" + f.getName() + ":" + n + ")");
+					}
+				}
+			} finally {
+				r.close();
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	/** True when a "media/..." path exists in the mod's own trees or in the game. */
+	private static boolean resolveTexture(String texture) {
+		String relative = texture.startsWith("media/") ? texture.substring("media/".length()) : texture;
+
+		File[] roots = {
+			new File(modRoot, "common/media"),
+			new File(modRoot, "42/media"),
+			new File(gameDir, "media")
+		};
+		for (File root : roots) {
+			if (new File(root, relative).isFile()) return true;
+		}
+		return false;
 	}
 
 	private static String valueOf(String block, String key) {

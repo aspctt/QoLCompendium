@@ -54,6 +54,9 @@ exists because the mistake it catches was shipped at least once:
   crashes: the option is silently dropped or renders as a raw key.
 - **Translation escaping.** The game runs every string through `String.format`, so a
   bare `%` is an invalid conversion and the whole string fails to render.
+- **Texture paths.** Every `getTexture` path is resolved against the mod's own trees and
+  the game install. A wrong path is not an error at runtime: the texture is simply null
+  and nothing draws.
 
 The `MoodleType` and `CharacterStat` tables exposed to tests are built from that same
 jar reflection, so a retired constant is nil in tests exactly as it is in game, and the
@@ -85,6 +88,21 @@ For anything player driven: `NewPlayer(Number, IsLocal)` builds a character with
 stats, moodles and mod data, and `Advance(Milliseconds)` moves the clock that
 `getTimestampMs` reads. `ResetSandbox` and `ClearSandbox` set up the server side
 balance, the latter reproducing a save made before a feature existed.
+
+For UI: `NewInventoryPage(PlayerNum, OnCharacter)` and `NewHotbar(Player, SlotTypes)`
+build the two windows, `ButtonOrderByArray` and `ButtonOrderByPosition` read a container
+window's order out of the array and off the screen so a spec can prove the two agree,
+and `SlotOrder` does the same for the hotbar. `NewContainer`, `NewInventoryItem`,
+`NewIsoObject` and `PlaceItemOnGround` cover the things an order can be stored on.
+
+Both windows reproduce the behaviour that actually catches mods out. The inventory page
+takes its scroll height and selection from the `backpacks` array rather than from where
+the buttons are drawn, and the hotbar rebuilds its slots in the game's own order with
+Back forced to the front every time clothing changes.
+
+`ClientCommands` records anything a client would have sent to a server, and
+`Harness.IsClient` switches between singleplayer and a multiplayer client, which is how
+the networked half is tested without a server.
 
 Passing `IsLocal` as false gives a remote player. On a real client `OnPlayerUpdate`
 fires for those too, so any mod that writes to a character needs a test proving it

@@ -37,6 +37,17 @@ military lockers.
 life sheds the Drowsy debuff and performs properly for a while, then pays it all
 back with interest once they calm down. Sleep is still the only real fix.
 
+**Reorder Containers** - Drag the container buttons beside your inventory into
+whatever order suits you. Each container remembers its own place, so a bag keeps
+it after being dropped and picked up again. Sorting the loot window is opt in,
+and either window can be locked once you are happy with it.
+
+**Reorder The Hotbar** - Drag hotbar slots into the order you want, and click a
+slot to use it instead of reaching for the key. Dragging either swaps two slots
+or slides one in between, whichever you pick, and the order can be locked. Slots
+past the eighth need a key bound before clicking them does anything, which the
+extra hotbar bindings above cover.
+
 
 Options
 -------
@@ -74,6 +85,8 @@ ran at all.
 | Rifle Sling | [Actual Realistic Rifle Sling](https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977) | **Bundles the original models and hotbar code.** See below. |
 | Ammo Icons | [Ammo & Magazine icon MOD](https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813) by falcon33jp | **Bundles 12 original icons.** Code written from scratch. |
 | Adrenaline | [Adrenaline - Panic Counters Tiredness](https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835) | MIT licensed. Rewritten, the stat API it used no longer exists. Balance values kept. |
+| Reorder Containers | [Reorder Containers - Backpack Orders](https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885) | MIT licensed. Rewritten around a build 42 event the original predates, which removed three of its patches. |
+| Reorder The Hotbar | [Reorder The Hotbar](https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337) | MIT licensed. Rewritten. Build 42 added the key lookup and the order saving it had to carry itself. |
 
 The exceptions are artwork. A 3D model or an icon cannot be rewritten from a
 description, so the sling's models and hotbar code are the originals by **Akyet**
@@ -103,10 +116,14 @@ game API, and runs the specs in `tests/specs`. It also checks every file compile
 and that no code refers to a game constant that the installed build no longer has.
 A full run takes under a second. See [tests/README.md](tests/README.md).
 
-The overlay textures are generated, not painted:
+The textures are generated, not painted:
 
 ```
 python tools/generate_overlays.py
+```
+
+```
+python tools/generate_ui_icons.py
 ```
 
 

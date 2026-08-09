@@ -7,9 +7,15 @@
 -- shipped jar, so a constant that no longer exists is simply nil here too.
 Harness = {}
 Harness.EventHandlers = {}
+Harness.ClientCommands = {}
+Harness.TriggeredEvents = {}
 Harness.MissingText = {}
+Harness.OpenWindows = {}
+Harness.Players = {}
 Harness.Moodles = {}
 Harness.Draws = {}
+Harness.Pages = {}
+Harness.Squares = {}
 Harness.ScreenX = 1920
 Harness.ScreenY = 1080
 Harness.HasPlayer = true
@@ -124,6 +130,17 @@ function CoreStub:getScreenHeight()
 	return Harness.ScreenY
 end
 
+-- Bound keys. Vanilla ships Hotbar 1 to 8, and the game returns -1 for a binding that
+-- does not exist, which is what makes clicking an unbound slot do nothing.
+Harness.BoundKeys = {
+	["Hotbar 1"] = 2, ["Hotbar 2"] = 3, ["Hotbar 3"] = 4, ["Hotbar 4"] = 5,
+	["Hotbar 5"] = 6, ["Hotbar 6"] = 7, ["Hotbar 7"] = 8, ["Hotbar 8"] = 9
+}
+
+function CoreStub:getKey(Name)
+	return Harness.BoundKeys[Name] or -1
+end
+
 function getCore()
 	return CoreStub
 end
@@ -186,6 +203,87 @@ end
 
 Harness.NewStats = NewStats
 
+--// Java Collections
+-- ArrayList and friends are indexed from zero through get(), which is the single most
+-- common way lua written against this API goes wrong.
+local function NewJavaList(Items)
+	local List = {}
+	function List:size() return #Items end
+	function List:get(Index) return Items[Index + 1] end
+	function List:getItemByIndex(Index) return Items[Index + 1] end
+	return List
+end
+
+Harness.NewJavaList = NewJavaList
+
+--// Containers
+-- Declared before the player, which builds one at file scope. ContainingItem is the bag
+-- an inventory belongs to, Parent is the world object holding it. A player's own
+-- inventory has neither.
+function Harness.NewContainer(Type, ContainingItem, Parent)
+	local Container = {}
+	Container.Class = "ItemContainer"
+	Container.Type = Type or "bag"
+	Container.Items = {}
+
+	function Container:getType() return self.Type end
+	function Container:getContainingItem() return ContainingItem end
+	function Container:getParent() return Parent end
+
+	function Container:getItemWithIDRecursiv(Id)
+		for _, Item in ipairs(self.Items) do
+			if Item:getID() == Id then return Item end
+		end
+		return nil
+	end
+
+	return Container
+end
+
+Harness.NextItemId = 1
+
+function Harness.NewInventoryItem(Name, WorldItem)
+	local Item = {}
+	Item.Class = "InventoryItem"
+	Item.ModData = {}
+	Item.Name = Name or "Bag"
+	Item.Id = Harness.NextItemId
+	Harness.NextItemId = Harness.NextItemId + 1
+
+	function Item:getModData() return self.ModData end
+	function Item:getName() return self.Name end
+	function Item:getID() return self.Id end
+	function Item:getWorldItem() return WorldItem end
+
+	return Item
+end
+
+function Harness.NewWorldObject(X, Y, Z)
+	local Square = {}
+	function Square:getX() return X or 0 end
+	function Square:getY() return Y or 0 end
+	function Square:getZ() return Z or 0 end
+
+	local Object = {}
+	Object.Class = "IsoWorldInventoryObject"
+	function Object:getSquare() return Square end
+
+	return Object, Square
+end
+
+-- A crate or a locker. Carries mod data and transmits it, same as any IsoObject.
+function Harness.NewIsoObject()
+	local Object = {}
+	Object.Class = "IsoObject"
+	Object.ModData = {}
+	Object.Transmits = 0
+
+	function Object:getModData() return self.ModData end
+	function Object:transmitModData() self.Transmits = self.Transmits + 1 end
+
+	return Object
+end
+
 --// Player
 local function NewMoodles(Levels)
 	local Moodles = {}
@@ -204,13 +302,16 @@ end
 -- player in range, which is what the remote case is here to reproduce.
 function Harness.NewPlayer(Number, IsLocal)
 	local Player = {}
+	Player.Class = "IsoPlayer"
 	Player.Levels = {}
 	Player.ModData = {}
 	Player.Stats = NewStats()
 	Player.Moodles = NewMoodles(Player.Levels)
 	Player.Number = Number or 0
 	Player.IsLocal = IsLocal ~= false
+	Player.Username = "Player" .. tostring(Number or 0)
 	Player.Asleep = false
+	Player.Transmits = 0
 
 	function Player:getMoodles() return self.Moodles end
 	function Player:getModData() return self.ModData end
@@ -218,13 +319,42 @@ function Harness.NewPlayer(Number, IsLocal)
 	function Player:isLocalPlayer() return self.IsLocal end
 	function Player:getPlayerNum() return self.Number end
 	function Player:isAsleep() return self.Asleep end
+	function Player:getUsername() return self.Username end
+	function Player:getInventory() return self.Inventory end
+	function Player:transmitModData() self.Transmits = self.Transmits + 1 end
+	function Player:getWornItems() return NewJavaList(self.WornItems) end
+
+	-- A bag being carried rather than worn provides no hotbar slots
+	function Player:isHandItem(Item) return self.HandItem == Item end
+
+	function Player:getDescriptor()
+		local Descriptor = {}
+		function Descriptor:getForename() return "Test" end
+		function Descriptor:getSurname() return "Survivor" end
+		return Descriptor
+	end
 
 	function Player:SetMoodle(Type, Level)
 		if Type == nil then error("SetMoodle called with a nil MoodleType") end
 		self.Levels[Type] = Level
 	end
 
+	Player.Inventory = Harness.NewContainer("inventory")
+	Player.WornItems = {}
+	Harness.Players[Player.Number] = Player
+
 	return Player
+end
+
+-- A worn garment offering hotbar attachment points, e.g. a holster providing "Holster"
+function Harness.NewWornItem(Provides)
+	local Item = Harness.NewInventoryItem("Clothing")
+	Item.Provides = Provides or {}
+
+	function Item:getAttachmentsProvided() return NewJavaList(self.Provides) end
+	function Item:setAttachedSlot(Index) self.AttachedSlot = Index end
+
+	return Item
 end
 
 -- The player getPlayer() hands back. Its moodles read the shared Harness.Moodles table
@@ -262,13 +392,28 @@ end
 Harness.ResetSandbox()
 
 --// Translation
--- UI_EN.txt is itself valid Lua, so the runner loads it and we read the table it sets.
-function getText(Key)
-	if UI_EN and UI_EN[Key] ~= nil then
-		return UI_EN[Key]
+-- Build 42 translations are flat json. TestRunner parses every file in the mod's
+-- Translate folder into one Translations table, so a key resolves here the same way it
+-- would in game regardless of which file declared it.
+function getText(Key, ...)
+	local Value = Translations and Translations[Key]
+	if Value == nil then
+		Harness.MissingText[Key] = true
+		return Key
 	end
-	Harness.MissingText[Key] = true
-	return Key
+
+	-- The game runs these through String.format. Only positional %1 and %2 are worth
+	-- reproducing, which is all vanilla uses in the strings this mod touches.
+	local Args = { ... }
+	for Index, Argument in ipairs(Args) do
+		Value = string.gsub(Value, "%%" .. Index, tostring(Argument))
+	end
+	return Value
+end
+
+function getTextOrNull(Key)
+	if Translations and Translations[Key] ~= nil then return Translations[Key] end
+	return nil
 end
 
 --// File IO
@@ -286,6 +431,18 @@ function getFileWriter()
 	function Writer:write() end
 	function Writer:close() end
 	return Writer
+end
+
+--// Module Loading
+-- Mod files declare their vanilla dependencies with require, e.g. require "ISUI/ISPanel".
+-- The runner has already loaded every stub by the time any mod file runs, so this only
+-- has to not be nil. Anything genuinely missing fails later on use, with a better error
+-- than a require would give.
+Harness.Required = {}
+
+function require(Path)
+	Harness.Required[Path] = true
+	return _G[string.match(tostring(Path), "([^/]+)$")] or {}
 end
 
 --// Utility
@@ -681,3 +838,555 @@ Keyboard = setmetatable({}, {
 		return 0
 	end
 })
+
+Harness.MouseX = 0
+Harness.MouseY = 0
+
+function Harness.SetMouse(X, Y)
+	Harness.MouseX = X
+	Harness.MouseY = Y
+end
+
+function getMouseX() return Harness.MouseX end
+function getMouseY() return Harness.MouseY end
+
+--// Object Identity
+-- The real instanceof walks the Java class hierarchy, so a mod testing for IsoObject
+-- matches a player. Stubs declare a class name and this walks the same chain, or a
+-- mod's IsoObject branch would silently never run in tests.
+local CLASS_PARENTS = {
+	IsoWorldInventoryObject = "IsoObject",
+	IsoGameCharacter = "IsoMovingObject",
+	IsoMovingObject = "IsoObject",
+	IsoPlayer = "IsoGameCharacter"
+}
+
+function instanceof(Object, ClassName)
+	if type(Object) ~= "table" then return false end
+
+	local Current = Object.Class
+	while Current do
+		if Current == ClassName then return true end
+		Current = CLASS_PARENTS[Current]
+	end
+	return false
+end
+
+--// Events From Java
+-- Java side code raises events with triggerEvent rather than Events.X, and build 42's
+-- inventory window uses it to announce each phase of a container refresh.
+function triggerEvent(Name, A, B, C, D)
+	table.insert(Harness.TriggeredEvents, { Name = Name, A = A, B = B })
+	return Harness.Fire(Name, A, B, C, D)
+end
+
+--// Networking
+-- Every sendClientCommand is recorded rather than sent. A spec asserts on what a client
+-- would have asked the server to do, which is the only way to test the multiplayer path
+-- without a server.
+function sendClientCommand(Player, Module, Command, Request)
+	table.insert(Harness.ClientCommands, {
+		Player = Player,
+		Module = Module,
+		Command = Command,
+		Request = Request
+	})
+end
+
+function Harness.LastCommand(Command)
+	for Index = #Harness.ClientCommands, 1, -1 do
+		local Entry = Harness.ClientCommands[Index]
+		if not Command or Entry.Command == Command then return Entry end
+	end
+	return nil
+end
+
+-- isClient is true on a multiplayer client, false in singleplayer. isServer is true only
+-- on a dedicated server. Both false is singleplayer, which is the default here.
+Harness.IsClient = false
+Harness.IsServer = false
+
+function isClient() return Harness.IsClient end
+function isServer() return Harness.IsServer end
+
+--// UI Elements
+-- Enough of ISUIElement for a mod to lay things out and be measured. Positions are real
+-- numbers that round trip, because ordering mods are judged entirely on those.
+-- Positions live on the lowercase fields, because vanilla reads self.width, self.height,
+-- self.x and self.y directly as often as it calls the getters. Only exposing the
+-- accessors leaves those reads nil, and the failure surfaces as a comparison against nil
+-- somewhere far from the cause.
+local function NewUIElement(X, Y, Width, Height)
+	local Element = {}
+	Element.x = X or 0
+	Element.y = Y or 0
+	Element.width = Width or 0
+	Element.height = Height or 0
+	Element.Children = {}
+	Element.Visible = true
+	Element.backgroundColor = { r = 0, g = 0, b = 0, a = 1 }
+
+	function Element:setX(Value) self.x = Value end
+	function Element:setY(Value) self.y = Value end
+	function Element:getX() return self.x end
+	function Element:getY() return self.y end
+	function Element:setWidth(Value) self.width = Value end
+	function Element:setHeight(Value) self.height = Value end
+	function Element:getWidth() return self.width end
+	function Element:getHeight() return self.height end
+	function Element:getBottom() return self.y + self.height end
+	function Element:getAbsoluteY() return self.y end
+	function Element:getIsVisible() return self.Visible end
+	function Element:setVisible(Value) self.Visible = Value end
+	function Element:bringToTop() self.OnTop = true end
+	function Element:setImage(Texture) self.Image = Texture end
+	function Element:setTooltip(Text) self.Tooltip = Text end
+	function Element:setOnClick(Handler) self.OnClick = Handler end
+	function Element:setAlwaysOnTop(Value) self.AlwaysOnTop = Value end
+	function Element:setCapture(Value) self.Capture = Value end
+	function Element:setOnlyNumbers(Value) self.OnlyNumbers = Value end
+	function Element:setText(Text) self.Text = Text end
+	function Element:getText() return self.Text end
+	function Element:initialise() end
+	function Element:instantiate() end
+	-- Vanilla's addChild sets the parent link, and mods rely on it to convert mouse
+	-- coordinates. Leaving it off makes any drag silently do nothing.
+	function Element:addChild(Child)
+		table.insert(self.Children, Child)
+		Child.parent = self
+	end
+
+	function Element:removeChild(Child)
+		for Index, Existing in ipairs(self.Children) do
+			if Existing == Child then
+				table.remove(self.Children, Index)
+				return
+			end
+		end
+	end
+
+	function Element:addToUIManager() Harness.OpenWindows[self] = true end
+	function Element:removeFromUIManager() Harness.OpenWindows[self] = nil end
+
+	-- Click a button the way a player would
+	function Element:Click()
+		if self.OnClick then self.OnClick(self) end
+	end
+
+	return Element
+end
+
+Harness.NewUIElement = NewUIElement
+
+function Harness.OpenWindowCount()
+	local Count = 0
+	for _ in pairs(Harness.OpenWindows) do Count = Count + 1 end
+	return Count
+end
+
+local function NewWidgetClass()
+	local Class = {}
+	Class.__index = Class
+
+	function Class:new(X, Y, Width, Height, Text, Target, OnClick)
+		local Element = NewUIElement(X, Y, Width, Height)
+		Element.Text = Text
+		Element.Target = Target
+		if OnClick then
+			Element.OnClick = function() OnClick(Target) end
+		end
+		return Element
+	end
+
+	function Class:derive(Name)
+		local Derived = {}
+		Derived.__index = Derived
+		Derived.Name = Name
+		Derived.new = self.new
+		Derived.derive = self.derive
+		return Derived
+	end
+
+	return Class
+end
+
+ISPanel = NewWidgetClass()
+ISButton = NewWidgetClass()
+ISLabel = NewWidgetClass()
+ISTextEntryBox = NewWidgetClass()
+
+-- ISLabel measures its own text, which mods use to centre it
+function ISLabel:new(X, Y, Height, Text)
+	local Element = NewUIElement(X, Y, string.len(tostring(Text or "")) * 6, Height)
+	Element.Text = Text
+	return Element
+end
+
+function ISTextEntryBox:new(Text, X, Y, Width, Height)
+	local Element = NewUIElement(X, Y, Width, Height)
+	Element.Text = Text
+	return Element
+end
+
+ISTickBox = NewWidgetClass()
+
+function ISTickBox:new(X, Y, Width, Height)
+	local Element = NewUIElement(X, Y, Width, Height)
+	Element.selected = {}
+	Element.Options = {}
+
+	function Element:addOption(Text)
+		table.insert(self.Options, Text)
+		return #self.Options
+	end
+
+	function Element:setSelected(Index, Value) self.selected[Index] = Value end
+	function Element:isSelected(Index) return self.selected[Index] end
+
+	return Element
+end
+
+UIFont = setmetatable({}, {
+	__index = function(Table, Name)
+		rawset(Table, Name, Name)
+		return Name
+	end
+})
+
+--// Inventory Page
+-- Models the parts of ISInventoryPage that container ordering depends on, taken from
+-- media\lua\client\ISUI\ISInventoryPage.lua. The important detail reproduced here is
+-- that vanilla reads the backpacks ARRAY, not the screen: scroll height comes from the
+-- last entry, and selection walks it in order. A mod that only moves buttons visually
+-- leaves both wrong, and these stubs are what make that visible in a test.
+ISInventoryPage = {}
+ISInventoryPage.__index = ISInventoryPage
+
+function ISInventoryPage:titleBarHeight() return 16 end
+
+function ISInventoryPage:createChildren() end
+
+function ISInventoryPage:addContainerButton(Container, Texture, Name, Tooltip)
+	local Index = #self.backpacks + 1
+	local Button = NewUIElement(0, ((Index - 1) * self.buttonSize) - 1, self.buttonSize, self.buttonSize)
+
+	Button.Class = "ISButton"
+	Button.inventory = Container
+	Button.tooltip = Tooltip
+	Button.name = Name
+
+	-- Vanilla assigns all five of these in addContainerButton, so a mod that wraps them
+	-- finds real functions to capture. Recorded rather than empty, so a spec can prove
+	-- a wrapper still calls through to the original.
+	Button.OriginalCalls = {}
+	function Button:onMouseDown() table.insert(self.OriginalCalls, "down") end
+	function Button:onMouseMove() table.insert(self.OriginalCalls, "move") end
+	function Button:onMouseMoveOutside() table.insert(self.OriginalCalls, "moveOutside") end
+	function Button:onMouseUp() table.insert(self.OriginalCalls, "up") end
+	function Button:onMouseUpOutside() table.insert(self.OriginalCalls, "upOutside") end
+
+	self.containerButtonPanel:addChild(Button)
+	self.backpacks[Index] = Button
+	return Button
+end
+
+function ISInventoryPage:refreshBackpacks()
+	self.backpacks = {}
+	self.RefreshCount = (self.RefreshCount or 0) + 1
+
+	triggerEvent("OnRefreshInventoryWindowContainers", self, "begin")
+
+	for _, Container in ipairs(self.Containers) do
+		self:addContainerButton(Container, nil, Container:getType(), nil)
+	end
+
+	triggerEvent("OnRefreshInventoryWindowContainers", self, "beforeFloor")
+	triggerEvent("OnRefreshInventoryWindowContainers", self, "buttonsAdded")
+
+	-- Everything below reads the array, which is the whole point
+	for _, Button in ipairs(self.backpacks) do
+		if Button.inventory == self.inventory then self.selectedButton = Button end
+	end
+
+	local Last = self.backpacks[#self.backpacks]
+	self.containerButtonPanel.ScrollHeight = Last and Last:getBottom() or 0
+
+	triggerEvent("OnRefreshInventoryWindowContainers", self, "end")
+end
+
+-- OnCharacter false builds a loot window instead of the player's own inventory
+function Harness.NewInventoryPage(PlayerNum, OnCharacter)
+	local Page = NewUIElement(0, 0, 400, 500)
+	setmetatable(Page, ISInventoryPage)
+
+	Page.player = PlayerNum or 0
+	Page.onCharacter = OnCharacter ~= false
+	Page.buttonSize = 32
+	Page.backpacks = {}
+	Page.Containers = {}
+	Page.containerButtonPanel = NewUIElement(0, 0, 32, 400)
+
+	return Page
+end
+
+-- Reads the button order off the screen rather than out of the array, so a spec can
+-- prove the two agree
+function Harness.ButtonOrderByPosition(Page)
+	local Sorted = {}
+	for Index, Button in ipairs(Page.backpacks) do
+		Sorted[Index] = Button
+	end
+	table.sort(Sorted, function(A, B) return A:getY() < B:getY() end)
+
+	local Names = {}
+	for Index, Button in ipairs(Sorted) do
+		Names[Index] = Button.inventory:getType()
+	end
+	return Names
+end
+
+function Harness.ButtonOrderByArray(Page)
+	local Names = {}
+	for Index, Button in ipairs(Page.backpacks) do
+		Names[Index] = Button.inventory:getType()
+	end
+	return Names
+end
+
+--// Text And Sound
+function getTextManager()
+	local Manager = {}
+	function Manager:getFontHeight() return 12 end
+	function Manager:MeasureStringX(_Font, Text) return string.len(tostring(Text or "")) * 6 end
+	return Manager
+end
+
+Harness.UISounds = {}
+
+function getSoundManager()
+	local Manager = {}
+	function Manager:playUISound(Name) table.insert(Harness.UISounds, Name) end
+	return Manager
+end
+
+--// Hotbar
+-- Models the parts of ISHotbar that slot ordering depends on, from
+-- media\lua\client\Hotbar\ISHotbar.lua. Two behaviours matter and are reproduced
+-- exactly: refresh rebuilds availableSlot in its own canonical order with Back forced
+-- to the front, which is what any ordering mod has to undo afterwards, and
+-- getSlotIndexAt clamps a click past the last slot onto the last slot rather than
+-- reporting a miss.
+ISHotbar = {}
+ISHotbar.__index = ISHotbar
+
+Harness.HotkeyPresses = {}
+
+function ISHotbar:getSlotDef(Name)
+	if not Name then return nil end
+	return { type = Name, name = Name, attachments = {} }
+end
+
+function ISHotbar:compareWornItems()
+	return self.WornChanged and true or false
+end
+
+function ISHotbar:getKeyForIndex(Index)
+	return getCore():getKey("Hotbar " .. tostring(Index))
+end
+
+ISHotbar.onKeyStartPressed = function(Key)
+	table.insert(Harness.HotkeyPresses, { Key = Key, Phase = "start" })
+end
+
+ISHotbar.onKeyPressed = function(Key)
+	table.insert(Harness.HotkeyPresses, { Key = Key, Phase = "press" })
+end
+
+function ISHotbar:getSlotIndexAt(X, Y)
+	if X >= 0 and X < self.width and Y >= 0 and Y < self.height then
+		local Index = math.floor((X - self.margins) / (self.slotWidth + self.slotPad)) + 1
+		Index = math.max(Index, 1)
+		return math.min(Index, #self.availableSlot)
+	end
+	return -1
+end
+
+function ISHotbar:savePosition()
+	local ModData = self.chr:getModData()
+	ModData.hotbar = {}
+
+	for Index, Slot in ipairs(self.availableSlot) do
+		ModData.hotbar[Index] = Slot.slotType
+	end
+
+	self.SaveCount = (self.SaveCount or 0) + 1
+	if isClient() then self.chr:transmitModData() end
+end
+
+function ISHotbar:loadPosition()
+	local ModData = self.chr:getModData()
+	if not ModData.hotbar then return end
+
+	self.availableSlot = {}
+	for Index, SlotType in ipairs(ModData.hotbar) do
+		self.availableSlot[Index] = { slotType = SlotType, name = SlotType, def = self:getSlotDef(SlotType) }
+	end
+end
+
+-- Rebuilds in the game's own order: Back first, then whatever the worn clothing
+-- provides, in the order it provides it. Items follow their slot type across the
+-- rebuild, exactly as vanilla reattaches them.
+function ISHotbar:refresh()
+	self.needsRefresh = false
+	if not self.wornItems then self.wornItems = {} end
+
+	local Carried = {}
+	for Index, Slot in ipairs(self.availableSlot) do
+		Carried[Slot.slotType] = self.attachedItems[Index]
+	end
+
+	self.availableSlot = {}
+	self.attachedItems = {}
+
+	for Index, SlotType in ipairs(self.SlotTypes) do
+		self.availableSlot[Index] = { slotType = SlotType, name = SlotType, def = self:getSlotDef(SlotType) }
+		if Carried[SlotType] then
+			self.attachedItems[Index] = Carried[SlotType]
+			Carried[SlotType]:setAttachedSlot(Index)
+		end
+	end
+
+	self.RefreshCount = (self.RefreshCount or 0) + 1
+	self:savePosition()
+end
+
+function ISHotbar:onMouseUp(X, Y)
+	self.VanillaMouseUps = (self.VanillaMouseUps or 0) + 1
+end
+
+function ISHotbar:doMenu(SlotIndex)
+	self.LastMenuIndex = SlotIndex
+end
+
+function ISHotbar:onRightMouseUp(X, Y)
+	self:doMenu(self:getSlotIndexAt(X, Y))
+end
+
+function ISHotbar:setSizeAndPosition()
+	self:setWidth(self.margins * 2 + (self.slotWidth + self.slotPad) * #self.availableSlot)
+end
+
+function ISHotbar:render()
+	self.RenderCount = (self.RenderCount or 0) + 1
+end
+
+-- SlotTypes is what the character's clothing currently provides, Back included. It is
+-- the order the game would rebuild in, which an ordering mod then has to correct.
+function Harness.NewHotbar(Player, SlotTypes)
+	local Hotbar = Harness.NewUIElement(0, 0, 400, 76)
+	setmetatable(Hotbar, ISHotbar)
+
+	Hotbar.SlotTypes = SlotTypes or { "Back" }
+	Hotbar.character = Player
+	Hotbar.chr = Player
+	Hotbar.availableSlot = {}
+	Hotbar.attachedItems = {}
+	Hotbar.slotWidth = 60
+	Hotbar.slotHeight = 60
+	Hotbar.slotPad = 4
+	Hotbar.margins = 4
+	Hotbar.borderColor = { r = 0.8, g = 0.8, b = 0.8, a = 0.8 }
+	Hotbar.textColor = { r = 1, g = 1, b = 1, a = 1 }
+	Hotbar.font = UIFont.Small
+	Hotbar.MouseX = 0
+	Hotbar.MouseY = 0
+	Hotbar.Drawn = {}
+
+	function Hotbar:getMouseX() return self.MouseX end
+	function Hotbar:getMouseY() return self.MouseY end
+	function Hotbar:drawRect(...) table.insert(self.Drawn, { Kind = "rect", ... }) end
+	function Hotbar:drawRectBorderStatic(...) table.insert(self.Drawn, { Kind = "border", ... }) end
+	function Hotbar:drawText(...) table.insert(self.Drawn, { Kind = "text", ... }) end
+
+	function Hotbar:drawTexture(Texture, X, Y)
+		table.insert(self.Drawn, { Kind = "texture", Texture = Texture, X = X, Y = Y })
+	end
+
+	Harness.SetHotbarSlots(Hotbar, Hotbar.SlotTypes)
+
+	-- Two refreshes, because the first is the one the mod deliberately sits out while
+	-- the game is still building the bar
+	Hotbar:refresh()
+	Hotbar:refresh()
+	Hotbar:setSizeAndPosition()
+
+	return Hotbar
+end
+
+-- Sets what the bar can show and dresses the character to match, since the game derives
+-- one from the other. Back is always available and comes from no garment.
+function Harness.SetHotbarSlots(Hotbar, SlotTypes)
+	Hotbar.SlotTypes = SlotTypes
+
+	local Provided = {}
+	for _, SlotType in ipairs(SlotTypes) do
+		if SlotType ~= "Back" then table.insert(Provided, SlotType) end
+	end
+
+	Hotbar.character.WornItems = { Harness.NewWornItem(Provided) }
+end
+
+function Harness.SlotOrder(Hotbar)
+	local Names = {}
+	for Index, Slot in ipairs(Hotbar.availableSlot) do
+		Names[Index] = Slot.slotType
+	end
+	return Names
+end
+
+--// Player Windows
+-- Keyed "<playerNum>:inventory" and "<playerNum>:loot", which is how a spec decides
+-- which of the two windows it is building.
+function getPlayerInventory(PlayerNum)
+	return Harness.Pages[(PlayerNum or 0) .. ":inventory"]
+end
+
+function getPlayerLoot(PlayerNum)
+	return Harness.Pages[(PlayerNum or 0) .. ":loot"]
+end
+
+function getSpecificPlayer(PlayerNum)
+	return Harness.Players[PlayerNum or 0]
+end
+
+--// World
+function getCell()
+	local Cell = {}
+	function Cell:getGridSquare(X, Y, Z)
+		return Harness.Squares[tostring(X) .. "," .. tostring(Y) .. "," .. tostring(Z)]
+	end
+	return Cell
+end
+
+-- Registers a square holding one item, which is how the server side ground save is
+-- driven in a spec
+function Harness.PlaceItemOnGround(X, Y, Z, Item)
+	local Objects = {}
+	local WorldObject = {}
+	function WorldObject:getItem() return Item end
+	table.insert(Objects, WorldObject)
+
+	local Square = {}
+	function Square:getX() return X end
+	function Square:getY() return Y end
+	function Square:getZ() return Z end
+	function Square:getWorldObjects()
+		local List = {}
+		function List:size() return #Objects end
+		function List:get(Index) return Objects[Index + 1] end
+		return List
+	end
+
+	Harness.Squares[tostring(X) .. "," .. tostring(Y) .. "," .. tostring(Z)] = Square
+	return Square
+end
