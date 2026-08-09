@@ -48,9 +48,10 @@ logs/
 # Remove an entry only if you deliberately intend to publish it.
 # See NOTICE and LICENSE.
 ###############################################################################
-other-mods/
-context-files/
 external-files/
+context-files/
 bug-reports/
+other-mods/
+photoshop/
 example-script-*.lua
 NOTES.md
