@@ -13,10 +13,11 @@
 *.info text eol=lf
 *.xml text eol=lf
 
-# Shell and PowerShell keep their native endings, since a CRLF .sh will not run
-# and PowerShell is easiest to read on Windows as it was written.
+# LF everywhere, PowerShell included. pwsh reads LF scripts without complaint, and
+# a single ending across the repo means no file ever shows as wholly changed just
+# because it was opened on a different machine.
 *.sh text eol=lf
-*.ps1 text eol=crlf
+*.ps1 text eol=lf
 
 # Binaries, kept byte for byte. Auto-detection already covers these; naming them
 # is the belt to its braces, since the failure is silent and only shows up in a
