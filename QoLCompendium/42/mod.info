@@ -1,7 +1,7 @@
 id=QoLCompendium
 name=QoL Compendium
 modversion=1.0.0
-description=A curated collection of abandoned QoL mods, updated and merged for the latest build.
+description=Quality of life mods that have not been updated for build 42, rebuilt and merged into one.
 icon=icon.png
 poster=poster.png
 versionMin=42.20

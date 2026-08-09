@@ -7,17 +7,16 @@ trademark holders.
 
 ABOUT THIS PROJECT
 
-QoL Compendium takes quality of life mods that their authors have stopped
-updating and rebuilds them for the current build of Project Zomboid, as a single
-mod. Most of it is written from scratch against the current game rather than
-copied, because build 41 code generally does not survive the move to build 42
-intact.
+QoL Compendium takes quality of life mods that have not been updated for the
+current build of Project Zomboid and rebuilds them, as a single mod. Most of it
+is written from scratch against the current game rather than copied, because
+build 41 code generally does not survive the move to build 42 intact.
 
 
 THIRD-PARTY COMPONENTS
 
-Everything here is original work except where listed below. Where a component is
-bundled, it remains the property of its author and is not covered by this
+Everything here is original work except where listed below. Where a component
+is bundled, it remains the property of its author and is not covered by this
 project's licence.
 
   Rifle Sling
