@@ -23,28 +23,46 @@ Load order, assembled by `run-tests.ps1`:
 | Layer | Source |
 | --- | --- |
 | Game API stubs | `harness/pz_stubs.lua` |
-| Translations | the mod's own `UI_EN.txt`, which is valid Lua |
+| Translations | the mod's `Translate/EN/*.json`, parsed as flat json |
 | Mod options API | the real one from the game install |
 | Assertions | `harness/test_lib.lua` |
-| Code under test | every `.lua` in the mod's `client` folder |
+| Code under test | every `.lua` in the mod's `shared`, `client` and `server` folders |
 | Specs | `specs/*_spec.lua` |
+
+Singleplayer loads all three lua folders, so the harness does too. Multiplayer does
+not, which is exactly why where a file lives is a decision rather than a detail.
 
 Each test runs in a completely fresh environment. A mod's file-level locals, such as
 the overlay blend accumulators, cannot leak from one test into the next.
 
 ## What it checks
 
-Beyond the specs themselves, every run performs two static checks first:
+Beyond the specs themselves, every run performs a set of static checks first. Each one
+exists because the mistake it catches was shipped at least once:
 
 - **Syntax**, by compiling each file with the game's own compiler.
-- **Enum validity.** Every `MoodleType.X` in shipped mod source is verified against the
-  constants actually present in the installed build, read straight out of the jar. This
-  catches build-41 names in branches the tests never execute, reported with file and
-  line.
+- **Constant validity.** Every `MoodleType.X` and `CharacterStat.X` in shipped mod
+  source is verified against the constants actually present in the installed build,
+  read straight out of the jar. This catches build-41 names in branches the tests never
+  execute, reported with file and line. Comments are skipped, since they routinely name
+  a retired constant to explain why it is gone.
+- **Item script shape.** A legacy `Type =` leaves `getItemType()` null and takes the
+  debug item spawner down with it, `DisplayName` is ignored in build 42, and a
+  `BodyLocation` that is not namespaced never resolves.
+- **Sandbox options.** Types are checked against the five the game's parser accepts,
+  and every option and page must have its label in `Sandbox.json`. Neither mistake
+  crashes: the option is silently dropped or renders as a raw key.
+- **Translation escaping.** The game runs every string through `String.format`, so a
+  bare `%` is an invalid conversion and the whole string fails to render.
 
-The `MoodleType` table exposed to tests is built from that same jar reflection, so a
-retired constant is nil in tests exactly as it is in game, and the stub raises a clear
-error instead of a Java NullPointerException.
+The `MoodleType` and `CharacterStat` tables exposed to tests are built from that same
+jar reflection, so a retired constant is nil in tests exactly as it is in game, and the
+stub raises a clear error instead of a Java NullPointerException. `CharacterStat` also
+carries the real min, max and default of every stat, which is what lets the stubbed
+`Stats:set` clamp exactly as the engine does.
+
+Sandbox defaults are parsed out of `sandbox-options.txt` and handed to the specs, so
+the stubs never restate a number that already lives in the option file.
 
 ## Writing a spec
 
@@ -62,6 +80,15 @@ end)
 
 Harness surface: `Fire`, `FireFrames`, `SetMoodle`, `SetScreenSize`, `ClearDraws`,
 `FindDraw`, `DrawOrder`, `HandlerCount`, and the flags `HasPlayer`, `Draws`, `Moodles`.
+
+For anything player driven: `NewPlayer(Number, IsLocal)` builds a character with its own
+stats, moodles and mod data, and `Advance(Milliseconds)` moves the clock that
+`getTimestampMs` reads. `ResetSandbox` and `ClearSandbox` set up the server side
+balance, the latter reproducing a save made before a feature existed.
+
+Passing `IsLocal` as false gives a remote player. On a real client `OnPlayerUpdate`
+fires for those too, so any mod that writes to a character needs a test proving it
+leaves them alone.
 
 Assertions: `AssertTrue`, `AssertFalse`, `AssertNil`, `AssertNotNil`, `AssertEquals`,
 `AssertNear`, `AssertContains`.

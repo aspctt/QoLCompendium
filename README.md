@@ -33,15 +33,21 @@ ammo needlessly fiddly.
 front or across your back. Craftable at Tailoring 4, or found in gun stores and
 military lockers.
 
+**Adrenaline** - Panic holds tiredness at bay. A character fighting for their
+life sheds the Drowsy debuff and performs properly for a while, then pays it all
+back with interest once they calm down. Sleep is still the only real fix.
+
 
 Options
 -------
 
-Anything cosmetic is configurable in **Options -> Mods**, with each feature in its
-own section. Settings are per player.
+Anything cosmetic is configurable in **Options -> Mods**, with each feature in
+its own section. These settings are per player.
 
-Anything that changes game balance is deliberately not configurable, so a
-multiplayer client cannot drift out of step with its server.
+Anything that changes game balance lives in the **QoL Compendium** sandbox page
+instead, set when the world is created or by the server admin. That way every
+player in a multiplayer game is playing to the same numbers, rather than each
+client quietly running its own.
 
 
 Installation
@@ -67,6 +73,7 @@ ran at all.
 | Welding Torch Capacity | [Propane Torch Fix](https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057) | Rewritten. Build 42 already fixed the original bug, so only the economy changed. |
 | Rifle Sling | [Actual Realistic Rifle Sling](https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977) | **Bundles the original models and hotbar code.** See below. |
 | Ammo Icons | [Ammo & Magazine icon MOD](https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813) by falcon33jp | **Bundles 12 original icons.** Code written from scratch. |
+| Adrenaline | [Adrenaline - Panic Counters Tiredness](https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835) | MIT licensed. Rewritten, the stat API it used no longer exists. Balance values kept. |
 
 The exceptions are artwork. A 3D model or an icon cannot be rewritten from a
 description, so the sling's models and hotbar code are the originals by **Akyet**

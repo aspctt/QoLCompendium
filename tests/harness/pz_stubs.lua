@@ -128,26 +128,138 @@ function getCore()
 	return CoreStub
 end
 
---// Player
-local MoodlesStub = {}
+--// Clock
+-- Mods that pace themselves off elapsed time read this. Specs move it by hand so a
+-- test never has to wait on a real second.
+Harness.NowMs = 0
 
-function MoodlesStub:getMoodleLevel(Type)
-	if Type == nil then
-		error("getMoodleLevel was given a nil MoodleType. The constant does not exist in this build.")
+function Harness.Advance(Milliseconds)
+	Harness.NowMs = Harness.NowMs + Milliseconds
+end
+
+function getTimestampMs()
+	return Harness.NowMs
+end
+
+--// Character Stats
+-- Build 42 replaced every named accessor, getFatigue and setFatigue among them, with a
+-- keyed pair taking a CharacterStat. Both CharacterStat and the real bounds behind it
+-- are injected by TestRunner straight from the shipped jar, so a constant this build no
+-- longer has reads nil here exactly as it would in game.
+local function NewStats()
+	local Values = {}
+	local Stats = {}
+
+	local function Bounds(Stat)
+		return QOLC_STAT_BOUNDS and QOLC_STAT_BOUNDS[Stat] or nil
 	end
-	return Harness.Moodles[Type] or 0
+
+	function Stats:get(Stat)
+		if Stat == nil then
+			error("Stats:get was given a nil CharacterStat. The constant does not exist in this build.")
+		end
+		if Values[Stat] ~= nil then return Values[Stat] end
+
+		local Limits = Bounds(Stat)
+		return Limits and Limits.Default or 0
+	end
+
+	-- The real Stats.set runs the value through CharacterStat.clamp before storing it,
+	-- so a mod that overshoots sees what the game would keep, not what it asked for.
+	function Stats:set(Stat, Value)
+		if Stat == nil then
+			error("Stats:set was given a nil CharacterStat. The constant does not exist in this build.")
+		end
+
+		local Limits = Bounds(Stat)
+		if Limits then
+			if Value < Limits.Min then Value = Limits.Min end
+			if Value > Limits.Max then Value = Limits.Max end
+		end
+
+		Values[Stat] = Value
+		return true
+	end
+
+	return Stats
 end
 
-local PlayerStub = {}
+Harness.NewStats = NewStats
 
-function PlayerStub:getMoodles()
-	return MoodlesStub
+--// Player
+local function NewMoodles(Levels)
+	local Moodles = {}
+
+	function Moodles:getMoodleLevel(Type)
+		if Type == nil then
+			error("getMoodleLevel was given a nil MoodleType. The constant does not exist in this build.")
+		end
+		return Levels[Type] or 0
+	end
+
+	return Moodles
 end
+
+-- IsLocal defaults true. On a real client OnPlayerUpdate also fires for every remote
+-- player in range, which is what the remote case is here to reproduce.
+function Harness.NewPlayer(Number, IsLocal)
+	local Player = {}
+	Player.Levels = {}
+	Player.ModData = {}
+	Player.Stats = NewStats()
+	Player.Moodles = NewMoodles(Player.Levels)
+	Player.Number = Number or 0
+	Player.IsLocal = IsLocal ~= false
+	Player.Asleep = false
+
+	function Player:getMoodles() return self.Moodles end
+	function Player:getModData() return self.ModData end
+	function Player:getStats() return self.Stats end
+	function Player:isLocalPlayer() return self.IsLocal end
+	function Player:getPlayerNum() return self.Number end
+	function Player:isAsleep() return self.Asleep end
+
+	function Player:SetMoodle(Type, Level)
+		if Type == nil then error("SetMoodle called with a nil MoodleType") end
+		self.Levels[Type] = Level
+	end
+
+	return Player
+end
+
+-- The player getPlayer() hands back. Its moodles read the shared Harness.Moodles table
+-- so Harness.SetMoodle keeps driving it.
+local PlayerStub = Harness.NewPlayer(0, true)
+PlayerStub.Levels = Harness.Moodles
+PlayerStub.Moodles = NewMoodles(Harness.Moodles)
+
+Harness.Player = PlayerStub
 
 function getPlayer()
 	if not Harness.HasPlayer then return nil end
 	return PlayerStub
 end
+
+--// Sandbox
+-- Server controlled balance. Seeded from the defaults TestRunner parsed out of
+-- 42/media/sandbox-options.txt, so these numbers are never restated here.
+SandboxVars = { QoLC = {} }
+
+function Harness.ResetSandbox()
+	SandboxVars.QoLC = {}
+	if not QOLC_SANDBOX_DEFAULTS then return end
+	for Name, Value in pairs(QOLC_SANDBOX_DEFAULTS) do
+		SandboxVars.QoLC[Name] = Value
+	end
+end
+
+-- A save made before a feature existed has no values at all, which the mod has to cope
+-- with. This is how a spec reproduces that.
+function Harness.ClearSandbox()
+	SandboxVars.QoLC = nil
+end
+
+Harness.ResetSandbox()
 
 --// Translation
 -- UI_EN.txt is itself valid Lua, so the runner loads it and we read the table it sets.

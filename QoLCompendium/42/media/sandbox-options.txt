@@ -1,0 +1,43 @@
+VERSION = 1,
+
+/*
+ * Server controlled balance for QoL Compendium.
+ *
+ * Everything here is balance, so it belongs to the server rather than the individual
+ * player. Mod options are per client and would let one player quietly run different
+ * numbers to everyone else on the same server. Cosmetic settings go there instead.
+ *
+ * One page for the whole compendium, matching the single mod options category, so a
+ * host sees one QoL Compendium heading rather than one per absorbed mod.
+ *
+ * Read from lua as SandboxVars.QoLC.<name>. Labels live in
+ * 42/media/lua/shared/Translate/EN/Sandbox.json, keyed Sandbox_<translation>.
+ */
+
+option QoLC.AdrenalineEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_AdrenalineEnabled,
+}
+
+option QoLC.AdrenalineBoostSpeed
+{
+    type = integer, min = 1, max = 500, default = 75,
+    page = QoLC,
+    translation = QoLC_AdrenalineBoostSpeed,
+}
+
+option QoLC.AdrenalineCrashSpeed
+{
+    type = integer, min = 1, max = 500, default = 70,
+    page = QoLC,
+    translation = QoLC_AdrenalineCrashSpeed,
+}
+
+option QoLC.AdrenalineCrashPenalty
+{
+    type = double, min = 1.001, max = 2.0, default = 1.015,
+    page = QoLC,
+    translation = QoLC_AdrenalineCrashPenalty,
+}

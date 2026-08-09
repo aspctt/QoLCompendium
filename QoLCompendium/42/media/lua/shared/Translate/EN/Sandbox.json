@@ -1,0 +1,11 @@
+{
+    "Sandbox_QoLC": "QoL Compendium",
+    "Sandbox_QoLC_AdrenalineEnabled": "Adrenaline",
+    "Sandbox_QoLC_AdrenalineEnabled_tooltip": "Panic temporarily takes fatigue off the character, hiding the Tired debuff until they calm down.",
+    "Sandbox_QoLC_AdrenalineBoostSpeed": "Adrenaline Boost Speed",
+    "Sandbox_QoLC_AdrenalineBoostSpeed_tooltip": "How quickly panic wakes the character up. Higher sheds the Tired debuff sooner.",
+    "Sandbox_QoLC_AdrenalineCrashSpeed": "Adrenaline Crash Speed",
+    "Sandbox_QoLC_AdrenalineCrashSpeed_tooltip": "How quickly drowsiness returns once the character calms down.",
+    "Sandbox_QoLC_AdrenalineCrashPenalty": "Adrenaline Crash Penalty",
+    "Sandbox_QoLC_AdrenalineCrashPenalty_tooltip": "How much extra fatigue is paid back on top of what adrenaline borrowed."
+}

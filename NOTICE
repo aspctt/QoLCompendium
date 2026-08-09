@@ -19,6 +19,21 @@ Everything here is original work except where listed below. Where a component
 is bundled, it remains the property of its author and is not covered by this
 project's licence.
 
+  Adrenaline
+    From "Adrenaline - Panic Counters Tiredness", Steam Workshop 2807001835.
+    Stated terms: MIT, declared by the author in the mod description.
+
+    Bundled: no files. The implementation was written for this project, because
+    the original reads and writes fatigue through methods build 42 removed.
+
+    Taken: the mechanic and its balance values, meaning the absorption caps per
+    panic level, the rates and the crash multiplier. Those numbers are the
+    author's judgement rather than ours, and MIT covers their reuse.
+
+    The mod ships no licence file and names no author in mod.info, so no
+    copyright line is reproduced here. The Workshop page above identifies the
+    author.
+
   Ammo and Magazine Icons
     Workshop 1904952813, by falcon33jp
     Stated terms: none.

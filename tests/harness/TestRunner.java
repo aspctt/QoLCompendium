@@ -25,6 +25,9 @@ public class TestRunner {
 	private static String modRoot;
 	private static final List<String> loadFiles = new ArrayList<String>();
 	private static List<String> moodleTypes = new ArrayList<String>();
+	private static List<String> characterStats = new ArrayList<String>();
+	private static final Map<String, float[]> statBounds = new LinkedHashMap<String, float[]>();
+	private static final Map<String, Object> sandboxDefaults = new LinkedHashMap<String, Object>();
 	private static int translationFailures = 0;
 
 	public static void main(String[] args) throws Exception {
@@ -39,7 +42,13 @@ public class TestRunner {
 		moodleTypes = readMoodleTypes();
 		System.out.println("MoodleType constants found in this build: " + moodleTypes.size());
 
-		int staticFailures = checkMoodleTypeUsage() + checkItemScripts();
+		characterStats = readCharacterStats();
+		System.out.println("CharacterStat constants found in this build: " + characterStats.size());
+
+		int staticFailures = checkConstantUsage("MoodleType.", moodleTypes)
+			+ checkConstantUsage("CharacterStat.", characterStats)
+			+ checkItemScripts()
+			+ checkSandboxOptions();
 
 		// Discovery pass: load everything once just to learn the test names.
 		List<String> names;
@@ -89,6 +98,33 @@ public class TestRunner {
 		}
 		env.rawset("MoodleType", types);
 		env.rawset("QOLC_MOODLE_TYPES", list);
+
+		// Build 42 moved every named stat accessor onto CharacterStat, so the same
+		// treatment applies: names come from the jar, and the real min/max travel with
+		// them so the stub can clamp exactly like Stats.set does.
+		KahluaTable stats = platform.newTable();
+		KahluaTable bounds = platform.newTable();
+		for (int i = 0; i < characterStats.size(); i++) {
+			String n = characterStats.get(i);
+			stats.rawset(n, n);
+			float[] b = statBounds.get(n);
+			if (b != null) {
+				KahluaTable entry = platform.newTable();
+				entry.rawset("Min", Double.valueOf(b[0]));
+				entry.rawset("Max", Double.valueOf(b[1]));
+				entry.rawset("Default", Double.valueOf(b[2]));
+				bounds.rawset(n, entry);
+			}
+		}
+		env.rawset("CharacterStat", stats);
+		env.rawset("QOLC_STAT_BOUNDS", bounds);
+
+		KahluaTable defaults = platform.newTable();
+		for (Map.Entry<String, Object> e : sandboxDefaults.entrySet()) {
+			defaults.rawset(e.getKey(), e.getValue());
+		}
+		env.rawset("QOLC_SANDBOX_DEFAULTS", defaults);
+
 		env.rawset("QOLC_GAME_DIR", gameDir);
 		return env;
 	}
@@ -225,13 +261,49 @@ public class TestRunner {
 	}
 
 	/**
-	 * Scans every loaded mod file for MoodleType.X references and verifies each one
-	 * exists in the installed build. Catches build-41 constant names in branches the
-	 * tests never execute.
+	 * Reads the CharacterStat constants and their real bounds out of the shipped jar.
+	 * Unlike MoodleType this one has to be initialised, because the constants are built
+	 * by a static block calling register(id, min, max, default) rather than declared.
 	 */
-	private static int checkMoodleTypeUsage() throws IOException {
-		if (moodleTypes.isEmpty()) return 0;
-		Set<String> known = new HashSet<String>(moodleTypes);
+	private static List<String> readCharacterStats() {
+		List<String> names = new ArrayList<String>();
+		try {
+			// true = run the static initialiser. It only fills a HashMap, so it works
+			// without a live game.
+			Class<?> c = Class.forName("zombie.characters.CharacterStat", true,
+				TestRunner.class.getClassLoader());
+			Method min = c.getMethod("getMinimumValue");
+			Method max = c.getMethod("getMaximumValue");
+			Method def = c.getMethod("getDefaultValue");
+
+			for (Field f : c.getDeclaredFields()) {
+				if (!Modifier.isStatic(f.getModifiers())) continue;
+				if (!f.getType().equals(c)) continue;
+				if (!f.getName().matches("[A-Z][A-Z0-9_]*")) continue;
+
+				names.add(f.getName());
+				Object v = f.get(null);
+				if (v == null) continue;
+				statBounds.put(f.getName(), new float[] {
+					((Float) min.invoke(v)).floatValue(),
+					((Float) max.invoke(v)).floatValue(),
+					((Float) def.invoke(v)).floatValue()
+				});
+			}
+		} catch (Throwable t) {
+			System.out.println("WARN   could not read CharacterStat from the jar: " + t);
+		}
+		return names;
+	}
+
+	/**
+	 * Scans every loaded mod file for <prefix>X references and verifies each one exists
+	 * in the installed build. Catches build-41 constant names in branches the tests
+	 * never execute, which is how MoodleType.Panic survived into a shipped 42 folder.
+	 */
+	private static int checkConstantUsage(String prefix, List<String> valid) throws IOException {
+		if (valid.isEmpty()) return 0;
+		Set<String> known = new HashSet<String>(valid);
 		int bad = 0;
 		for (String path : loadFiles) {
 			File f = new File(path);
@@ -244,16 +316,21 @@ public class TestRunner {
 			try {
 				while ((line = r.readLine()) != null) {
 					n++;
+					// Comments are prose and routinely name a retired constant to explain
+					// why it is gone. Only real code is checked.
+					int comment = line.indexOf("--");
+					if (comment >= 0) line = line.substring(0, comment);
+
 					int at = 0;
-					while ((at = line.indexOf("MoodleType.", at)) >= 0) {
-						at += "MoodleType.".length();
+					while ((at = line.indexOf(prefix, at)) >= 0) {
+						at += prefix.length();
 						int end = at;
 						while (end < line.length()
 							&& (Character.isLetterOrDigit(line.charAt(end)) || line.charAt(end) == '_')) end++;
 						String name = line.substring(at, end);
 						if (name.length() > 0 && !known.contains(name)) {
 							bad++;
-							System.out.println("  FAIL  unknown MoodleType." + name
+							System.out.println("  FAIL  unknown " + prefix + name
 								+ "  (" + f.getName() + ":" + n + ")");
 						}
 					}
@@ -350,6 +427,114 @@ public class TestRunner {
 
 		if (bad > 0) System.out.println();
 		return bad;
+	}
+
+	/**
+	 * Checks the sandbox option file against what the game's parser actually accepts,
+	 * and against the translation file. A typo in a type or a missing label does not
+	 * crash: the option is dropped or renders as its raw key, which is easy to ship
+	 * without noticing. Every option is server-controlled balance, so a dropped one
+	 * silently falls back to the hardcoded default on every machine.
+	 */
+	private static int checkSandboxOptions() throws IOException {
+		File options = new File(modRoot, "42/media/sandbox-options.txt");
+		if (!options.isFile()) return 0;
+
+		// zombie.sandbox.CustomSandboxOptions.parseOption accepts exactly these.
+		Set<String> types = new HashSet<String>(
+			Arrays.asList("boolean", "double", "enum", "integer", "string"));
+
+		String body = readAll(options);
+		// The parser strips /* */ before reading, so the checks here must too.
+		body = body.replaceAll("(?s)/\\*.*?\\*/", "");
+
+		int bad = 0;
+		if (!body.matches("(?s).*\\bVERSION\\s*=\\s*\\d+.*")) {
+			bad++;
+			System.out.println("  FAIL  sandbox-options.txt has no VERSION, the parser throws on load");
+		}
+
+		Set<String> keys = readTranslationKeys(
+			new File(modRoot, "42/media/lua/shared/Translate/EN/Sandbox.json"));
+
+		java.util.regex.Matcher m = java.util.regex.Pattern
+			.compile("option\\s+([A-Za-z_][\\w.]*)\\s*\\{(.*?)\\}", java.util.regex.Pattern.DOTALL)
+			.matcher(body);
+
+		int found = 0;
+		while (m.find()) {
+			found++;
+			String id = m.group(1);
+			String block = m.group(2).replaceAll("\\s", "");
+
+			String type = valueOf(block, "type");
+			if (type == null || !types.contains(type)) {
+				bad++;
+				System.out.println("  FAIL  option " + id + " has type '" + type
+					+ "', the parser only accepts " + types);
+			}
+
+			String page = valueOf(block, "page");
+			if (page != null && !keys.isEmpty() && !keys.contains("Sandbox_" + page)) {
+				bad++;
+				System.out.println("  FAIL  option " + id + " is on page '" + page
+					+ "' but Sandbox.json has no Sandbox_" + page);
+			}
+
+			// Hand the declared defaults to the specs, so the stub never has to restate
+			// numbers that live in the option file.
+			String def = valueOf(block, "default");
+			String shortId = id.contains(".") ? id.substring(id.indexOf('.') + 1) : id;
+			if (def != null) {
+				if ("boolean".equals(type)) sandboxDefaults.put(shortId, Boolean.valueOf(def));
+				else if ("string".equals(type) || "enum".equals(type)) sandboxDefaults.put(shortId, def);
+				else sandboxDefaults.put(shortId, Double.valueOf(def));
+			}
+
+			String translation = valueOf(block, "translation");
+			if (translation == null) {
+				bad++;
+				System.out.println("  FAIL  option " + id + " declares no translation");
+			} else if (!keys.isEmpty() && !keys.contains("Sandbox_" + translation)) {
+				bad++;
+				System.out.println("  FAIL  option " + id + " has no Sandbox_" + translation
+					+ " in Sandbox.json, it would render as the raw key");
+			}
+		}
+
+		if (found == 0) {
+			bad++;
+			System.out.println("  FAIL  sandbox-options.txt parsed to zero options");
+		}
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	private static String valueOf(String block, String key) {
+		java.util.regex.Matcher m = java.util.regex.Pattern
+			.compile("(?:^|,)" + key + "=([^,}]+)").matcher(block);
+		return m.find() ? m.group(1) : null;
+	}
+
+	private static Set<String> readTranslationKeys(File f) throws IOException {
+		Set<String> keys = new HashSet<String>();
+		if (!f.isFile()) return keys;
+		java.util.regex.Matcher m = java.util.regex.Pattern
+			.compile("\"(.+?)\"\\s*:").matcher(readAll(f));
+		while (m.find()) keys.add(m.group(1));
+		return keys;
+	}
+
+	private static String readAll(File f) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+		try {
+			String line;
+			while ((line = r.readLine()) != null) sb.append(line).append('\n');
+		} finally {
+			r.close();
+		}
+		return sb.toString();
 	}
 
 	private static String rootCause(Throwable t) {
