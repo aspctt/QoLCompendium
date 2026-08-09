@@ -1,0 +1,67 @@
+QoL Compendium
+Copyright (c) 2026 aspctt. All Rights Reserved.
+
+
+ORIGINAL WORK
+
+All original work in this project is All Rights Reserved. You may not copy,
+redistribute, modify, sublicense, or create derivative works from it without
+prior written permission. This covers:
+
+  - qol_compendium/          the mod itself, all Lua, scripts and assets
+                             authored for it, including the moodle overlay
+                             textures
+  - tests/                   the headless test harness and its specs
+  - tools/                   asset generators
+  - included-mods.txt        and other project documentation
+
+
+THIRD PARTY WORK
+
+This project incorporates or adapts work from other Project Zomboid mods. That
+work remains the property of its respective authors. The All Rights Reserved
+grant above does not extend to it, and nothing here claims rights over it.
+
+Where a source mod stated terms, those terms govern. Where a source mod stated
+no terms, no permission has been granted by its author and the incorporation
+rests on nothing more than the absence of an objection.
+
+Status of each incorporated work, as recorded at time of integration:
+
+  Immersive Overlays
+    Workshop 533622988, by Stephanus van Zyl (Viceroy)
+    Stated terms: none.
+    Used: concept and blend behaviour. The five overlay textures are original,
+    generated procedurally by tools/generate_overlays.py, and share no pixels
+    with the source mod.
+
+  Bigger Character Avatar
+    Workshop 3245854570
+    Stated terms: none.
+    Used: concept only. The implementation here was written from scratch
+    against the current build and shares no code with the original.
+
+  Welding Torch Capacity
+    Workshop 3044705007
+    Stated terms: none.
+    Used: concept only. The refill implementation here follows the base game's
+    own algorithm, not the original mod's, and uses different values.
+
+Mods whose authors explicitly prohibit redistribution, including inclusion in
+another mod, are excluded from this project entirely and are recorded as
+NO REDISTRIBUTE in included-mods.txt.
+
+
+BASE GAME
+
+Project Zomboid is the property of The Indie Stone. This project is an
+unofficial modification, is not affiliated with or endorsed by The Indie Stone,
+and is subject to their terms for user created content. Portions of this
+project interoperate with, and follow the behaviour of, the base game's own
+code and data.
+
+
+CONTACT
+
+For permission requests, or for any author who wishes their work removed from
+this project, contact aspctt. Removal requests will be honoured.

@@ -1,0 +1,56 @@
+###############################################################################
+# QoL Compendium - .gitignore for a Project Zomboid Lua mod
+###############################################################################
+
+## Test harness build output
+# The runner is compiled from tests/harness/TestRunner.java on demand.
+tests/build/
+
+## Generated assets
+# Every overlay texture is produced by tools/generate_overlays.py from a fixed
+# seed, so the generator is the source of truth. The textures themselves are
+# tracked, since players install the mod folder directly, but the preview sheets
+# the generator emits alongside them are not.
+tools/overlay_preview.png
+tools/overlay_detail.png
+
+## IDE / editor cruft
+.idea/
+.vscode/
+.vs/
+*.iml
+*.code-workspace
+*.swp
+*~
+
+## OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+## Logs and crash artefacts, wherever they land
+*.log
+hs_err_pid*.log
+logs/
+
+###############################################################################
+# Local-only reference material. NOT for publication.
+#
+# other-mods/ holds the unpacked source of every mod on the integration list.
+# It is other people's work under other people's terms, and three of them
+# explicitly forbid redistribution in any form, including as part of another
+# mod. Publishing this folder would be exactly that. It stays local so the
+# integration work can reference it.
+#
+# example-script-*.lua are the author's own scripts from an unrelated project,
+# kept as a style reference only.
+#
+# Remove an entry only if you deliberately intend to publish it.
+# See NOTICE and LICENSE.
+###############################################################################
+other-mods/
+context-files/
+external-files/
+bug-reports/
+example-script-*.lua
+NOTES.md

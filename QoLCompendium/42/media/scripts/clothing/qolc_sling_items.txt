@@ -1,0 +1,87 @@
+/*
+	Field formats here were taken from vanilla build 42 clothing, see
+	generated/items/clothing.txt, not carried over from the build 41 original:
+
+	  ItemType = base:clothing   replaces "Type = Clothing". No vanilla item uses
+	                             "Type" any more, and a null item type crashes the
+	                             debug item spawner at ISItemsListTable.lua:244.
+	  DisplayName                gone entirely. Names come from Items_EN.txt now.
+	  ClothingItemExtra          fully qualified, "Base.SlingABack" not "SlingABack".
+	  BodyLocation               namespaced. Ours is registered from lua as
+	                             qolc:Sling, see qolc_sling_locations.lua.
+	  Cosmetic = true            lowercase, as vanilla writes it.
+	  AttachmentsProvided        stays a bare name, vanilla still writes these plain.
+
+	Two wearing styles, front and back. Item ids, ClothingItem xml files, attachment
+	types, hotbar slot types and mesh file names all use the same Front and Back
+	naming, so nothing carries the old alt numbering.
+*/
+module Base
+{
+	item SlingAFront
+	{
+		DisplayCategory = Accessory,
+		ItemType = base:clothing,
+		Weight = 0.01,
+		Icon = slingAky,
+		BodyLocation = qolc:Sling,
+		ClothingItem = SlingAFront,
+		AttachmentsProvided = SlingFront,
+		Cosmetic = true,
+		ChanceToFall = 0,
+		ClothingExtraSubmenu = SlingStyle1,
+		ClothingItemExtra = Base.SlingABack,
+		ClothingItemExtraOption = SlingStyle2,
+		WorldStaticModel = SlingFlat,
+	}
+
+	item SlingABack
+	{
+		DisplayCategory = Accessory,
+		ItemType = base:clothing,
+		Weight = 0.01,
+		Icon = slingAky,
+		BodyLocation = qolc:Sling,
+		ClothingItem = SlingABack,
+		AttachmentsProvided = SlingBack,
+		Cosmetic = true,
+		ChanceToFall = 0,
+		ClothingExtraSubmenu = SlingStyle2,
+		ClothingItemExtra = Base.SlingAFront,
+		ClothingItemExtraOption = SlingStyle1,
+		WorldStaticModel = SlingFlat,
+	}
+
+	/*
+		The original shipped this as a build 41 "recipe" block. That format no longer
+		exists in build 42, which has 969 craftRecipe blocks and zero legacy ones, so
+		the recipe simply would not have loaded. Rewritten against the shape vanilla
+		tailoring recipes use, see generated/recipes/recipes_tailoring.txt.
+
+		Tools are matched by tag rather than by item id, so any scissors or needle the
+		base game or another mod provides will satisfy it.
+	*/
+	craftRecipe MakeRifleSling
+	{
+		timedAction = SewingCloth,
+		time = 800,
+		xpAward = Tailoring:15,
+		AllowBatchCraft = false,
+		Tags = AnySurfaceCraft,
+		category = Tailoring,
+		SkillRequired = Tailoring:4,
+		NeedToBeLearn = false,
+		inputs
+		{
+			item 1 tags[base:scissors] mode:keep flags[SharpnessCheck;IsNotDull],
+			item 1 tags[base:sewingneedle] mode:keep,
+			item 1 [Base.Belt2],
+			item 4 [Base.LeatherStrips],
+			item 1 tags[base:thread],
+		}
+		outputs
+		{
+			item 1 Base.SlingAFront,
+		}
+	}
+}

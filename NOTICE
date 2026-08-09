@@ -1,0 +1,54 @@
+"Project Zomboid" is a trademark of The Indie Stone. This project is in no way
+associated with nor endorsed by The Indie Stone.
+
+Other trademarks and registered trademarks are the property of the respective
+trademark holders.
+
+
+ABOUT THIS PROJECT
+
+QoL Compendium takes quality of life mods that their authors have stopped
+updating and rebuilds them for the current build of Project Zomboid, as a single
+mod. Most of it is written from scratch against the current game rather than
+copied, because build 41 code generally does not survive the move to build 42
+intact.
+
+
+THIRD-PARTY COMPONENTS
+
+Everything here is original work except where listed below. Where a component is
+bundled, it remains the property of its author and is not covered by this
+project's licence.
+
+  Rifle Sling
+    Models and textures: Akyet
+    Hotbar and attachment code: Noir
+    From "Actual Realistic Rifle Sling", Steam Workshop 3073937977, itself a
+    modification of Noir's Rifle Sling.
+
+    Bundled: two sling models, its texture and icon, two clothing item
+    definitions, and the hotbar attachment logic. A 3D model cannot be
+    reimplemented from a description, so unlike the rest of this project these
+    files are the originals. Two of the original's four wearing styles were
+    dropped, and the files renamed, but the models themselves are unmodified.
+
+    Rewritten for this project: the crafting recipe, which used build 41's
+    "recipe" format that build 42 no longer supports at all, and the spawn
+    distribution.
+
+    No licence or permission statement was published with the original.
+
+Components adapted in concept only, sharing no files or code with their source,
+are listed in README.md.
+
+
+ASSETS GENERATED FOR THIS PROJECT
+
+The moodle overlay textures are produced procedurally by
+tools/generate_overlays.py and share no pixels with any other mod.
+
+
+REMOVAL REQUESTS
+
+Any author who wishes their work removed from this project should contact
+aspctt. Removal requests will be honoured.
