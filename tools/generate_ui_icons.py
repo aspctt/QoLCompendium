@@ -18,8 +18,12 @@ from PIL import Image, ImageDraw
 
 # Drawn large and downsampled, which is the cheapest way to get clean edges on a glyph
 # this small without hand antialiasing.
-SUPERSAMPLE = 8
-SIZE = 32
+SUPERSAMPLE = 16
+
+# 16 pixels, not 32. drawTexture paints at the texture's own size with no scaling, and
+# these sit in 18 pixel cells on the hotbar, so anything larger spills out over the slots
+# beside it. One pixel of padding each side is what the 18 leaves room for.
+SIZE = 16
 
 # Matches the muted grey of vanilla's own button icons. The open padlock is dimmer,
 # so "unlocked" reads as the inactive state at a glance.

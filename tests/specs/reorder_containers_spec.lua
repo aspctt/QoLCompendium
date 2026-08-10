@@ -186,6 +186,55 @@ Test("a small nudge is not treated as a reorder", function()
 		"a couple of pixels should still count as a click")
 end)
 
+-- Reported in game: swap the second and third containers and the icons trade places but
+-- each button opens the other's inventory.
+Test("a button opens the container whose icon it shows", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	DragSlot = nil
+	DragTo(Page, "KeyRing", TOP)
+
+	for Index, Button in ipairs(Page.backpacks) do
+		AssertEquals(Button.Image, "icon:" .. Button.inventory:getType(),
+			"button " .. Index .. " shows one container's icon and carries another")
+	end
+end)
+
+Test("clicking a moved button opens that container", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	DragTo(Page, "KeyRing", TOP)
+	Page:refreshBackpacks()
+
+	for _, Button in ipairs(Page.backpacks) do
+		Page:onBackpackClick(Button)
+		AssertEquals(Page.SelectedInventory, Button.inventory,
+			"clicking a button must open the container it is showing")
+	end
+end)
+
+Test("recycled buttons carry the right container after a reorder", function()
+	-- Vanilla pools and reuses button objects, so the one showing the keyring now may
+	-- have been the backpack's a refresh ago.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	DragTo(Page, "KeyRing", TOP)
+
+	for _ = 1, 3 do
+		Page:refreshBackpacks()
+		for Index, Button in ipairs(Page.backpacks) do
+			AssertEquals(Button.Image, "icon:" .. Button.inventory:getType(),
+				"icon and inventory drifted apart on button " .. Index)
+		end
+	end
+
+	AssertEquals(Concat(Harness.ButtonOrderByArray(Page)), "KeyRing,inventory,Backpack",
+		"and the chosen order should still hold")
+end)
+
 --// Locking
 Test("a locked window refuses to reorder", function()
 	local Player = Harness.NewPlayer(0, true)
@@ -254,199 +303,126 @@ Test("turning loot sorting on lets it reorder", function()
 end)
 
 --// Storage
-Test("a bag's order is stored on the bag, not the player", function()
-	-- So it survives being dropped and picked up again.
+-- Reported in game: after a swap the order held for a few refreshes and then reverted
+-- on its own. The order was being kept in a nested table on the container's own item,
+-- and those writes do not survive. It lives on the player now.
+Test("the order is stored on the player, not on the container's item", function()
 	local Player = Harness.NewPlayer(0, true)
-	local Page = NewPage(Player, true, "Bag", "Crate")
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
 
-	DragTo(Page, "Crate", TOP)
+	DragTo(Page, "KeyRing", TOP)
 
-	local Crate = FindButton(Page, "Crate").inventory
-	local Stored = QolcReorderData.GetSort(Crate:getContainingItem():getModData(), Player:getUsername())
-
-	-- Asserting on the priority, not merely that the section exists. Reading a priority
-	-- creates the section as a side effect, so its presence alone proves nothing.
-	AssertNotNil(Stored.Priority, "the crate's own mod data should carry its position")
-	AssertNil(Player:getModData().QolcReorder[QolcReorderData.GetSortKey(Player:getUsername())],
-		"and the player should not be carrying it instead")
+	local KeyRing = FindButton(Page, "KeyRing").inventory
+	AssertNotNil(Player:getModData().QolcReorder, "the player should carry the order")
+	AssertNil(KeyRing:getContainingItem():getModData().QolcReorder,
+		"nothing should be written into the item's mod data")
 end)
 
-Test("the player's own inventory is keyed by container type", function()
+Test("what is stored is a plain number", function()
+	-- Not a table. A nested table on an item is what was being lost, and keeping the
+	-- values flat means nothing here depends on that behaviour again.
 	local Player = Harness.NewPlayer(0, true)
-	local Page = NewPage(Player, true, "Bag")
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
 
-	QolcReorderSetPriority(Player, Player.Inventory, 5, true)
+	DragTo(Page, "KeyRing", TOP)
 
-	local Key = QolcReorderData.GetSortKey("inventory")
-	AssertNotNil(Player:getModData().QolcReorder[Key],
-		"should be stored against the container type, not the username")
+	local Count = 0
+	for Key, Value in pairs(Player:getModData().QolcReorder) do
+		Count = Count + 1
+		AssertEquals(type(Value), "number", "entry " .. tostring(Key) .. " should be a number")
+	end
+
+	AssertTrue(Count >= 2, "every container in the window should have an entry")
 end)
 
-Test("two players sorting one crate do not overwrite each other", function()
+Test("a bag is keyed by its item id, which the save keeps", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Item = Harness.NewInventoryItem("Backpack")
+	local Bag = Harness.NewContainer("Backpack", Item, nil)
+
+	AssertEquals(QolcReorderData.GetKey(Player, Bag), "item:" .. tostring(Item:getID()),
+		"the item id is what survives a reload")
+end)
+
+Test("the player's own inventory is keyed separately from any bag", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Item = Harness.NewInventoryItem("Backpack")
+	local Bag = Harness.NewContainer("Backpack", Item, nil)
+
+	AssertTrue(QolcReorderData.GetKey(Player, Player.Inventory) ~= QolcReorderData.GetKey(Player, Bag),
+		"the two must not collide")
+end)
+
+Test("two containers of the same type get different keys", function()
+	-- Two bags of one type would collide if the key were the container type.
+	local Player = Harness.NewPlayer(0, true)
+	local One = Harness.NewContainer("Bag", Harness.NewInventoryItem("Bag"), nil)
+	local Two = Harness.NewContainer("Bag", Harness.NewInventoryItem("Bag"), nil)
+
+	AssertTrue(QolcReorderData.GetKey(Player, One) ~= QolcReorderData.GetKey(Player, Two),
+		"same type, different bags, different keys")
+end)
+
+Test("a world container is keyed by where it stands", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Object = Harness.NewIsoObject()
+	Object.Square = { X = 10, Y = 20, Z = 0 }
+	function Object:getSquare()
+		local S = self.Square
+		return { getX = function() return S.X end, getY = function() return S.Y end, getZ = function() return S.Z end }
+	end
+
+	local Crate = Harness.NewContainer("Crate", nil, Object)
+	AssertEquals(QolcReorderData.GetKey(Player, Crate), "obj:10,20,0:Crate", "keyed by position")
+end)
+
+Test("clearing a priority removes the entry", function()
+	local Player = Harness.NewPlayer(0, true)
+
+	QolcReorderSetPriority(Player, Player.Inventory, 5)
+	AssertEquals(QolcReorderData.GetPriority(Player, Player.Inventory), 5, "should be set")
+
+	QolcReorderSetPriority(Player, Player.Inventory, nil)
+	AssertNil(QolcReorderData.GetPriority(Player, Player.Inventory), "should be cleared, not left stale")
+end)
+
+Test("each player keeps their own order", function()
 	local One = Harness.NewPlayer(0, true)
 	local Two = Harness.NewPlayer(1, true)
 
 	local Item = Harness.NewInventoryItem("Crate")
 	local Crate = Harness.NewContainer("Crate", Item, nil)
 
-	QolcReorderSetPriority(One, Crate, 10, true)
-	QolcReorderSetPriority(Two, Crate, 90, true)
+	QolcReorderSetPriority(One, Crate, 10)
+	QolcReorderSetPriority(Two, Crate, 90)
 
-	AssertEquals(QolcReorderGetPriority(One, Crate, 0), 10, "player one's choice")
-	AssertEquals(QolcReorderGetPriority(Two, Crate, 0), 90, "player two's choice")
-end)
-
-Test("clearing a priority puts a container back in the game's order", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Page = NewPage(Player, true, "Bag")
-
-	QolcReorderSetPriority(Player, Player.Inventory, 5, true)
-	QolcReorderSetPriority(Player, Player.Inventory, nil, false)
-
-	AssertTrue(QolcReorderGetPriority(Player, Player.Inventory, 0) >= QolcReorderData.PRIORITY_UNSET,
-		"an unset priority should sort with the rest")
+	AssertEquals(QolcReorderData.GetPriority(One, Crate), 10, "player one's choice")
+	AssertEquals(QolcReorderData.GetPriority(Two, Crate), 90, "player two's choice")
 end)
 
 --// Multiplayer
-Test("singleplayer sends nothing to a server", function()
+Test("a client transmits its own order and sends no commands", function()
+	Harness.IsClient = true
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+	local Before = Player.Transmits
+
+	DragTo(Page, "KeyRing", TOP)
+
+	AssertTrue(Player.Transmits > Before, "a player owns their own mod data")
+	AssertEquals(#Harness.ClientCommands, 0, "so the server needs no command at all")
+end)
+
+Test("singleplayer transmits nothing", function()
 	Harness.IsClient = false
 	local Player = Harness.NewPlayer(0, true)
-	local Page = NewPage(Player, true, "Bag", "Crate")
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+	local Before = Player.Transmits
 
-	DragTo(Page, "Crate", TOP)
-	AssertEquals(#Harness.ClientCommands, 0, "there is no server to tell")
-end)
+	DragTo(Page, "KeyRing", TOP)
 
-Test("a client asks the server to save a carried bag", function()
-	Harness.IsClient = true
-	local Player = Harness.NewPlayer(0, true)
-	local Page = NewPage(Player, true, "Bag", "Crate")
-
-	DragTo(Page, "Crate", TOP)
-
-	local Command = Harness.LastCommand(QolcReorderData.SAVE_ITEM)
-	AssertNotNil(Command, "a carried bag should go through the item command")
-	AssertEquals(Command.Module, QolcReorderData.MODULE, "module")
-	AssertNotNil(Command.Request.ItemId, "the request must name the item")
-	AssertNotNil(Command.Request.Suffix, "the request must carry the key suffix")
-end)
-
-Test("a bag on the ground is saved by position", function()
-	Harness.IsClient = true
-	local Player = Harness.NewPlayer(0, true)
-
-	local WorldObject = Harness.NewWorldObject(120, 340, 0)
-	local Item = Harness.NewInventoryItem("Crate", WorldObject)
-	local Crate = Harness.NewContainer("Crate", Item, nil)
-
-	QolcReorderSetPriority(Player, Crate, 10, true)
-
-	local Command = Harness.LastCommand(QolcReorderData.SAVE_GROUND)
-	AssertNotNil(Command, "a dropped bag should go through the ground command")
-	AssertEquals(Command.Request.X, 120, "x")
-	AssertEquals(Command.Request.Y, 340, "y")
-	AssertEquals(Command.Request.Z, 0, "z")
-end)
-
-Test("the player's own order is transmitted, not sent as a command", function()
-	Harness.IsClient = true
-	local Player = Harness.NewPlayer(0, true)
-
-	QolcReorderSetPriority(Player, Player.Inventory, 5, true)
-
-	AssertTrue(Player.Transmits > 0, "a player owns their own mod data")
-	AssertEquals(#Harness.ClientCommands, 0, "so there is nothing to ask the server for")
-end)
-
-Test("a world container is transmitted by the object itself", function()
-	Harness.IsClient = true
-	local Player = Harness.NewPlayer(0, true)
-
-	local Object = Harness.NewIsoObject()
-	local Crate = Harness.NewContainer("Crate", nil, Object)
-
-	QolcReorderSetPriority(Player, Crate, 10, true)
-	AssertTrue(Object.Transmits > 0, "an IsoObject transmits its own mod data")
-end)
-
---// Server
-Test("the server writes an order sent for a carried item", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Item = Harness.NewInventoryItem("Crate")
-	table.insert(Player.Inventory.Items, Item)
-
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, Player, {
-		ItemId = Item:getID(),
-		Suffix = "Player0",
-		Sort = { Priority = 30, Manual = true }
-	})
-
-	local Stored = QolcReorderData.GetSort(Item:getModData(), "Player0")
-	AssertEquals(Stored.Priority, 30, "the priority should have been written")
-	AssertEquals(Stored.Manual, true, "and the manual flag with it")
-end)
-
-Test("the server ignores an item the sender is not carrying", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Item = Harness.NewInventoryItem("Crate")
-
-	-- Deliberately reachable some other way. The item command must resolve through the
-	-- sender's own inventory and nothing else, or a client could name any id it liked.
-	Harness.PlaceItemOnGround(5, 5, 0, Item)
-
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, Player, {
-		ItemId = Item:getID(),
-		Suffix = "Player0",
-		Sort = { Priority = 30, Manual = true }
-	})
-
-	AssertNil(Item:getModData().QolcReorder,
-		"a client must not be able to write to an item it does not hold")
-end)
-
-Test("the server writes an order sent for a ground item", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Item = Harness.NewInventoryItem("Crate")
-	Harness.PlaceItemOnGround(10, 20, 0, Item)
-
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_GROUND, Player, {
-		ItemId = Item:getID(),
-		Suffix = "Player0",
-		Sort = { Priority = 40, Manual = false },
-		X = 10, Y = 20, Z = 0
-	})
-
-	AssertEquals(QolcReorderData.GetSort(Item:getModData(), "Player0").Priority, 40,
-		"the ground item should have been found and written")
-end)
-
-Test("the server copies only the fields this feature owns", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Item = Harness.NewInventoryItem("Crate")
-	table.insert(Player.Inventory.Items, Item)
-
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, Player, {
-		ItemId = Item:getID(),
-		Suffix = "Player0",
-		Sort = { Priority = 30, Manual = false, Injected = "should not be stored" }
-	})
-
-	AssertNil(QolcReorderData.GetSort(Item:getModData(), "Player0").Injected,
-		"a request must not be able to write arbitrary keys")
-end)
-
-Test("the server ignores other modules and malformed requests", function()
-	local Player = Harness.NewPlayer(0, true)
-	local Item = Harness.NewInventoryItem("Crate")
-	table.insert(Player.Inventory.Items, Item)
-
-	Harness.Fire("OnClientCommand", "SomeOtherMod", QolcReorderData.SAVE_ITEM, Player, {
-		ItemId = Item:getID(), Suffix = "Player0", Sort = { Priority = 1 }
-	})
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, Player, nil)
-	Harness.Fire("OnClientCommand", QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, Player, {})
-
-	AssertNil(Item:getModData().QolcReorder, "none of those should have written anything")
+	AssertEquals(Player.Transmits, Before, "there is no server to tell")
+	AssertEquals(#Harness.ClientCommands, 0, "and nothing to send")
 end)
 
 --// Translations

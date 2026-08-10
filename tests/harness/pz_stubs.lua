@@ -115,8 +115,12 @@ function UIManager.DrawTexture(Texture, X, Y, Width, Height, Alpha)
 	})
 end
 
+-- Size stands in for the real texture's pixel dimensions. Kept so a spec can catch an
+-- icon being drawn larger than the box it is meant to sit in.
+Harness.TextureSize = 32
+
 function getTexture(Path)
-	return { Path = Path }
+	return { Path = Path, Size = Harness.TextureSize }
 end
 
 --// Core
@@ -881,9 +885,9 @@ function triggerEvent(Name, A, B, C, D)
 end
 
 --// Networking
--- Every sendClientCommand is recorded rather than sent. A spec asserts on what a client
--- would have asked the server to do, which is the only way to test the multiplayer path
--- without a server.
+-- Every sendClientCommand is recorded rather than sent, so a spec can assert on what a
+-- client would have asked the server to do without needing a server. Also how a spec
+-- proves a feature sends nothing at all.
 function sendClientCommand(Player, Module, Command, Request)
 	table.insert(Harness.ClientCommands, {
 		Player = Player,
@@ -1066,31 +1070,60 @@ function ISInventoryPage:titleBarHeight() return 16 end
 
 function ISInventoryPage:createChildren() end
 
+-- Vanilla recycles container buttons through a pool rather than building new ones each
+-- refresh, so the object showing one container this frame may have been showing another
+-- last frame. Reproduced because it is exactly where an icon and an inventory can drift
+-- apart, and creating fresh buttons every time hides that entirely.
 function ISInventoryPage:addContainerButton(Container, Texture, Name, Tooltip)
 	local Index = #self.backpacks + 1
-	local Button = NewUIElement(0, ((Index - 1) * self.buttonSize) - 1, self.buttonSize, self.buttonSize)
+	local Button
+
+	if #self.buttonPool > 0 then
+		Button = table.remove(self.buttonPool, 1)
+		Button:setX(0)
+		Button:setY(((Index - 1) * self.buttonSize) - 1)
+	else
+		Button = NewUIElement(0, ((Index - 1) * self.buttonSize) - 1, self.buttonSize, self.buttonSize)
+		Button.OriginalCalls = {}
+		function Button:onMouseDown() table.insert(self.OriginalCalls, "down") end
+		function Button:onMouseMove() table.insert(self.OriginalCalls, "move") end
+		function Button:onMouseMoveOutside() table.insert(self.OriginalCalls, "moveOutside") end
+		function Button:onMouseUp() table.insert(self.OriginalCalls, "up") end
+		function Button:onMouseUpOutside() table.insert(self.OriginalCalls, "upOutside") end
+	end
 
 	Button.Class = "ISButton"
 	Button.inventory = Container
 	Button.tooltip = Tooltip
 	Button.name = Name
 
-	-- Vanilla assigns all five of these in addContainerButton, so a mod that wraps them
-	-- finds real functions to capture. Recorded rather than empty, so a spec can prove
-	-- a wrapper still calls through to the original.
-	Button.OriginalCalls = {}
-	function Button:onMouseDown() table.insert(self.OriginalCalls, "down") end
-	function Button:onMouseMove() table.insert(self.OriginalCalls, "move") end
-	function Button:onMouseMoveOutside() table.insert(self.OriginalCalls, "moveOutside") end
-	function Button:onMouseUp() table.insert(self.OriginalCalls, "up") end
-	function Button:onMouseUpOutside() table.insert(self.OriginalCalls, "upOutside") end
+	-- The icon vanilla picks is derived from the container, so it always matches the
+	-- inventory the button carries. A spec can compare the two to catch a desync.
+	Button.Image = "icon:" .. Container:getType()
 
 	self.containerButtonPanel:addChild(Button)
 	self.backpacks[Index] = Button
 	return Button
 end
 
+-- Selecting a container goes through the button, never through its position, which is
+-- what makes reordering the array safe in the first place.
+function ISInventoryPage:selectContainer(Button)
+	self.inventory = Button.inventory
+	self.SelectedInventory = Button.inventory
+end
+
+function ISInventoryPage:onBackpackClick(Button)
+	self:selectContainer(Button)
+end
+
 function ISInventoryPage:refreshBackpacks()
+	self.buttonPool = self.buttonPool or {}
+	for Index, Button in ipairs(self.backpacks) do
+		self.containerButtonPanel:removeChild(Button)
+		table.insert(self.buttonPool, Index, Button)
+	end
+
 	self.backpacks = {}
 	self.RefreshCount = (self.RefreshCount or 0) + 1
 
@@ -1308,8 +1341,16 @@ function Harness.NewHotbar(Player, SlotTypes)
 	function Hotbar:drawRectBorderStatic(...) table.insert(self.Drawn, { Kind = "border", ... }) end
 	function Hotbar:drawText(...) table.insert(self.Drawn, { Kind = "text", ... }) end
 
+	-- Width and height are recorded so a spec can prove an icon stays inside its cell.
+	-- drawTexture paints at the texture's own size, which is how a 32 pixel glyph ends
+	-- up spilling across the slots beside an 18 pixel button.
 	function Hotbar:drawTexture(Texture, X, Y)
-		table.insert(self.Drawn, { Kind = "texture", Texture = Texture, X = X, Y = Y })
+		local Size = Texture and Texture.Size or 0
+		table.insert(self.Drawn, { Kind = "texture", Texture = Texture, X = X, Y = Y, W = Size, H = Size })
+	end
+
+	function Hotbar:drawTextureScaled(Texture, X, Y, W, H)
+		table.insert(self.Drawn, { Kind = "texture", Texture = Texture, X = X, Y = Y, W = W, H = H })
 	end
 
 	Harness.SetHotbarSlots(Hotbar, Hotbar.SlotTypes)

@@ -129,7 +129,7 @@ function QolcReorderPriorityWindow:onOK()
 	-- puts the container back in the game's own order
 	local Number = tonumber(self.QolcEntry:getText())
 	if self.QolcInventory then
-		QolcReorderSetPriority(Player, self.QolcInventory, Number, Number ~= nil)
+		QolcReorderSetPriority(Player, self.QolcInventory, Number)
 	end
 
 	self:removeFromUIManager()

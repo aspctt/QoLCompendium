@@ -19,9 +19,9 @@
 --// rather than wrapping refreshBackpacks, so nothing here joins an override chain that
 --// another mod is also in.
 --//
---// Client only. Where a container sits in one player's window is that player's own
---// business, and in multiplayer each client sorts its own. What has to reach the server
---// is the saved order on shared containers, which goes through qolc_reorder_server.lua.
+--// Client only, and nothing is sent to the server. The order is stored on the player,
+--// who owns their own mod data, so transmitting it is all multiplayer needs. See
+--// qolc_reorder_data.lua for why it is stored there rather than on the container.
 
 --// Textures
 -- Vanilla's own gears icon, so the options button needs no bundled art.
@@ -30,75 +30,6 @@ local TextureUnlocked = getTexture("media/textures/GUI/qolc_lock_open.png")
 local TextureLocked = getTexture("media/textures/GUI/qolc_lock_closed.png")
 
 --// Functions
--- Finds where this container's order is stored. Returns the stored table, the object
--- that owns it, and the key suffix, all three of which are needed to save it again.
-local function ResolveSort(Player, Inventory)
-	if not Player or not Inventory then return nil end
-
-	-- The player's own inventory is keyed by container type on the player, so the main
-	-- inventory and any special container each get their own entry
-	if Inventory == Player:getInventory() then
-		local Suffix = Inventory:getType()
-		return QolcReorderData.GetSort(Player:getModData(), Suffix), Player, Suffix
-	end
-
-	-- Anything else belongs to the bag or the world object holding it, keyed by username
-	-- so two players sorting one crate do not overwrite each other
-	local Suffix = Player:getUsername()
-	local Item = Inventory:getContainingItem()
-	if Item then
-		return QolcReorderData.GetSort(Item:getModData(), Suffix), Item, Suffix
-	end
-
-	local Object = Inventory:getParent()
-	if Object then
-		return QolcReorderData.GetSort(Object:getModData(), Suffix), Object, Suffix
-	end
-
-	-- No owner to hang it on, so fall back to the player and key it by type
-	local TypeSuffix = Inventory:getType()
-	return QolcReorderData.GetSort(Player:getModData(), TypeSuffix), Player, TypeSuffix
-end
-
--- Persists a change. Singleplayer writes straight into the save, a multiplayer client
--- owns its own mod data but has to ask the server to write anyone else's.
-local function Save(Owner, Player, Suffix)
-	if not Owner or not isClient() then return end
-
-	-- Covers the player too, IsoPlayer is an IsoObject
-	if instanceof(Owner, "IsoObject") then
-		Owner:transmitModData()
-		return
-	end
-
-	if not instanceof(Owner, "InventoryItem") then return end
-
-	local Sort = QolcReorderData.GetSort(Owner:getModData(), Suffix)
-	local WorldItem = Owner:getWorldItem()
-
-	-- A bag lying on the ground is not in anyone's inventory, so the server is told
-	-- where to look for it instead of who is holding it
-	if WorldItem then
-		local Square = WorldItem:getSquare()
-		if not Square then return end
-
-		sendClientCommand(Player, QolcReorderData.MODULE, QolcReorderData.SAVE_GROUND, {
-			ItemId = Owner:getID(),
-			Suffix = Suffix,
-			Sort = Sort,
-			X = Square:getX(),
-			Y = Square:getY(),
-			Z = Square:getZ()
-		})
-	else
-		sendClientCommand(Player, QolcReorderData.MODULE, QolcReorderData.SAVE_ITEM, {
-			ItemId = Owner:getID(),
-			Suffix = Suffix,
-			Sort = Sort
-		})
-	end
-end
-
 -- Sorting is always on for your own inventory. The loot window is opt in, because
 -- dragging there is easy to do by accident while looting.
 function QolcReorderIsSortingEnabled(Page)
@@ -120,18 +51,14 @@ function QolcReorderIsLocked(Page)
 end
 
 function QolcReorderGetPriority(Player, Inventory, Fallback)
-	local Sort = ResolveSort(Player, Inventory)
-	if Sort and Sort.Priority then return Sort.Priority end
+	local Priority = QolcReorderData.GetPriority(Player, Inventory)
+	if Priority then return Priority end
+
 	return QolcReorderData.PRIORITY_UNSET + (Fallback or 0)
 end
 
-function QolcReorderSetPriority(Player, Inventory, Priority, Manual)
-	local Sort, Owner, Suffix = ResolveSort(Player, Inventory)
-	if not Sort then return end
-
-	Sort.Priority = Priority
-	Sort.Manual = Manual and true or false
-	Save(Owner, Player, Suffix)
+function QolcReorderSetPriority(Player, Inventory, Priority)
+	QolcReorderData.SetPriority(Player, Inventory, Priority)
 end
 
 -- Puts the buttons in their saved order. Rewrites the array itself, then lays the
@@ -180,21 +107,18 @@ function QolcReorderCommitOrder(Page)
 		return Difference < 0
 	end)
 
-	-- Some world objects expose more than one container. Those share a single stored
-	-- entry, since the key is the same object and the same username, so only the first
-	-- is numbered and the rest follow it.
+	-- Some world objects expose more than one container at the same spot, and those
+	-- share one key. Only the first is numbered so the second cannot overwrite it.
 	local Seen = {}
 	local Step = 0
 
 	for _, Entry in ipairs(Ordered) do
-		local Sort, Owner, Suffix = ResolveSort(Player, Entry.Button.inventory)
-		if Sort and not (Owner and Owner ~= Player and Seen[Owner]) then
-			if Owner then Seen[Owner] = true end
+		local Key = QolcReorderData.GetKey(Player, Entry.Button.inventory)
+		if Key and not Seen[Key] then
+			Seen[Key] = true
 
 			Step = Step + QolcReorderData.PRIORITY_STEP
-			Sort.Priority = Step
-			Sort.Manual = false
-			Save(Owner, Player, Suffix)
+			QolcReorderData.SetPriority(Player, Entry.Button.inventory, Step)
 		end
 	end
 end
@@ -309,6 +233,9 @@ function ISInventoryPage:createChildren()
 	OptionsButton.anchorTop = false
 	OptionsButton.borderColor = { r = 0.4, g = 0.4, b = 0.4, a = 1 }
 	OptionsButton:setImage(TextureOptions)
+	-- Vanilla's gears icon is 32 by 29, and the button is half a container button, which
+	-- is 16 pixels on the smallest setting. Without this the image spills out of it.
+	OptionsButton:forceImageSize(Size - 2, Size - 2)
 	OptionsButton:initialise()
 	OptionsButton:instantiate()
 	OptionsButton:setOnClick(function() QolcReorderOpenPriorityWindow(Page) end)
@@ -322,6 +249,7 @@ function ISInventoryPage:createChildren()
 	LockButton.anchorLeft = false
 	LockButton.anchorTop = false
 	LockButton.borderColor = { r = 0.4, g = 0.4, b = 0.4, a = 1 }
+	LockButton:forceImageSize(Size - 2, Size - 2)
 	LockButton:initialise()
 	LockButton:instantiate()
 	LockButton:setOnClick(function() QolcReorderToggleLock(Page) end)

@@ -31,6 +31,11 @@ local TextureSwap = getTexture("media/textures/GUI/qolc_swap.png")
 -- The two buttons are stacked at the right hand end of the bar, past the last slot.
 local BUTTON_SIZE = 18
 
+-- One pixel of padding inside each button. The icons are drawn scaled to this rather
+-- than at their own size, because drawTexture paints a texture at its native dimensions
+-- and anything bigger than the cell spills out across the slots beside it.
+local ICON_SIZE = BUTTON_SIZE - 2
+
 -- How far the mouse has to travel before a press becomes a drag rather than a click.
 local DRAG_THRESHOLD = 16
 
@@ -354,11 +359,13 @@ function ISHotbar:QolcRender()
 
 	self:drawRect(X, 0, BUTTON_SIZE, BUTTON_SIZE, 0.8, 0, 0, 0)
 	self:drawRectBorderStatic(X, 0, BUTTON_SIZE, BUTTON_SIZE, Border.a, Border.r, Border.g, Border.b)
-	self:drawTexture(ModData[LOCK_KEY] and TextureLocked or TextureUnlocked, X + 1, 1, 1, 1, 1, 1)
+	self:drawTextureScaled(ModData[LOCK_KEY] and TextureLocked or TextureUnlocked,
+		X + 1, 1, ICON_SIZE, ICON_SIZE, 1, 1, 1, 1)
 
 	self:drawRect(X, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, 0.8, 0, 0, 0)
 	self:drawRectBorderStatic(X, BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE, Border.a, Border.r, Border.g, Border.b)
-	self:drawTexture(ModData[SWAP_KEY] and TextureInsert or TextureSwap, X + 1, BUTTON_SIZE + 1, 1, 1, 1, 1)
+	self:drawTextureScaled(ModData[SWAP_KEY] and TextureInsert or TextureSwap,
+		X + 1, BUTTON_SIZE + 1, ICON_SIZE, ICON_SIZE, 1, 1, 1, 1)
 
 	if not self.QolcDragging then return end
 

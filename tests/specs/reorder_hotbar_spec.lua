@@ -74,6 +74,42 @@ Test("the bar is widened to fit the two buttons", function()
 	AssertEquals(Hotbar:getWidth(), Slots + 18, "there should be room for the buttons")
 end)
 
+--// Rendering
+Test("the button icons stay inside their cells", function()
+	-- Reported in game: the icons overflowed their 18 pixel buttons and covered the
+	-- slots beside them, because drawTexture paints at the texture's own size.
+	local Hotbar = NewHotbar("Back", "Belt")
+	Hotbar.Drawn = {}
+	Hotbar:render()
+
+	local Found = 0
+	for _, Draw in ipairs(Hotbar.Drawn) do
+		if Draw.Kind == "texture" then
+			Found = Found + 1
+			AssertTrue(Draw.W <= 18 and Draw.H <= 18,
+				"an icon was drawn at " .. tostring(Draw.W) .. "x" .. tostring(Draw.H)
+					.. ", larger than its 18 pixel button")
+		end
+	end
+
+	AssertEquals(Found, 2, "the lock and mode icons should both be drawn")
+end)
+
+Test("the icons sit within the button strip", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	Hotbar.Drawn = {}
+	Hotbar:render()
+
+	local Left = Hotbar.margins + (Hotbar.slotWidth + Hotbar.slotPad) * #Hotbar.availableSlot
+
+	for _, Draw in ipairs(Hotbar.Drawn) do
+		if Draw.Kind == "texture" then
+			AssertTrue(Draw.X >= Left, "an icon was drawn left of the button strip")
+			AssertTrue(Draw.X + Draw.W <= Left + 18, "an icon ran past the right of the strip")
+		end
+	end
+end)
+
 --// Ordering
 Test("swapping two slots holds across a refresh", function()
 	local Hotbar = NewHotbar("Back", "Belt", "Holster")
