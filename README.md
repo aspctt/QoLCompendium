@@ -42,9 +42,9 @@ whatever order suits you. Each container remembers its own place, so a bag keeps
 it after being dropped and picked up again. Sorting the loot window is opt in,
 and either window can be locked once you are happy with it.
 
-**Weapon Condition** - A small bar under each equipped weapon and each item on
-the hotbar, so you can see what is about to break without hovering it. Green
-while healthy, amber under half, red under a quarter.
+**Weapon Condition** - Each equipped weapon and each hotbar slot fills with
+colour to show how much of it is left, so you can see what is about to break
+without hovering it. Green while healthy, amber under half, red under a quarter.
 
 **Propane From Fuel Pumps** - Refill a propane tank at any working fuel pump.
 The base game has no way to refill one at all, so a spent tank is dead weight

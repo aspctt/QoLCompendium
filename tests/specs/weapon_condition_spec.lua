@@ -2,9 +2,9 @@
 --// aspctt - 10.08.2026
 
 --// Helpers
+-- One coloured rectangle per item, filling its box from the bottom in proportion to
+-- what condition is left.
 local function Bars(Panel)
-	-- Two rectangles per bar, the track and the fill. The fill is the one carrying a
-	-- colour, so that is what the assertions look at.
 	local Found = {}
 	for _, Rect in ipairs(Panel.Drawn) do
 		if Rect.R and Rect.R > 0.1 then table.insert(Found, Rect) end
@@ -81,14 +81,33 @@ Test("the vanilla panel still renders underneath", function()
 end)
 
 --// Bar Shape
-Test("the bar fills in proportion to condition", function()
+Test("the fill grows and shrinks with condition", function()
 	local Full = NewPanel(Harness.NewWeapon(10, 10))
 	local Half = NewPanel(Harness.NewWeapon(5, 10))
 
 	Full:render()
 	Half:render()
 
-	AssertNear(Bars(Half)[1].W, Bars(Full)[1].W / 2, 0.5, "half condition, half the bar")
+	AssertNear(Bars(Half)[1].H, Bars(Full)[1].H / 2, 0.5, "half condition, half the box")
+end)
+
+Test("a full weapon fills the whole box", function()
+	local Panel, Player = NewPanel(Harness.NewWeapon(10, 10))
+	Panel:render()
+
+	local Bar = Bars(Panel)[1]
+	AssertEquals(Bar.H, Panel.mainHand.height, "a full weapon should fill top to bottom")
+	AssertEquals(Bar.W, Panel.mainHand.width, "and the full width")
+end)
+
+Test("the fill rises from the bottom", function()
+	local Panel = NewPanel(Harness.NewWeapon(5, 10))
+	Panel:render()
+
+	local Bar = Bars(Panel)[1]
+	local Box = Panel.mainHand
+	AssertNear(Bar.Y + Bar.H, Box.y + Box.height, 0.001, "it should sit against the bottom edge")
+	AssertTrue(Bar.Y > Box.y, "and not reach the top at half condition")
 end)
 
 Test("a nearly broken weapon still shows a sliver", function()
@@ -96,11 +115,11 @@ Test("a nearly broken weapon still shows a sliver", function()
 	local Panel = NewPanel(Harness.NewWeapon(1, 1000))
 	Panel:render()
 
-	AssertTrue(#Bars(Panel) == 1, "a bar should still be drawn")
-	AssertTrue(Bars(Panel)[1].W >= 1, "and be at least a pixel wide")
+	AssertTrue(#Bars(Panel) == 1, "a fill should still be drawn")
+	AssertTrue(Bars(Panel)[1].H >= 1, "and be at least a pixel tall")
 end)
 
-Test("the bar stays inside the box it is given", function()
+Test("the fill stays inside the box it is given", function()
 	local Panel = NewPanel(Harness.NewWeapon(10, 10))
 	Panel:render()
 
@@ -146,7 +165,7 @@ Test("the hotbar draws a bar for each attached item", function()
 		if Draw.Kind == "rect" then Found = Found + 1 end
 	end
 
-	AssertTrue(Found >= 4, "two slots means a track and a fill each, got " .. tostring(Found))
+	AssertTrue(Found >= 2, "one fill per occupied slot, got " .. tostring(Found))
 end)
 
 Test("the hotbar is drawn through the one render override", function()

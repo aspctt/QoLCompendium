@@ -353,16 +353,19 @@ end
 function ISHotbar:QolcRender()
 	ISHotbar.QolcVanillaRender(self)
 
-	-- Condition bars, if that feature is present. Drawn from here rather than by
+	-- Condition fills, if that feature is present. Drawn from here rather than by
 	-- overriding ISHotbar.render a second time, because this file already owns it and
 	-- two overrides of one function is how mods quietly erase each other.
-	if QolcDrawConditionBar then
+	--
+	-- The slot geometry matches vanilla's own loop in ISHotbar:render, which starts at
+	-- margins + 1 and steps by the slot width plus its padding.
+	if QolcDrawCondition then
 		local SlotX = self.margins + 1
 
 		for Index, _Slot in ipairs(self.availableSlot) do
 			local Item = self.attachedItems[Index]
 			if Item then
-				QolcDrawConditionBar(self, SlotX, self.margins + 1, self.slotWidth, self.slotHeight, Item)
+				QolcDrawCondition(self, SlotX, self.margins + 1, self.slotWidth, self.slotHeight, Item)
 			end
 			SlotX = SlotX + self.slotWidth + self.slotPad
 		end

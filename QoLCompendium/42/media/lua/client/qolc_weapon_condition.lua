@@ -16,22 +16,29 @@
 --// the same function is how mods end up silently erasing each other.
 
 --// Tuning
--- Thin enough to sit under an icon without crowding it.
-local BAR_HEIGHT = 3
-local BAR_INSET = 3
+-- The whole slot is the gauge. It fills from the bottom, so how much colour is showing
+-- is how much of the weapon is left, readable at a glance without reading anything.
+--
+-- Translucent because it is drawn over the item icon rather than under it. The hand
+-- slots are child ISImage elements with their own textures, so there is no layer
+-- underneath that can be relied on in both places.
+local FILL_ALPHA = 0.35
+
+-- A nearly broken weapon still shows a sliver, so "almost gone" never looks like
+-- "nothing here".
+local MINIMUM_FILL = 2
 
 -- Condition runs 0 to getConditionMax, which differs per item, so it is always compared
--- as a fraction. Below these the bar turns amber, then red.
+-- as a fraction. Below these the fill turns amber, then red.
 local LEVEL_CAUTION = 0.5
 local LEVEL_DANGER = 0.25
 
--- Green drains out of the bar as the weapon wears, rather than the three being three
+-- Green drains out of the fill as the weapon wears, rather than the three being three
 -- unrelated colours. That way the change reads even to someone who cannot separate red
--- from green, because the bar also gets visibly duller.
-local COLOUR_BACKGROUND = { r = 0, g = 0, b = 0, a = 0.55 }
-local COLOUR_HEALTHY = { r = 0.30, g = 0.78, b = 0.30, a = 0.9 }
-local COLOUR_CAUTION = { r = 0.85, g = 0.68, b = 0.20, a = 0.9 }
-local COLOUR_DANGER = { r = 0.85, g = 0.22, b = 0.22, a = 0.9 }
+-- from green, because the fill also gets visibly duller.
+local COLOUR_HEALTHY = { r = 0.30, g = 0.78, b = 0.30 }
+local COLOUR_CAUTION = { r = 0.85, g = 0.68, b = 0.20 }
+local COLOUR_DANGER = { r = 0.85, g = 0.22, b = 0.22 }
 
 --// Options
 local OPTIONS_ID = "QoLC"
@@ -67,32 +74,22 @@ function QolcConditionEnabled()
 	return Options.Enabled:getValue() and true or false
 end
 
--- Draws the bar along the bottom of the box given. Silently does nothing for an item
--- with no condition, which is most of them.
-function QolcDrawConditionBar(Panel, X, Y, Width, Height, Item)
+-- Fills the box given from the bottom up, in proportion to what is left. Silently does
+-- nothing for an item with no condition, which is most of them.
+function QolcDrawCondition(Panel, X, Y, Width, Height, Item)
 	if not Panel or not QolcConditionEnabled() then return false end
+	if Width <= 0 or Height <= 0 then return false end
 
 	local Fraction = QolcConditionFraction(Item)
 	if not Fraction then return false end
 
-	local BarWidth = Width - (BAR_INSET * 2)
-	if BarWidth <= 0 then return false end
+	local Filled = Height * Fraction
+	if Fraction > 0 and Filled < MINIMUM_FILL then Filled = MINIMUM_FILL end
+	if Filled <= 0 then return false end
+	if Filled > Height then Filled = Height end
 
-	local BarX = X + BAR_INSET
-	local BarY = Y + Height - BAR_INSET - BAR_HEIGHT
-
-	local Back = COLOUR_BACKGROUND
-	Panel:drawRect(BarX, BarY, BarWidth, BAR_HEIGHT, Back.a, Back.r, Back.g, Back.b)
-
-	-- A weapon on its last legs still shows a sliver, so "nearly gone" reads
-	-- differently from "gone"
-	local Filled = BarWidth * Fraction
-	if Fraction > 0 and Filled < 1 then Filled = 1 end
-
-	if Filled > 0 then
-		local Colour = ColourFor(Fraction)
-		Panel:drawRect(BarX, BarY, Filled, BAR_HEIGHT, Colour.a, Colour.r, Colour.g, Colour.b)
-	end
+	local Colour = ColourFor(Fraction)
+	Panel:drawRect(X, Y + Height - Filled, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
 
 	return true
 end
@@ -113,7 +110,7 @@ function ISEquippedItem:render()
 	for _, Hand in ipairs(Hands) do
 		local Box = Hand.Box
 		if Box and Hand.Item then
-			QolcDrawConditionBar(self, Box.x, Box.y, Box.width, Box.height, Hand.Item)
+			QolcDrawCondition(self, Box.x, Box.y, Box.width, Box.height, Hand.Item)
 		end
 	end
 end
