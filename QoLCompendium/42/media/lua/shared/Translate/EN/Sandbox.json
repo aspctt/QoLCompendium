@@ -7,5 +7,7 @@
     "Sandbox_QoLC_AdrenalineCrashSpeed": "Adrenaline Crash Speed",
     "Sandbox_QoLC_AdrenalineCrashSpeed_tooltip": "How quickly drowsiness returns once the character calms down.",
     "Sandbox_QoLC_AdrenalineCrashPenalty": "Adrenaline Crash Penalty",
-    "Sandbox_QoLC_AdrenalineCrashPenalty_tooltip": "How much extra fatigue is paid back on top of what adrenaline borrowed."
+    "Sandbox_QoLC_AdrenalineCrashPenalty_tooltip": "How much extra fatigue is paid back on top of what adrenaline borrowed.",
+    "Sandbox_QoLC_PropanePumpCost": "Propane Cost At A Pump",
+    "Sandbox_QoLC_PropanePumpCost_tooltip": "Fuel drawn from a pump to fill one propane tank. A jerry can holds 10, a pump holds 22000."
 }

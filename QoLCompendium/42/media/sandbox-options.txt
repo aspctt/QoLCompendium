@@ -41,3 +41,15 @@ option QoLC.AdrenalineCrashPenalty
     page = QoLC,
     translation = QoLC_AdrenalineCrashPenalty,
 }
+
+/*
+ * Pump units to fill one propane tank from empty. A pump holds 22000 and a jerry can
+ * takes 10, so the default of 20 makes a tank cost two cans of fuel and leaves a full
+ * pump good for around a thousand of them.
+ */
+option QoLC.PropanePumpCost
+{
+    type = integer, min = 1, max = 2000, default = 20,
+    page = QoLC,
+    translation = QoLC_PropanePumpCost,
+}

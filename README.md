@@ -42,6 +42,10 @@ whatever order suits you. Each container remembers its own place, so a bag keeps
 it after being dropped and picked up again. Sorting the loot window is opt in,
 and either window can be locked once you are happy with it.
 
+**Propane From Fuel Pumps** - Refill a propane tank at any working fuel pump.
+The base game has no way to refill one at all, so a spent tank is dead weight
+and welding has a hard ceiling. Costs pump fuel, and the server sets how much.
+
 **Food Categories** - Splits the inventory's single Food heading into food that
 spoils and food that keeps. The base game files all 707 food items together,
 which buries the only question that matters when you open a fridge.
@@ -92,6 +96,7 @@ ran at all.
 | Reorder Containers | [Reorder Containers - Backpack Orders](https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885) | MIT licensed. Rewritten around a build 42 event the original predates, which removed three of its patches. |
 | Reorder The Hotbar | [Reorder The Hotbar](https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337) | MIT licensed. Rewritten. Build 42 added the key lookup and the order saving it had to carry itself. |
 | Food Categories | [Better Sorting](https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159) by ChobitsCrazy | Idea only, see below. Written from scratch against the base game's own data. |
+| Propane From Fuel Pumps | [Pumps Have Propane](https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406) by Uncle Griz | Rewritten. Build 42 rebuilt fuel pumps as entities, so only the idea carried over. |
 
 **A note on Better Sorting.** It is GPL-3.0, which cannot be combined with this
 project's licence, so none of its code or data is used or referred to here. Only

@@ -241,7 +241,30 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return nil
 	end
 
+	-- A Java ArrayList, indexed from zero through get()
+	function Container:getItems()
+		local Items = self.Items
+		local List = {}
+		function List:size() return #Items end
+		function List:get(Index) return Items[Index + 1] end
+		return List
+	end
+
 	return Container
+end
+
+-- A propane tank, which is a drainable measured in uses rather than a fluid container
+function Harness.NewPropaneTank(Fraction)
+	local Tank = Harness.NewDrainable(5000, Fraction)
+	Tank.Class = "InventoryItem"
+	Tank.Id = Harness.NextItemId
+	Harness.NextItemId = Harness.NextItemId + 1
+
+	function Tank:getFullType() return "Base.PropaneTank" end
+	function Tank:getName() return "Propane Tank" end
+	function Tank:getID() return self.Id end
+
+	return Tank
 end
 
 Harness.NextItemId = 1
@@ -330,6 +353,13 @@ function Harness.NewPlayer(Number, IsLocal)
 
 	-- A bag being carried rather than worn provides no hotbar slots
 	function Player:isHandItem(Item) return self.HandItem == Item end
+
+	-- Enough of the character surface for a timed action to run
+	function Player:faceThisObject() end
+	function Player:setMetabolicTarget() end
+	function Player:playSound(Name) return Name end
+	function Player:stopOrTriggerSound() end
+	function Player:isTimedActionInstant() return false end
 
 	function Player:getDescriptor()
 		local Descriptor = {}
@@ -1423,6 +1453,108 @@ function Harness.SlotOrder(Hotbar)
 	end
 	return Names
 end
+
+--// World Objects
+-- A fuel pump. Vanilla recognises one by getPipedFuelAmount() > 0, which covers both
+-- having power and having fuel left, so that is the whole of what a pump needs here.
+function Harness.NewFuelPump(Fuel)
+	local Pump = {}
+	Pump.Class = "IsoObject"
+	Pump.Fuel = Fuel or 22000
+
+	function Pump:getPipedFuelAmount() return self.Fuel end
+	function Pump:setPipedFuelAmount(Value) self.Fuel = Value end
+	function Pump:getSquare() return nil end
+
+	return Pump
+end
+
+-- Anything else on the square, so a spec can prove a right click that lands on a wall
+-- or a sign still finds the pump beside it.
+function Harness.NewSceneryWith(Neighbours)
+	local Objects = Neighbours or {}
+
+	local Square = {}
+	function Square:getObjects()
+		local List = {}
+		function List:size() return #Objects end
+		function List:get(Index) return Objects[Index + 1] end
+		return List
+	end
+
+	local Object = {}
+	Object.Class = "IsoObject"
+	function Object:getSquare() return Square end
+
+	return Object
+end
+
+--// Timed Actions
+-- Queued actions are recorded rather than run. A spec performs them by hand so it can
+-- check the state before and after.
+Harness.ActionQueue = {}
+
+ISTimedActionQueue = {}
+
+function ISTimedActionQueue.add(Action)
+	table.insert(Harness.ActionQueue, Action)
+	return Action
+end
+
+ISBaseTimedAction = {}
+ISBaseTimedAction.__index = ISBaseTimedAction
+
+function ISBaseTimedAction:derive(Name)
+	local Class = {}
+	Class.__index = Class
+	Class.Name = Name
+	Class.derive = ISBaseTimedAction.derive
+	setmetatable(Class, { __index = ISBaseTimedAction })
+	return Class
+end
+
+function ISBaseTimedAction.new(Class, Character)
+	local Action = setmetatable({}, Class)
+	Action.character = Character
+	return Action
+end
+
+function ISBaseTimedAction:perform() self.Performed = true end
+function ISBaseTimedAction:stop() self.Stopped = true end
+function ISBaseTimedAction:setActionAnim() end
+
+--// Context Menus
+-- Records what a mod added, so a spec can find an option by name and click it.
+local function NewContextMenu()
+	local Menu = {}
+	Menu.Options = {}
+
+	function Menu:addOption(Name, Target, Handler)
+		local Option = { name = Name, Handler = Handler }
+		function Option:Click() if self.Handler then self.Handler() end end
+		table.insert(self.Options, Option)
+		return Option
+	end
+
+	function Menu:addSubMenu(Option, Sub) Option.SubMenu = Sub end
+	function Menu:addGetUpOption(Name, Target, Handler) return self:addOption(Name, Target, Handler) end
+
+	function Menu:Find(Name)
+		for _, Option in ipairs(self.Options) do
+			if Option.name == Name then return Option end
+		end
+		return nil
+	end
+
+	return Menu
+end
+
+Harness.NewContextMenu = NewContextMenu
+
+ISContextMenu = {}
+function ISContextMenu:getNew() return NewContextMenu() end
+
+Metabolics = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
 
 --// Player Windows
 -- Keyed "<playerNum>:inventory" and "<playerNum>:loot", which is how a spec decides
