@@ -33,6 +33,12 @@ local FILL_ALPHA = 0.55
 -- "nothing here".
 local MINIMUM_FILL = 2
 
+-- How much of a hand slot the circle actually occupies. Measured from vanilla's own
+-- artwork rather than guessed: at 128 the main hand draws a 118 wide circle in a 128 box
+-- and the off hand an 81 wide one in a box 92 tall. The tighter of the two is used, so
+-- the fill sits inside the ring in both instead of bleeding a pixel or two past it.
+local DISC_SCALE = 0.88
+
 -- Condition runs 0 to getConditionMax, which differs per item, so it is always compared
 -- as a fraction. Below these the fill turns amber, then red.
 local LEVEL_CAUTION = 0.5
@@ -91,24 +97,37 @@ function QolcDrawCondition(Panel, X, Y, Width, Height, Item, Round)
 	local Fraction = QolcConditionFraction(Item)
 	if not Fraction then return false end
 
-	local Filled = Height * Fraction
-	if Fraction > 0 and Filled < MINIMUM_FILL then Filled = MINIMUM_FILL end
-	if Filled <= 0 then return false end
-	if Filled > Height then Filled = Height end
-
 	local Colour = ColourFor(Fraction)
-	local FillY = Y + Height - Filled
 
 	if Round and TextureDisc then
+		-- A circle centred in the box, never the box stretched to fit. The off hand's
+		-- box is three quarters as tall as it is wide, so filling it would give an
+		-- ellipse rather than the round slot the player sees.
+		local Diameter = math.min(Width, Height) * DISC_SCALE
+		local DiscX = X + ((Width - Diameter) / 2)
+		local DiscY = Y + ((Height - Diameter) / 2)
+
+		local Filled = Diameter * Fraction
+		if Fraction > 0 and Filled < MINIMUM_FILL then Filled = MINIMUM_FILL end
+		if Filled > Diameter then Filled = Diameter end
+		if Filled <= 0 then return false end
+
 		-- Draw the whole disc but let only the filled band through, which gives a
-		-- circle filling from the bottom rather than a rectangle with round ends
-		Panel:setStencilRect(X, FillY, Width, Filled)
-		Panel:drawTextureScaled(TextureDisc, X, Y, Width, Height, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+		-- circle filling from the bottom rather than a shrinking dot
+		Panel:setStencilRect(DiscX, DiscY + Diameter - Filled, Diameter, Filled)
+		Panel:drawTextureScaled(TextureDisc, DiscX, DiscY, Diameter, Diameter,
+			FILL_ALPHA, Colour.r, Colour.g, Colour.b)
 		Panel:clearStencilRect()
-	else
-		Panel:drawRect(X, FillY, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+
+		return true
 	end
 
+	local Filled = Height * Fraction
+	if Fraction > 0 and Filled < MINIMUM_FILL then Filled = MINIMUM_FILL end
+	if Filled > Height then Filled = Height end
+	if Filled <= 0 then return false end
+
+	Panel:drawRect(X, Y + Height - Filled, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
 	return true
 end
 

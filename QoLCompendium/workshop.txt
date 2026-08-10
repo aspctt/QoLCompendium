@@ -1,0 +1,6 @@
+version=1
+id=3781012462
+title=QoL Compendium
+description=Quality of life mods that have not been updated for build 42, rebuilt and merged into one.
+tags=Build 42;Clothing/Armor;Interface;Multiplayer;Textures;QoL;WIP
+visibility=public

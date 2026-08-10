@@ -75,9 +75,14 @@ client quietly running its own.
 Installation
 ------------
 
-Copy the `QoLCompendium` folder into `%UserProfile%\Zomboid\mods\`, then enable
-it in the mod list. For a server, add `QoLCompendium` to `Mods=` in your server
-config.
+Subscribe on the Steam Workshop, then enable it in the mod list.
+
+To install by hand, copy `QoLCompendium/Contents/mods/QoLCompendium` into
+`%UserProfile%\Zomboid\mods\`. For a server, add `QoLCompendium` to `Mods=` in
+your server config, and the Workshop id `3781012462` to `WorkshopItems=`.
+
+This repository is laid out the way Steam expects a Workshop item, so the mod
+itself sits at `QoLCompendium/Contents/mods/QoLCompendium/`.
 
 
 Building on other people's work

@@ -136,23 +136,68 @@ Test("the fill grows and shrinks with condition", function()
 	AssertNear(Bars(Half)[1].H, Bars(Full)[1].H / 2, 0.5, "half condition, half the box")
 end)
 
-Test("a full weapon fills the whole box", function()
-	local Panel, Player = NewPanel(Harness.NewWeapon(10, 10))
+Test("a full weapon fills the whole disc", function()
+	local Panel = NewPanel(Harness.NewWeapon(10, 10))
 	Panel:render()
 
 	local Bar = Bars(Panel)[1]
-	AssertEquals(Bar.H, Panel.mainHand.height, "a full weapon should fill top to bottom")
-	AssertEquals(Bar.W, Panel.mainHand.width, "and the full width")
+	AssertEquals(Bar.W, Bar.H, "the fill should be as wide as it is tall")
 end)
 
-Test("the fill rises from the bottom", function()
+Test("the fill rises from the bottom of the disc", function()
 	local Panel = NewPanel(Harness.NewWeapon(5, 10))
 	Panel:render()
 
 	local Bar = Bars(Panel)[1]
-	local Box = Panel.mainHand
-	AssertNear(Bar.Y + Bar.H, Box.y + Box.height, 0.001, "it should sit against the bottom edge")
-	AssertTrue(Bar.Y > Box.y, "and not reach the top at half condition")
+	local Full = NewPanel(Harness.NewWeapon(10, 10))
+	Full:render()
+	local Disc = Bars(Full)[1]
+
+	AssertNear(Bar.Y + Bar.H, Disc.Y + Disc.H, 0.001, "it should sit on the bottom of the disc")
+	AssertTrue(Bar.Y > Disc.Y, "and not reach the top at half condition")
+end)
+
+Test("the off hand fill is a circle, not an ellipse", function()
+	-- The off hand box is three quarters as tall as it is wide. Filling the box would
+	-- squash the disc, which is what it looked like in game.
+	--
+	-- The texture itself is checked here, not the clip. Clipping a stretched disc to a
+	-- round band still draws an ellipse, and reading only the clip would miss it.
+	local Panel = NewPanel(Harness.NewWeapon(10, 10), Harness.NewWeapon(10, 10))
+	Panel:render()
+
+	AssertTrue(Panel.offHand.width ~= Panel.offHand.height, "the box itself is not square")
+
+	local Found = 0
+	for _, Draw in ipairs(Panel.Drawn) do
+		if Draw.Kind == "texture" then
+			Found = Found + 1
+			AssertNear(Draw.W, Draw.H, 0.001,
+				"the disc drawn for fill " .. Found .. " should be square, not squashed")
+			AssertNotNil(Draw.Stencil, "and clipped to how much is filled")
+			AssertNear(Draw.X, Draw.Stencil.X, 0.001, "the clip should sit on the disc")
+			AssertNear(Draw.W, Draw.Stencil.W, 0.001, "and be as wide as it")
+		end
+	end
+
+	AssertEquals(Found, 2, "one disc per hand")
+end)
+
+Test("the fill sits inside the slot's own circle", function()
+	-- Vanilla draws the circle inset from the edge of its box, so filling the whole box
+	-- spills a pixel or two past the ring.
+	local Panel = NewPanel(Harness.NewWeapon(10, 10), Harness.NewWeapon(10, 10))
+	Panel:render()
+
+	local Boxes = { Panel.mainHand, Panel.offHand }
+	for Index, Bar in ipairs(Bars(Panel)) do
+		local Box = Boxes[Index]
+		local Smallest = math.min(Box.width, Box.height)
+
+		AssertTrue(Bar.W < Smallest, "fill " .. Index .. " should be inset from the box")
+		AssertTrue(Bar.X > Box.x, "and centred, not flush left")
+		AssertTrue(Bar.X + Bar.W < Box.x + Box.width, "nor flush right")
+	end
 end)
 
 Test("a nearly broken weapon still shows a sliver", function()

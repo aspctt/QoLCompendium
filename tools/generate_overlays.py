@@ -45,9 +45,12 @@ SIZES = {
                                             # drawn crystals were dropped
 }
 
+# The repository is laid out the way Steam expects a Workshop item, so the mod itself
+# sits several levels down: <item>/Contents/mods/<modid>/.
 OUT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "QoLCompendium", "common", "media", "textures", "GUI",
+    "QoLCompendium", "Contents", "mods", "QoLCompendium",
+    "common", "media", "textures", "GUI",
 )
 
 

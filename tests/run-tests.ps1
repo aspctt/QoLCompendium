@@ -39,7 +39,9 @@ function Find-GameDir {
 $GameDir  = Find-GameDir
 $Jar      = Join-Path $GameDir 'projectzomboid.jar'
 $Root     = Split-Path -Parent $PSScriptRoot
-$ModRoot  = Join-Path $Root 'QoLCompendium'
+# The repository is laid out the way Steam expects a Workshop item, so the mod itself is
+# several levels down. Everything below, and TestRunner, works from this one path.
+$ModRoot  = Join-Path $Root 'QoLCompendium\Contents\mods\QoLCompendium'
 $Harness  = Join-Path $PSScriptRoot 'harness'
 $Specs    = Join-Path $PSScriptRoot 'specs'
 $Build    = Join-Path $PSScriptRoot 'build'

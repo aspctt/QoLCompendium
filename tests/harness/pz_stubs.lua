@@ -1539,8 +1539,12 @@ function Harness.NewEquippedItemPanel(Player)
 	setmetatable(Panel, ISEquippedItem)
 
 	Panel.chr = Player
-	Panel.mainHand = { x = 0, y = 0, width = 40, height = 40 }
-	Panel.offHand = { x = 0, y = 50, width = 40, height = 40 }
+
+	-- Vanilla's own proportions. The main hand box is square and the off hand box is
+	-- three quarters as tall as it is wide, TEXTURE_HEIGHT = TEXTURE_WIDTH * 0.75, which
+	-- is what turns a box filling fill into an ellipse on the second slot.
+	Panel.mainHand = { x = 0, y = 0, width = 48, height = 48 }
+	Panel.offHand = { x = 0, y = 60, width = 48, height = 36 }
 	Panel.Drawn = {}
 
 	function Panel:drawRect(X, Y, W, H, A, R, G, B)

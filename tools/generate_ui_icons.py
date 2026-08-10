@@ -6,8 +6,8 @@ options button, so that one is used directly rather than reproduced here.
 The glyphs are drawn rather than bundled, which keeps the project's rule that no artwork
 comes from another mod unless it genuinely cannot be reproduced. A padlock plainly can.
 
-Output: QoLCompendium/common/media/textures/GUI/qolc_lock_closed.png
-        QoLCompendium/common/media/textures/GUI/qolc_lock_open.png
+Output goes into the mod's own texture folder, which sits inside the Workshop layout at
+QoLCompendium/Contents/mods/QoLCompendium/common/media/textures/GUI/.
 
 Run:    python tools/generate_ui_icons.py
 """
@@ -34,9 +34,12 @@ DISC_SIZE = 128
 COLOUR_CLOSED = (222, 222, 222, 255)
 COLOUR_OPEN = (150, 150, 150, 255)
 
+# The repository is laid out the way Steam expects a Workshop item, so the mod itself
+# sits several levels down: <item>/Contents/mods/<modid>/.
 OUTPUT = (
     Path(__file__).resolve().parent.parent
-    / "QoLCompendium" / "common" / "media" / "textures" / "GUI"
+    / "QoLCompendium" / "Contents" / "mods" / "QoLCompendium"
+    / "common" / "media" / "textures" / "GUI"
 )
 
 

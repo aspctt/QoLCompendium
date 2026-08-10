@@ -33,4 +33,4 @@
 *.class binary
 
 # Generated, so diffing them is noise. The generator is the thing to review.
-QoLCompendium/common/media/textures/GUI/qolc_*.png binary -diff
+QoLCompendium/Contents/mods/QoLCompendium/common/media/textures/GUI/qolc_*.png binary -diff

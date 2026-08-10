@@ -1,9 +1,9 @@
 Reorder Containers, held back
 =============================
 
-Nothing in this folder is loaded. Project Zomboid only reads
-`QoLCompendium/42/media/...` and `QoLCompendium/common/media/...`, so these files sit
-outside the mod entirely. They are kept here rather than deleted because the feature is
+Nothing in this folder is loaded. The mod itself lives at
+`QoLCompendium/Contents/mods/QoLCompendium/`, and Project Zomboid only reads `42/media`
+and `common/media` inside it, so these files sit outside the mod entirely. They are kept here rather than deleted because the feature is
 close to working and the investigation behind it was long.
 
 Why it is out
@@ -42,14 +42,16 @@ version of the feature could ship with typing a number and no dragging at all.
 Restoring
 ---------
 
-    qolc_reorder_data.lua             -> QoLCompendium/42/media/lua/shared/
-    qolc_reorder_containers.lua       -> QoLCompendium/42/media/lua/client/
-    qolc_reorder_priority_window.lua  -> QoLCompendium/42/media/lua/client/
+The first three are relative to `QoLCompendium/Contents/mods/QoLCompendium/`, the spec is
+relative to the repository root.
+
+    qolc_reorder_data.lua             -> 42/media/lua/shared/
+    qolc_reorder_containers.lua       -> 42/media/lua/client/
+    qolc_reorder_priority_window.lua  -> 42/media/lua/client/
     reorder_containers_spec.lua       -> tests/specs/
 
 The five `UI_QoLC_Reorder_*` keys also need putting back into
-`QoLCompendium/42/media/lua/shared/Translate/EN/UI.json`. They are listed at the bottom
-of this file.
+`42/media/lua/shared/Translate/EN/UI.json`. They are listed at the bottom of this file.
 
     "UI_QoLC_Reorder_Locked": "Container order is locked. Click to unlock and allow dragging.",
     "UI_QoLC_Reorder_Unlocked": "Container order is unlocked. Drag the buttons to reorder them.",
