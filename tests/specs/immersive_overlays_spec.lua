@@ -33,9 +33,9 @@ local function ExpectedBlend(Rate, FrameCount)
 	return FrameCount * Rate
 end
 
--- Every overlay is drawn at half what its strength asks for, so a slider at 100 is a
--- gentler ceiling than the original mod's. See ALPHA_SCALE in the mod.
-local ALPHA_SCALE = 0.5
+-- Every overlay is drawn at sixty percent of what its strength asks for, so a slider at
+-- 100 is a gentler ceiling than the original mod's. See ALPHA_SCALE in the mod.
+local ALPHA_SCALE = 0.6
 
 local function ExpectedAlpha(Blend, Strength)
 	return (Blend / 4) * (Strength / 100) * ALPHA_SCALE

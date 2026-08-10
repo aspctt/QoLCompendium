@@ -15,11 +15,12 @@ local OverlayPain = getTexture("media/textures/GUI/qolc_pain.png")
 -- Strength is a percentage supplied by mod options, 100 being the original mod's opacity.
 local MOODLE_LEVEL_MAX = 4
 
--- Every overlay is drawn at half what its strength slider asks for. The original mod's
--- opacities were heavy enough to fight the game underneath them, and halving reads far
--- better without touching the sliders: 100 percent still means "as strong as this goes",
--- it is just a gentler ceiling. Kept as one number so the whole set moves together.
-local ALPHA_SCALE = 0.5
+-- Every overlay is drawn at sixty percent of what its strength slider asks for. The
+-- original mod's opacities were heavy enough to fight the game underneath them, and
+-- pulling them back reads far better without touching the sliders: 100 percent still
+-- means "as strong as this goes", it is just a gentler ceiling. Kept as one number so
+-- the whole set moves together.
+local ALPHA_SCALE = 0.6
 
 local RATE_HYPERTHERMIA = 0.01
 local RATE_HYPOTHERMIA = 0.003

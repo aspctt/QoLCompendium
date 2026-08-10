@@ -91,6 +91,17 @@ Test("the tooltip is grown to make room for the line", function()
 		"without this the line would be drawn past the bottom border")
 end)
 
+Test("the line lines up with every other row", function()
+	-- Reported in game: the fabric line sat a couple of pixels left of the stat rows.
+	-- Vanilla draws those at the tooltip's own padLeft, so hardcoding anything else
+	-- drifts the moment that padding is not what was assumed.
+	local Panel = Harness.NewItemTooltip(Harness.NewGarment("Cotton"))
+	Panel.tooltip.padLeft = 11
+	Panel:render()
+
+	AssertEquals(Line(Panel).X, 11, "the line should follow the tooltip's own left padding")
+end)
+
 Test("the line sits inside the box", function()
 	local Panel = Render("Cotton")
 	local Text = Line(Panel)

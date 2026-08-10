@@ -1510,6 +1510,10 @@ local function NewObjectTooltip()
 	local Tooltip = {}
 	Tooltip.Texts = {}
 
+	-- Vanilla draws the item name and every stat row at this offset, so anything a mod
+	-- adds has to use it too or the line sits in its own column.
+	Tooltip.padLeft = 5
+
 	function Tooltip:DrawText(Font, Text, X, Y, R, G, B, A)
 		table.insert(self.Texts, { Font = Font, Text = Text, X = X, Y = Y, R = R, G = G, B = B, A = A })
 	end

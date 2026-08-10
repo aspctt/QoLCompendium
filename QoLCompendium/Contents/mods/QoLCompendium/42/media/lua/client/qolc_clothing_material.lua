@@ -27,7 +27,11 @@ local NAME_PREFIX = "IGUI_QoLC_Fabric_"
 -- Padding around the row we add, matching the gap vanilla leaves at the bottom of a
 -- tooltip so the line does not sit flush against the border.
 local ROW_PADDING = 4
-local ROW_INSET = 5
+
+-- Only used if the tooltip does not report its own left padding. Vanilla draws the item
+-- name and every stat row at padLeft, so reading that field is what keeps our line in
+-- the same column as the rest instead of a couple of pixels adrift.
+local FALLBACK_INSET = 5
 
 -- Each fabric reads as itself. Leather is tan, denim is denim, and cotton is a bright
 -- near white so it stands out from the grey the rest of a tooltip is written in rather
@@ -98,6 +102,8 @@ function ISToolTipInv:render()
 
 	if not Content then return end
 
-	self.tooltip:DrawText(GetFont(), Text, ROW_INSET, Content - ROW_PADDING,
+	local Inset = self.tooltip.padLeft or FALLBACK_INSET
+
+	self.tooltip:DrawText(GetFont(), Text, Inset, Content - ROW_PADDING,
 		Colour.r, Colour.g, Colour.b, 1)
 end
