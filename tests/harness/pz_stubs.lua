@@ -638,6 +638,17 @@ Harness.ScriptItems = {
 	-- Not food, so it must be left exactly as vanilla filed it
 	["Base.Pan"] = { DisplayCategory = "Cooking" },
 	["Base.Axe"] = { DisplayCategory = "ToolWeapon" },
+
+	-- Clothing, seeded from the three fabric types build 42 defines. RippedSheets is one
+	-- of only three vanilla items carrying both a fabric and a tooltip of its own, which
+	-- must not be overwritten.
+	["Base.Tshirt"] = { FabricType = "Cotton" },
+	["Base.Jeans"] = { FabricType = "Denim" },
+	["Base.JacketLeather"] = { FabricType = "Leather" },
+	["Base.RippedSheets"] = { FabricType = "Cotton", Tooltip = "Tooltip_RippedSheets" },
+
+	-- A fabric the game might add later, with no translation of ours to show for it
+	["Base.SilkShirt"] = { FabricType = "Silk" },
 }
 
 local function NewScriptItem(Name)
@@ -651,6 +662,8 @@ local function NewScriptItem(Name)
 	function Item:getFullName() return Name end
 
 	function Item:getDisplayCategory() return Definition.DisplayCategory end
+	function Item:getFabricType() return Definition.FabricType end
+	function Item:getTooltip() return Definition.Tooltip end
 
 	-- Zero on anything that does not spoil, which is how the game distinguishes tinned
 	-- food from fresh

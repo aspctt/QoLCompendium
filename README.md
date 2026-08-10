@@ -45,6 +45,10 @@ without hovering it. Green while healthy, amber under half, red under a quarter.
 The base game has no way to refill one at all, so a spent tank is dead weight
 and welding has a hard ceiling. Costs pump fuel, and the server sets how much.
 
+**Clothing Material** - Every garment's tooltip says what it is made of. The
+game already tracks whether something is cotton, denim or leather, and uses it
+for patching and for what the garment rips into, but never tells you.
+
 **Food Categories** - Splits the inventory's single Food heading into food that
 spoils and food that keeps. The base game files all 707 food items together,
 which buries the only question that matters when you open a fridge.
@@ -96,6 +100,7 @@ ran at all.
 | Food Categories | [Better Sorting](https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159) by ChobitsCrazy | Idea only, see below. Written from scratch against the base game's own data. |
 | Propane From Fuel Pumps | [Pumps Have Propane](https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406) by Uncle Griz | Rewritten. Build 42 rebuilt fuel pumps as entities, so only the idea carried over. |
 | Weapon Condition | [Weapon Condition Indicator](https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426) by NoctisFalco | Idea only, see below. Built without reading its code. |
+| Clothing Material | [Show Clothes Material](https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845) | Rewritten. Uses the base game's own tooltip field, so it overrides no interface code. |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,

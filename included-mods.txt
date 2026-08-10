@@ -9,7 +9,7 @@ Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id
 CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507
 Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
-Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043
+Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
 Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451
 Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- READ NOTES IN FOLDER
@@ -29,12 +29,12 @@ Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/
 Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
-Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845
+Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
 Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- PERMISSION GRANTED (CREDIT REQUIRED)
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
-Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874
+Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
 Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE
