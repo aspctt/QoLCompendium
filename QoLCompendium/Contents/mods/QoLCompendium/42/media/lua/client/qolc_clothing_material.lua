@@ -29,12 +29,13 @@ local NAME_PREFIX = "IGUI_QoLC_Fabric_"
 local ROW_PADDING = 4
 local ROW_INSET = 5
 
--- Each fabric reads as itself. Leather is tan, denim is denim, cotton is an unbleached
--- off white kept well clear of the dark tooltip background.
+-- Each fabric reads as itself. Leather is tan, denim is denim, and cotton is a bright
+-- near white so it stands out from the grey the rest of a tooltip is written in rather
+-- than blending into it. The faint warmth is what keeps it from being flat white.
 local COLOURS = {
 	Leather = { r = 0.80, g = 0.52, b = 0.25 },
 	Denim = { r = 0.42, g = 0.58, b = 0.82 },
-	Cotton = { r = 0.90, g = 0.86, b = 0.74 }
+	Cotton = { r = 0.98, g = 0.97, b = 0.92 }
 }
 
 -- Anything the game adds later still gets a line, just in the default tooltip white

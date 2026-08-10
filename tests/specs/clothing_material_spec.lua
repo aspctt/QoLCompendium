@@ -61,9 +61,11 @@ Test("each fabric reads as itself", function()
 	-- Denim is blue, so the reverse
 	AssertTrue(Denim.B > Denim.R, "denim should be blue")
 
-	-- Cotton is a pale off white, so bright and near neutral
-	AssertTrue(Cotton.R > 0.8 and Cotton.G > 0.8, "cotton should be pale")
-	AssertTrue(math.abs(Cotton.R - Cotton.B) < 0.25, "and close to neutral")
+	-- Cotton is a bright near white, so it stands clear of the grey the rest of the
+	-- tooltip is written in rather than sitting close to it
+	AssertTrue(Cotton.R > 0.95 and Cotton.G > 0.95, "cotton should be bright")
+	AssertTrue(math.abs(Cotton.R - Cotton.B) < 0.15, "and near neutral, with only a hint of warmth")
+	AssertTrue(Cotton.R > Cotton.B, "warm rather than cold")
 end)
 
 Test("every fabric is readable against a dark tooltip", function()

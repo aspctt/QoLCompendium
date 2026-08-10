@@ -15,6 +15,12 @@ local OverlayPain = getTexture("media/textures/GUI/qolc_pain.png")
 -- Strength is a percentage supplied by mod options, 100 being the original mod's opacity.
 local MOODLE_LEVEL_MAX = 4
 
+-- Every overlay is drawn at half what its strength slider asks for. The original mod's
+-- opacities were heavy enough to fight the game underneath them, and halving reads far
+-- better without touching the sliders: 100 percent still means "as strong as this goes",
+-- it is just a gentler ceiling. Kept as one number so the whole set moves together.
+local ALPHA_SCALE = 0.5
+
 local RATE_HYPERTHERMIA = 0.01
 local RATE_HYPOTHERMIA = 0.003
 local RATE_PAIN_FADE = 0.02
@@ -51,7 +57,7 @@ local function GetAlpha(BlendCurrent, StrengthOption)
 	local Strength = StrengthOption and StrengthOption:getValue() or 100
 	if Strength <= 0 then return nil end
 
-	return (BlendCurrent / MOODLE_LEVEL_MAX) * (Strength / 100)
+	return (BlendCurrent / MOODLE_LEVEL_MAX) * (Strength / 100) * ALPHA_SCALE
 end
 
 local function OnPreUIDraw()
