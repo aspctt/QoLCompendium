@@ -370,11 +370,13 @@ end
 
 --// Rendering
 function ISHotbar:QolcRender()
-	ISHotbar.QolcVanillaRender(self)
-
 	-- Condition fills, if that feature is present. Drawn from here rather than by
 	-- overriding ISHotbar.render a second time, because this file already owns it and
 	-- two overrides of one function is how mods quietly erase each other.
+	--
+	-- Before the vanilla render, so the colour sits behind the item icon instead of
+	-- washing over it. Vanilla only draws slot borders and the icon itself, so there is
+	-- nothing underneath that would hide it.
 	--
 	-- The slot geometry matches vanilla's own loop in ISHotbar:render, which starts at
 	-- margins + 1 and steps by the slot width plus its padding.
@@ -389,6 +391,8 @@ function ISHotbar:QolcRender()
 			SlotX = SlotX + self.slotWidth + self.slotPad
 		end
 	end
+
+	ISHotbar.QolcVanillaRender(self)
 
 	local ModData = self.character:getModData()
 	local X = GetButtonsX(self)

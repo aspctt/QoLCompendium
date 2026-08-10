@@ -2,12 +2,20 @@
 --// aspctt - 10.08.2026
 
 --// Helpers
--- One coloured rectangle per item, filling its box from the bottom in proportion to
--- what condition is left.
+-- One coloured fill per item. The hand slots are round, so those are a disc clipped to
+-- the filled band rather than a rectangle; the clip is what carries the shape, so that
+-- is what the geometry assertions read.
 local function Bars(Panel)
 	local Found = {}
-	for _, Rect in ipairs(Panel.Drawn) do
-		if Rect.R and Rect.R > 0.1 then table.insert(Found, Rect) end
+	for _, Draw in ipairs(Panel.Drawn) do
+		if Draw.R and Draw.R > 0.1 then
+			local Shape = Draw.Stencil or Draw
+			table.insert(Found, {
+				X = Shape.X, Y = Shape.Y, W = Shape.W, H = Shape.H,
+				R = Draw.R, G = Draw.G, B = Draw.B,
+				Kind = Draw.Kind, Texture = Draw.Texture
+			})
+		end
 	end
 	return Found
 end
@@ -73,11 +81,48 @@ Test("an item with no condition draws nothing", function()
 	AssertEquals(#Bars(Panel), 0, "an apple has no condition bar")
 end)
 
-Test("the vanilla panel still renders underneath", function()
+Test("the vanilla panel still renders", function()
 	local Panel = NewPanel(Harness.NewWeapon(5, 10))
 	Panel:render()
 
 	AssertEquals(Panel.VanillaRenders, 1, "wrapping must not replace what vanilla draws")
+end)
+
+Test("the fill is drawn before the icon, not over it", function()
+	-- Vanilla draws the item icon in this same call. Painting after it washes colour
+	-- across the icon; painting first puts the colour behind, where it belongs.
+	local Panel = NewPanel(Harness.NewWeapon(5, 10))
+	Panel.RenderOrder = {}
+
+	local Vanilla = ISEquippedItem.render
+	Panel:render()
+
+	AssertTrue(#Panel.Drawn > 0, "the fill should have been drawn")
+	AssertEquals(Panel.DrawnBeforeVanilla, #Panel.Drawn,
+		"every fill must land before the vanilla render runs")
+end)
+
+Test("the hand slots are filled as a disc, not a rectangle", function()
+	-- The equipped hand slots are circles. A rectangle spills out at the corners, which
+	-- is what it looked like in game.
+	local Panel = NewPanel(Harness.NewWeapon(5, 10))
+	Panel:render()
+
+	local Fill = Bars(Panel)[1]
+	AssertEquals(Fill.Kind, "texture", "a round slot should be filled with the disc")
+	AssertNotNil(Fill.Texture, "and that disc needs a texture")
+	AssertContains(Fill.Texture.Path, "qolc_slot_disc", "specifically the slot disc")
+end)
+
+Test("the disc is clipped to the filled band", function()
+	-- Without the clip the whole disc lights up regardless of condition.
+	local Half = NewPanel(Harness.NewWeapon(5, 10))
+	local Full = NewPanel(Harness.NewWeapon(10, 10))
+
+	Half:render()
+	Full:render()
+
+	AssertNear(Bars(Half)[1].H, Bars(Full)[1].H / 2, 0.5, "half condition, half the disc")
 end)
 
 --// Bar Shape

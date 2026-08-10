@@ -25,6 +25,10 @@ SUPERSAMPLE = 16
 # beside it. One pixel of padding each side is what the 18 leaves room for.
 SIZE = 16
 
+# The slot disc is scaled to whatever container size the player picked, which goes well
+# past 16, so it is generated large enough to scale down rather than up.
+DISC_SIZE = 128
+
 # Matches the muted grey of vanilla's own button icons. The open padlock is dimmer,
 # so "unlocked" reads as the inactive state at a glance.
 COLOUR_CLOSED = (222, 222, 222, 255)
@@ -150,6 +154,27 @@ def draw_insert(colour: tuple) -> Image.Image:
     return image.resize((SIZE, SIZE), Image.LANCZOS)
 
 
+def draw_disc() -> Image.Image:
+    """A plain white disc, tinted at draw time.
+
+    The equipped hand slots are round, so a rectangular condition fill spills out of
+    them at the corners. This is drawn into the slot and clipped to however much of it
+    should be filled. White because the colour comes from the draw call.
+
+    Larger than the others: it is scaled to whatever slot size the player has chosen,
+    and scaling down stays clean where scaling up does not.
+    """
+    span = DISC_SIZE * 4
+    image = Image.new("RGBA", (span, span), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+
+    # Half a pixel in at the final size, so the edge does not clip against the slot
+    inset = span / DISC_SIZE * 0.5
+    draw.ellipse([inset, inset, span - inset, span - inset], fill=(255, 255, 255, 255))
+
+    return image.resize((DISC_SIZE, DISC_SIZE), Image.LANCZOS)
+
+
 def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
 
@@ -158,6 +183,7 @@ def main() -> None:
         "qolc_lock_open": draw_padlock(True, COLOUR_OPEN),
         "qolc_swap": draw_swap(COLOUR_CLOSED),
         "qolc_insert": draw_insert(COLOUR_CLOSED),
+        "qolc_slot_disc": draw_disc(),
     }
 
     for name, image in images.items():

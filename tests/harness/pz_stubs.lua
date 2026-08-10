@@ -1528,6 +1528,10 @@ ISEquippedItem.__index = ISEquippedItem
 
 function ISEquippedItem:render()
 	self.VanillaRenders = (self.VanillaRenders or 0) + 1
+
+	-- Vanilla draws the item icon here. Recording how much had already been drawn lets a
+	-- spec prove a mod painted behind the icon rather than across it.
+	self.DrawnBeforeVanilla = #self.Drawn
 end
 
 function Harness.NewEquippedItemPanel(Player)
@@ -1540,7 +1544,25 @@ function Harness.NewEquippedItemPanel(Player)
 	Panel.Drawn = {}
 
 	function Panel:drawRect(X, Y, W, H, A, R, G, B)
-		table.insert(self.Drawn, { X = X, Y = Y, W = W, H = H, A = A, R = R, G = G, B = B })
+		table.insert(self.Drawn, { Kind = "rect", X = X, Y = Y, W = W, H = H, A = A, R = R, G = G, B = B })
+	end
+
+	-- The round slots are drawn as a disc clipped to the filled band, so a spec has to
+	-- see both the texture and the clip that shaped it.
+	function Panel:drawTextureScaled(Texture, X, Y, W, H, A, R, G, B)
+		table.insert(self.Drawn, {
+			Kind = "texture", Texture = Texture,
+			X = X, Y = Y, W = W, H = H, A = A, R = R, G = G, B = B,
+			Stencil = self.Stencil
+		})
+	end
+
+	function Panel:setStencilRect(X, Y, W, H)
+		self.Stencil = { X = X, Y = Y, W = W, H = H }
+	end
+
+	function Panel:clearStencilRect()
+		self.Stencil = nil
 	end
 
 	return Panel

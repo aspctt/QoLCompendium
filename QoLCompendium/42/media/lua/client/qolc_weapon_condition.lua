@@ -15,14 +15,19 @@
 --// ISHotbar.render again. That file already owns the render, and a second override of
 --// the same function is how mods end up silently erasing each other.
 
+--// Textures
+-- The equipped hand slots are round. A rectangular fill spills out of them at the
+-- corners, so those get a disc clipped to however much should be filled. Hotbar slots
+-- are square and take a plain rectangle.
+local TextureDisc = getTexture("media/textures/GUI/qolc_slot_disc.png")
+
 --// Tuning
 -- The whole slot is the gauge. It fills from the bottom, so how much colour is showing
 -- is how much of the weapon is left, readable at a glance without reading anything.
 --
--- Translucent because it is drawn over the item icon rather than under it. The hand
--- slots are child ISImage elements with their own textures, so there is no layer
--- underneath that can be relied on in both places.
-local FILL_ALPHA = 0.35
+-- Drawn before the icon rather than over it, so the icon stays crisp and the colour
+-- reads as the slot's background. That is also why this can be as strong as it is.
+local FILL_ALPHA = 0.55
 
 -- A nearly broken weapon still shows a sliver, so "almost gone" never looks like
 -- "nothing here".
@@ -76,7 +81,10 @@ end
 
 -- Fills the box given from the bottom up, in proportion to what is left. Silently does
 -- nothing for an item with no condition, which is most of them.
-function QolcDrawCondition(Panel, X, Y, Width, Height, Item)
+--
+-- Round is for the equipped hand slots. Those are circles, so the fill is a disc clipped
+-- to the filled height rather than a rectangle that would poke out at the corners.
+function QolcDrawCondition(Panel, X, Y, Width, Height, Item, Round)
 	if not Panel or not QolcConditionEnabled() then return false end
 	if Width <= 0 or Height <= 0 then return false end
 
@@ -89,30 +97,42 @@ function QolcDrawCondition(Panel, X, Y, Width, Height, Item)
 	if Filled > Height then Filled = Height end
 
 	local Colour = ColourFor(Fraction)
-	Panel:drawRect(X, Y + Height - Filled, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+	local FillY = Y + Height - Filled
+
+	if Round and TextureDisc then
+		-- Draw the whole disc but let only the filled band through, which gives a
+		-- circle filling from the bottom rather than a rectangle with round ends
+		Panel:setStencilRect(X, FillY, Width, Filled)
+		Panel:drawTextureScaled(TextureDisc, X, Y, Width, Height, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+		Panel:clearStencilRect()
+	else
+		Panel:drawRect(X, FillY, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+	end
 
 	return true
 end
 
 --// Equipped Hands
 -- Wrapped rather than replaced, so whatever else vanilla draws in the panel still runs.
+-- Drawn before it, not after, because vanilla draws the item icon in this same call and
+-- the colour belongs behind that icon rather than washed across it.
 local VanillaEquippedRender = ISEquippedItem.render
 function ISEquippedItem:render()
-	VanillaEquippedRender(self)
+	if self.chr then
+		local Hands = {
+			{ Box = self.mainHand, Item = self.chr:getPrimaryHandItem() },
+			{ Box = self.offHand, Item = self.chr:getSecondaryHandItem() }
+		}
 
-	if not self.chr then return end
-
-	local Hands = {
-		{ Box = self.mainHand, Item = self.chr:getPrimaryHandItem() },
-		{ Box = self.offHand, Item = self.chr:getSecondaryHandItem() }
-	}
-
-	for _, Hand in ipairs(Hands) do
-		local Box = Hand.Box
-		if Box and Hand.Item then
-			QolcDrawCondition(self, Box.x, Box.y, Box.width, Box.height, Hand.Item)
+		for _, Hand in ipairs(Hands) do
+			local Box = Hand.Box
+			if Box and Hand.Item then
+				QolcDrawCondition(self, Box.x, Box.y, Box.width, Box.height, Hand.Item, true)
+			end
 		end
 	end
+
+	VanillaEquippedRender(self)
 end
 
 --// Mod Options
