@@ -124,6 +124,21 @@ function QolcReorderCommitOrder(Page)
 end
 
 --// Drag Handling
+-- How long after a drag ends a release still counts as part of it rather than as a
+-- click. Both events land in the same frame, so this only has to survive one.
+local DRAG_GRACE_MS = 150
+
+-- True while a drag is running on this window, and briefly after it finishes.
+local function DragJustEnded(Page)
+	if not Page then return false end
+	if Page.QolcDragging then return true end
+
+	local Ended = Page.QolcDragEndedMs
+	if not Ended then return false end
+
+	return (getTimestampMs() - Ended) < DRAG_GRACE_MS
+end
+
 -- Vanilla reuses container buttons out of a pool, so a button can be handed back here
 -- more than once. Each original handler is captured only the first time.
 local function InjectDragging(Button, Page)
@@ -160,6 +175,10 @@ local function InjectDragging(Button, Page)
 		-- click with a twitchy hand would start reordering
 		if math.abs(self.QolcStartMouseY - getMouseY()) > Page.buttonSize / 2 then
 			self.QolcDragging = true
+			-- Recorded on the window as well as the button, because the release that
+			-- ends this drag is delivered to whichever button is under the cursor, not
+			-- to this one
+			Page.QolcDragging = true
 		end
 		if not self.QolcDragging then return end
 
@@ -177,16 +196,28 @@ local function InjectDragging(Button, Page)
 		end
 	end
 
-	-- A finished drag must not also register as a click, or letting go of a button
-	-- would select the container it was dropped on
+	-- A finished drag must not also register as a click, or letting go over another
+	-- container would open that container. Dropping a bag onto its neighbour reorders
+	-- the two and, without this, opens the neighbour at the same time.
+	--
+	-- Both buttons hear about the release. The one being dragged gets onMouseUpOutside
+	-- and the one underneath gets onMouseUp, in no guaranteed order, so the window
+	-- carries the flag rather than either button. The timestamp covers the case where
+	-- the dragged button is dealt with first and has already cleared it.
 	local function Finish(Self, X, Y, Original)
 		local Page = Self.QolcPage
+
 		if not Page or not Self.QolcDragging then
+			if DragJustEnded(Page) then return end
+
 			-- Not every button carries all five handlers, so check before calling on
 			local Handler = Original and Self[Original]
 			if Handler then Handler(Self, X, Y) end
 			return
 		end
+
+		Page.QolcDragEndedMs = getTimestampMs()
+		Page.QolcDragging = false
 
 		Self.QolcDragging = false
 		Self.pressed = false

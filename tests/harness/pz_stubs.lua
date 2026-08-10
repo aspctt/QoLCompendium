@@ -1160,8 +1160,16 @@ function ISInventoryPage:addContainerButton(Container, Texture, Name, Tooltip)
 		function Button:onMouseDown() table.insert(self.OriginalCalls, "down") end
 		function Button:onMouseMove() table.insert(self.OriginalCalls, "move") end
 		function Button:onMouseMoveOutside() table.insert(self.OriginalCalls, "moveOutside") end
-		function Button:onMouseUp() table.insert(self.OriginalCalls, "up") end
 		function Button:onMouseUpOutside() table.insert(self.OriginalCalls, "upOutside") end
+
+		-- Vanilla's onBackpackMouseUp selects the container. Reproduced because that is
+		-- what makes releasing a drag over another button open it, and a stub that
+		-- merely records the call cannot show that.
+		function Button:onMouseUp()
+			table.insert(self.OriginalCalls, "up")
+			local Page = self.parent and self.parent.parent
+			if Page and Page.onBackpackClick then Page:onBackpackClick(self) end
+		end
 	end
 
 	Button.Class = "ISButton"
@@ -1230,6 +1238,10 @@ function Harness.NewInventoryPage(PlayerNum, OnCharacter)
 	Page.backpacks = {}
 	Page.Containers = {}
 	Page.containerButtonPanel = NewUIElement(0, 0, 32, 400)
+
+	-- The panel is a child of the page in vanilla, and onBackpackMouseUp reaches the
+	-- page through self.parent.parent, so the link has to exist here too.
+	Page:addChild(Page.containerButtonPanel)
 
 	return Page
 end

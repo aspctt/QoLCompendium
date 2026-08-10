@@ -235,6 +235,72 @@ Test("recycled buttons carry the right container after a reorder", function()
 		"and the chosen order should still hold")
 end)
 
+-- Reported in game: the order swaps correctly but the container underneath opens.
+Test("dropping onto another container does not open it", function()
+	-- On release the dragged button gets onMouseUpOutside while the button it landed on
+	-- gets onMouseUp. Unguarded, that second event is an ordinary click and selects
+	-- whatever was underneath, which reads exactly like the two having swapped contents.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	local Dragged = FindButton(Page, "KeyRing")
+	local Target = FindButton(Page, "Backpack")
+	Page.SelectedInventory = nil
+
+	Harness.SetMouse(0, Dragged:getY())
+	Dragged:onMouseDown(0, 0)
+	Dragged.pressed = true
+
+	Harness.SetMouse(0, TOP + (Dragged:getHeight() / 2))
+	Dragged:onMouseMove(0, -40)
+
+	-- The button under the cursor receives the release, the dragged one gets outside
+	Target.pressed = true
+	Target:onMouseUp(0, 0)
+	Dragged:onMouseUpOutside(0, 0)
+
+	AssertNil(Page.SelectedInventory, "finishing a drag must not select anything")
+end)
+
+Test("the same release order the other way round is also ignored", function()
+	-- Which of the two fires first is not guaranteed, so neither order may select.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	local Dragged = FindButton(Page, "KeyRing")
+	local Target = FindButton(Page, "Backpack")
+	Page.SelectedInventory = nil
+
+	Harness.SetMouse(0, Dragged:getY())
+	Dragged:onMouseDown(0, 0)
+	Dragged.pressed = true
+
+	Harness.SetMouse(0, TOP + (Dragged:getHeight() / 2))
+	Dragged:onMouseMove(0, -40)
+
+	Dragged:onMouseUpOutside(0, 0)
+	Target.pressed = true
+	Target:onMouseUp(0, 0)
+
+	AssertNil(Page.SelectedInventory, "finishing a drag must not select anything")
+end)
+
+Test("an ordinary click still selects its container", function()
+	-- The guard must not swallow real clicks, only the release that ends a drag.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	local Button = FindButton(Page, "Backpack")
+	Page.SelectedInventory = nil
+
+	Harness.SetMouse(0, Button:getY())
+	Button:onMouseDown(0, 0)
+	Button.pressed = true
+	Button:onMouseUp(0, 0)
+
+	AssertEquals(Page.SelectedInventory, Button.inventory, "a plain click should still open it")
+end)
+
 --// Locking
 Test("a locked window refuses to reorder", function()
 	local Player = Harness.NewPlayer(0, true)
