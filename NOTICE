@@ -48,6 +48,10 @@ project's licence.
     The code that applies them was written for this project.
 
   Reorder Containers
+    Not currently shipped. The implementation is held back in
+    disabled/reorder-containers and no part of it is loaded by the mod. Left
+    here so the credit stands if it returns.
+
     From "Reorder Containers - Backpack Orders", Steam Workshop 2901962885.
     Stated terms: MIT, declared by the author in the mod description.
 

@@ -26,7 +26,7 @@ Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/
 Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
-Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- INTEGRATED (MIT LICENSE)
+Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
 Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845

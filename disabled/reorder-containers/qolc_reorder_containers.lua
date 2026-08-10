@@ -90,12 +90,20 @@ function QolcReorderApplyOrder(Page)
 	end
 end
 
--- Called once a drag finishes. Reads the order off the screen and writes it back as
--- priorities, so the arrangement survives the next refresh.
-function QolcReorderCommitOrder(Page)
+-- Called once a drag finishes, with the button that was dragged.
+--
+-- Dragged is required and is the whole point of the argument. Button positions only mean
+-- anything for the instant after a drop, and a second call does happen while the window
+-- is rebuilding: it read the half rebuilt layout and wrote the game's own order straight
+-- back over the chosen one, which is what made a reorder undo itself a moment later.
+-- Refusing to run without a dragged button is what stops that.
+function QolcReorderCommitOrder(Page, Dragged)
 	local Player = getSpecificPlayer(Page.player)
-	if not Player or not Page.backpacks then return end
+	if not Player or not Page.backpacks or not Dragged then return end
 
+	-- Order comes from where the buttons are sitting, which is what a player just
+	-- arranged by hand and so is the most forgiving reading of the drop. Judging it from
+	-- the dragged button's position alone was tried and rejected too many near misses.
 	local Ordered = {}
 	for Index, Button in ipairs(Page.backpacks) do
 		table.insert(Ordered, { Button = Button, Index = Index })
@@ -155,6 +163,11 @@ local function InjectDragging(Button, Page)
 	function Button:onMouseDown(X, Y)
 		if self.QolcMouseDown then self:QolcMouseDown(X, Y) end
 
+		-- A fresh press ends any drag the window still thinks is running. Without this
+		-- a drag that never reached its own release would leave the window stuck, and
+		-- every click after it would be swallowed.
+		if self.QolcPage then self.QolcPage.QolcDragging = false end
+
 		self.QolcStartMouseY = getMouseY()
 		self.QolcStartY = self:getY()
 		self.QolcCanDrag = not QolcReorderIsLocked(self.QolcPage)
@@ -208,7 +221,13 @@ local function InjectDragging(Button, Page)
 		local Page = Self.QolcPage
 
 		if not Page or not Self.QolcDragging then
-			if DragJustEnded(Page) then return end
+			if DragJustEnded(Page) then
+				-- Swallowing the click means vanilla's handler never runs, and that is
+				-- what would have cleared pressed. Left set, the next mouse movement
+				-- over this button starts a drag nobody asked for.
+				Self.pressed = false
+				return
+			end
 
 			-- Not every button carries all five handlers, so check before calling on
 			local Handler = Original and Self[Original]
@@ -228,7 +247,7 @@ local function InjectDragging(Button, Page)
 			return
 		end
 
-		QolcReorderCommitOrder(Page)
+		QolcReorderCommitOrder(Page, Self)
 		Page:refreshBackpacks()
 	end
 

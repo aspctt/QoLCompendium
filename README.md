@@ -37,11 +37,6 @@ military lockers.
 life sheds the Drowsy debuff and performs properly for a while, then pays it all
 back with interest once they calm down. Sleep is still the only real fix.
 
-**Reorder Containers** - Drag the container buttons beside your inventory into
-whatever order suits you. Each container remembers its own place, so a bag keeps
-it after being dropped and picked up again. Sorting the loot window is opt in,
-and either window can be locked once you are happy with it.
-
 **Weapon Condition** - Each equipped weapon and each hotbar slot fills with
 colour to show how much of it is left, so you can see what is about to break
 without hovering it. Green while healthy, amber under half, red under a quarter.
@@ -97,7 +92,6 @@ ran at all.
 | Rifle Sling | [Actual Realistic Rifle Sling](https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977) | **Bundles the original models and hotbar code.** See below. |
 | Ammo Icons | [Ammo & Magazine icon MOD](https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813) by falcon33jp | **Bundles 12 original icons.** Code written from scratch. |
 | Adrenaline | [Adrenaline - Panic Counters Tiredness](https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835) | MIT licensed. Rewritten, the stat API it used no longer exists. Balance values kept. |
-| Reorder Containers | [Reorder Containers - Backpack Orders](https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885) | MIT licensed. Rewritten around a build 42 event the original predates, which removed three of its patches. |
 | Reorder The Hotbar | [Reorder The Hotbar](https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337) | MIT licensed. Rewritten. Build 42 added the key lookup and the order saving it had to carry itself. |
 | Food Categories | [Better Sorting](https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159) by ChobitsCrazy | Idea only, see below. Written from scratch against the base game's own data. |
 | Propane From Fuel Pumps | [Pumps Have Propane](https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406) by Uncle Griz | Rewritten. Build 42 rebuilt fuel pumps as entities, so only the idea carried over. |

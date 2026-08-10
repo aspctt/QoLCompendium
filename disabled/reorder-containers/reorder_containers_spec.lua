@@ -285,6 +285,49 @@ Test("the same release order the other way round is also ignored", function()
 	AssertNil(Page.SelectedInventory, "finishing a drag must not select anything")
 end)
 
+Test("a swallowed click still releases the button", function()
+	-- Suppressing the drop target's click skips vanilla's handler, which is what clears
+	-- pressed. Left set, the next mouse movement over that button starts a drag nobody
+	-- asked for and commits a new order on release.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	local Dragged = FindButton(Page, "KeyRing")
+	local Target = FindButton(Page, "Backpack")
+
+	Harness.SetMouse(0, Dragged:getY())
+	Dragged:onMouseDown(0, 0)
+	Dragged.pressed = true
+
+	Harness.SetMouse(0, TOP + (Dragged:getHeight() / 2))
+	Dragged:onMouseMove(0, -40)
+
+	Target.pressed = true
+	Target:onMouseUp(0, 0)
+	Dragged:onMouseUpOutside(0, 0)
+
+	AssertFalse(Target.pressed, "the button the drag landed on must not stay pressed")
+end)
+
+Test("a drag that never finishes does not wedge the window", function()
+	-- If the window is left thinking a drag is running, every click after it is
+	-- swallowed. A fresh press has to clear that.
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	Page.QolcDragging = true
+
+	local Button = FindButton(Page, "Backpack")
+	Page.SelectedInventory = nil
+
+	Harness.SetMouse(0, Button:getY())
+	Button:onMouseDown(0, 0)
+	Button.pressed = true
+	Button:onMouseUp(0, 0)
+
+	AssertEquals(Page.SelectedInventory, Button.inventory, "a plain click should still open it")
+end)
+
 Test("an ordinary click still selects its container", function()
 	-- The guard must not swallow real clicks, only the release that ends a drag.
 	local Player = Harness.NewPlayer(0, true)
@@ -299,6 +342,42 @@ Test("an ordinary click still selects its container", function()
 	Button:onMouseUp(0, 0)
 
 	AssertEquals(Page.SelectedInventory, Button.inventory, "a plain click should still open it")
+end)
+
+-- Reported in game: the swap applied, then undid itself a moment later. The commit was
+-- deriving the whole order from where every button happened to be sitting, so a second
+-- call during a refresh read the half rebuilt layout and wrote the game's own order back.
+Test("a commit during a rebuild cannot undo the chosen order", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Backpack", "KeyRing")
+
+	DragTo(Page, "KeyRing", TOP)
+	local Chosen = Concat(Harness.ButtonOrderByArray(Page))
+	AssertEquals(Chosen, "KeyRing,inventory,Backpack", "the drag should have taken effect")
+
+	-- Exactly what a stray commit sees: buttons back in the game's own layout, before
+	-- the chosen order has been reapplied
+	for Index, Button in ipairs(Page.backpacks) do
+		Button:setY(((Index - 1) * Page.buttonSize) - 1)
+	end
+	QolcReorderCommitOrder(Page, nil)
+
+	Page:refreshBackpacks()
+	AssertEquals(Concat(Harness.ButtonOrderByArray(Page)), Chosen,
+		"a commit with no dragged button must change nothing")
+end)
+
+Test("dropping a button back where it started changes nothing", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Page = NewPage(Player, true, "Bag", "Crate")
+
+	local Before = Concat(Harness.ButtonOrderByArray(Page))
+	local Dragged = FindButton(Page, "Crate")
+
+	QolcReorderCommitOrder(Page, Dragged)
+	Page:refreshBackpacks()
+
+	AssertEquals(Concat(Harness.ButtonOrderByArray(Page)), Before, "no move, no change")
 end)
 
 --// Locking
