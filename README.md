@@ -42,6 +42,10 @@ whatever order suits you. Each container remembers its own place, so a bag keeps
 it after being dropped and picked up again. Sorting the loot window is opt in,
 and either window can be locked once you are happy with it.
 
+**Food Categories** - Splits the inventory's single Food heading into food that
+spoils and food that keeps. The base game files all 707 food items together,
+which buries the only question that matters when you open a fridge.
+
 **Reorder The Hotbar** - Drag hotbar slots into the order you want, and click a
 slot to use it instead of reaching for the key. Dragging either swaps two slots
 or slides one in between, whichever you pick, and the order can be locked. Slots
@@ -87,6 +91,14 @@ ran at all.
 | Adrenaline | [Adrenaline - Panic Counters Tiredness](https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835) | MIT licensed. Rewritten, the stat API it used no longer exists. Balance values kept. |
 | Reorder Containers | [Reorder Containers - Backpack Orders](https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885) | MIT licensed. Rewritten around a build 42 event the original predates, which removed three of its patches. |
 | Reorder The Hotbar | [Reorder The Hotbar](https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337) | MIT licensed. Rewritten. Build 42 added the key lookup and the order saving it had to carry itself. |
+| Food Categories | [Better Sorting](https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159) by ChobitsCrazy | Idea only, see below. Written from scratch against the base game's own data. |
+
+**A note on Better Sorting.** It is GPL-3.0, which cannot be combined with this
+project's licence, so none of its code or data is used or referred to here. Only
+the idea of separating food that spoils from food that does not was taken, and
+ideas are not what a licence covers. Everything else that mod does, build 42 now
+does natively and in more detail: 82 item categories covering every item in the
+game, where build 41 left many of them filed as a bare "Item".
 
 The exceptions are artwork. A 3D model or an icon cannot be rewritten from a
 description, so the sling's models and hotbar code are the originals by **Akyet**

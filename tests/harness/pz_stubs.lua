@@ -588,6 +588,23 @@ Harness.ScriptItems = {
 
 	["Base.SlingAFront"] = { BodyLocation = nil },
 	["Base.SlingABack"] = { BodyLocation = nil },
+
+	-- Food, seeded from the real values in media\scripts. Vanilla files all of these
+	-- under one Food heading, and the rot time is the only thing separating what spoils
+	-- from what keeps. TinnedBeans and Yeast genuinely carry no rot time at all.
+	["Base.Tomato"] = { DisplayCategory = "Food", DaysTotallyRotten = 12 },
+	["Base.Potato"] = { DisplayCategory = "Food", DaysTotallyRotten = 280 },
+	["Base.Cabbage"] = { DisplayCategory = "Food", DaysTotallyRotten = 4 },
+	["Base.Honey"] = { DisplayCategory = "Food", DaysTotallyRotten = 730 },
+	["Base.TinnedBeans"] = { DisplayCategory = "Food" },
+	["Base.Yeast"] = { DisplayCategory = "Food" },
+
+	-- A mod using a large number to mean "never rots" rather than food that spoils
+	["Modded.EternalRation"] = { DisplayCategory = "Food", DaysTotallyRotten = 999999999 },
+
+	-- Not food, so it must be left exactly as vanilla filed it
+	["Base.Pan"] = { DisplayCategory = "Cooking" },
+	["Base.Axe"] = { DisplayCategory = "ToolWeapon" },
 }
 
 local function NewScriptItem(Name)
@@ -598,6 +615,13 @@ local function NewScriptItem(Name)
 	function Item:getUseDelta() return Definition.UseDelta end
 	function Item:getBodyLocation() return Definition.BodyLocation end
 	function Item:getIcon() return Definition.Icon end
+	function Item:getFullName() return Name end
+
+	function Item:getDisplayCategory() return Definition.DisplayCategory end
+
+	-- Zero on anything that does not spoil, which is how the game distinguishes tinned
+	-- food from fresh
+	function Item:getDaysTotallyRotten() return Definition.DaysTotallyRotten or 0 end
 
 	function Item:setBodyLocation(Location)
 		if type(Location) ~= "table" or not Location.IsItemBodyLocation then
@@ -624,6 +648,21 @@ ScriptManager.instance = {}
 
 function ScriptManager.instance:getItem(Name)
 	return NewScriptItem(Name)
+end
+
+-- The real getAllItems returns a Java ArrayList of every script item, indexed from zero.
+-- Order is not guaranteed by the game, so nothing should depend on it.
+function getAllItems()
+	local All = {}
+	for Name in pairs(Harness.ScriptItems) do
+		table.insert(All, Name)
+	end
+	table.sort(All)
+
+	local List = {}
+	function List:size() return #All end
+	function List:get(Index) return NewScriptItem(All[Index + 1]) end
+	return List
 end
 
 --// Loot Distributions

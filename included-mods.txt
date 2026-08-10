@@ -5,7 +5,7 @@ Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfile
 Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
 An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174		- READ NOTES IN FOLDER
 AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
-Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- PRIORITY
+Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
 CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507
 Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
