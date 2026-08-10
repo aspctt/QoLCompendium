@@ -1,4 +1,8 @@
 {
     "IGUI_ItemCat_FoodPerishable": "Food (Perishable)",
-    "IGUI_ItemCat_FoodNonPerishable": "Food (Keeps)"
+    "IGUI_ItemCat_FoodNonPerishable": "Food (Keeps)",
+    "IGUI_QoLC_Fabric": "Fabric:",
+    "IGUI_QoLC_Fabric_Cotton": "Cotton",
+    "IGUI_QoLC_Fabric_Denim": "Denim",
+    "IGUI_QoLC_Fabric_Leather": "Leather"
 }

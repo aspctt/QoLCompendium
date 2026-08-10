@@ -145,6 +145,14 @@ function CoreStub:getKey(Name)
 	return Harness.BoundKeys[Name] or -1
 end
 
+-- A UIFont name, not a font. Vanilla hands back "Small", "Medium" and so on, which the
+-- caller then looks up in the UIFont table.
+function CoreStub:getOptionTooltipFont()
+	return Harness.TooltipFont
+end
+
+Harness.TooltipFont = "Small"
+
 function getCore()
 	return CoreStub
 end
@@ -1492,6 +1500,50 @@ function Harness.SlotOrder(Hotbar)
 		Names[Index] = Slot.slotType
 	end
 	return Names
+end
+
+--// Item Tooltip
+-- ObjectTooltip is built on the Java side, so a mod can only reserve room while it
+-- measures and draw into that room afterwards. Both halves are reproduced: setHeight is
+-- called once with the measured content height, and DrawText records what was written.
+local function NewObjectTooltip()
+	local Tooltip = {}
+	Tooltip.Texts = {}
+
+	function Tooltip:DrawText(Font, Text, X, Y, R, G, B, A)
+		table.insert(self.Texts, { Font = Font, Text = Text, X = X, Y = Y, R = R, G = G, B = B, A = A })
+	end
+
+	return Tooltip
+end
+
+ISToolTipInv = {}
+ISToolTipInv.__index = ISToolTipInv
+
+-- Mirrors the shape of vanilla's render: measure the item, set the height once, then
+-- draw. The measured height is what a mod has to grow to fit a row of its own in.
+ISToolTipInv.MeasuredHeight = 120
+
+function ISToolTipInv:render()
+	self.VanillaRenders = (self.VanillaRenders or 0) + 1
+	self:setHeight(ISToolTipInv.MeasuredHeight)
+end
+
+function Harness.NewItemTooltip(Item)
+	local Panel = Harness.NewUIElement(0, 0, 200, 0)
+	setmetatable(Panel, ISToolTipInv)
+
+	Panel.item = Item
+	Panel.tooltip = NewObjectTooltip()
+
+	return Panel
+end
+
+--// Clothing
+function Harness.NewGarment(Fabric)
+	local Item = Harness.NewInventoryItem("Jacket")
+	function Item:getFabricType() return Fabric end
+	return Item
 end
 
 --// Weapons
