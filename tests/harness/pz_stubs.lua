@@ -1510,9 +1510,10 @@ local function NewObjectTooltip()
 	local Tooltip = {}
 	Tooltip.Texts = {}
 
-	-- Vanilla draws the item name and every stat row at this offset, so anything a mod
-	-- adds has to use it too or the line sits in its own column.
-	Tooltip.padLeft = 5
+	-- Where vanilla draws the item name and every stat row. Measured from the game at
+	-- the default scale, because the real padLeft is a public field with no getter and
+	-- cannot be read from lua. Anything a mod adds has to land on the same column.
+	Tooltip.padLeft = 8
 
 	function Tooltip:DrawText(Font, Text, X, Y, R, G, B, A)
 		table.insert(self.Texts, { Font = Font, Text = Text, X = X, Y = Y, R = R, G = G, B = B, A = A })
@@ -1530,6 +1531,12 @@ ISToolTipInv.MeasuredHeight = 120
 
 function ISToolTipInv:render()
 	self.VanillaRenders = (self.VanillaRenders or 0) + 1
+
+	-- Vanilla writes the item name and its stat rows at padLeft. Recorded so a spec can
+	-- require anything a mod adds to share that column rather than trusting a number.
+	self.tooltip:DrawText(UIFont.Small, "Encumbrance:", self.tooltip.padLeft, 20, 1, 1, 1, 1)
+	self.VanillaRowX = self.tooltip.padLeft
+
 	self:setHeight(ISToolTipInv.MeasuredHeight)
 end
 

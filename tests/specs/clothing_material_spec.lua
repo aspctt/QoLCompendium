@@ -9,8 +9,21 @@ local function Render(Fabric)
 	return Panel
 end
 
+-- Vanilla writes its own rows into the same tooltip, so ours has to be picked out
+-- rather than assumed to be the only thing drawn.
 local function Line(Panel)
-	return Panel.tooltip.Texts[1]
+	for _, Drawn in ipairs(Panel.tooltip.Texts) do
+		if string.find(Drawn.Text, "Fabric", 1, true) then return Drawn end
+	end
+	return nil
+end
+
+local function LineCount(Panel)
+	local Count = 0
+	for _, Drawn in ipairs(Panel.tooltip.Texts) do
+		if string.find(Drawn.Text, "Fabric", 1, true) then Count = Count + 1 end
+	end
+	return Count
 end
 
 --// Wiring
@@ -23,7 +36,7 @@ end)
 Test("a garment gets a fabric line", function()
 	local Panel = Render("Leather")
 
-	AssertEquals(#Panel.tooltip.Texts, 1, "one line, not more")
+	AssertEquals(LineCount(Panel), 1, "one line, not more")
 	AssertEquals(Line(Panel).Text, "Fabric: Leather", "label, a space, then the fabric")
 end)
 
@@ -35,12 +48,12 @@ end)
 
 Test("anything that is not clothing gets no line", function()
 	local Panel = Render(nil)
-	AssertEquals(#Panel.tooltip.Texts, 0, "an apple is not made of cloth")
+	AssertEquals(LineCount(Panel), 0, "an apple is not made of cloth")
 end)
 
 Test("an empty fabric is treated as none", function()
 	local Panel = Render("")
-	AssertEquals(#Panel.tooltip.Texts, 0, "an empty string is not a fabric")
+	AssertEquals(LineCount(Panel), 0, "an empty string is not a fabric")
 end)
 
 Test("a fabric the game adds later still gets a line", function()
@@ -92,14 +105,13 @@ Test("the tooltip is grown to make room for the line", function()
 end)
 
 Test("the line lines up with every other row", function()
-	-- Reported in game: the fabric line sat a couple of pixels left of the stat rows.
-	-- Vanilla draws those at the tooltip's own padLeft, so hardcoding anything else
-	-- drifts the moment that padding is not what was assumed.
-	local Panel = Harness.NewItemTooltip(Harness.NewGarment("Cotton"))
-	Panel.tooltip.padLeft = 11
-	Panel:render()
+	-- Reported in game: the fabric line sat three pixels left of the stat rows, because
+	-- it used the inset vanilla's own lua uses for the tooltips it builds rather than the
+	-- one the item tooltip actually uses.
+	local Panel = Render("Cotton")
 
-	AssertEquals(Line(Panel).X, 11, "the line should follow the tooltip's own left padding")
+	AssertEquals(Line(Panel).X, Panel.VanillaRowX,
+		"the line must share the column vanilla writes its rows in")
 end)
 
 Test("the line sits inside the box", function()

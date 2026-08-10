@@ -28,10 +28,15 @@ local NAME_PREFIX = "IGUI_QoLC_Fabric_"
 -- tooltip so the line does not sit flush against the border.
 local ROW_PADDING = 4
 
--- Only used if the tooltip does not report its own left padding. Vanilla draws the item
--- name and every stat row at padLeft, so reading that field is what keeps our line in
--- the same column as the rest instead of a couple of pixels adrift.
-local FALLBACK_INSET = 5
+-- Vanilla draws the item name and every stat row at the tooltip's padLeft, so this has
+-- to be the same number or the line sits in its own column.
+--
+-- It is a plain number because padLeft is a public field with no getter and is not
+-- reachable from lua. Reading it was tried and silently gave nothing, which is what left
+-- the line three pixels adrift. So the value is measured from the game instead: the item
+-- name and the stat rows start at eight, not at the five vanilla's own lua uses for the
+-- tooltips it builds itself.
+local ROW_INSET = 8
 
 -- Each fabric reads as itself. Leather is tan, denim is denim, and cotton is a bright
 -- near white so it stands out from the grey the rest of a tooltip is written in rather
@@ -102,8 +107,6 @@ function ISToolTipInv:render()
 
 	if not Content then return end
 
-	local Inset = self.tooltip.padLeft or FALLBACK_INSET
-
-	self.tooltip:DrawText(GetFont(), Text, Inset, Content - ROW_PADDING,
+	self.tooltip:DrawText(GetFont(), Text, ROW_INSET, Content - ROW_PADDING,
 		Colour.r, Colour.g, Colour.b, 1)
 end

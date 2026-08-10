@@ -1,40 +1,47 @@
-[B41] Bigger Character Avatar						- https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570		- INTEGRATED
-41.78+ Propane Torch Fix [B42 Supported]			- https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057		- INTEGRATED
-Actual Realistic Rifle Sling						- https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977		- INTEGRATED
-Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835		- INTEGRATED (MIT LICENSE)
-Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
+## TO DO MODS
 An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174		- READ NOTES IN FOLDER
 AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
-Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
 CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507
 Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
-Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
 Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451
 Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- READ NOTES IN FOLDER
 Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918
 Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398
-Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/?id=533622988		- INTEGRATED
 Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- READ NOTES IN FOLDER
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
 No More Modded Server Start Problems				- https://steamcommunity.com/sharedfiles/filedetails/?id=2954079051
-Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
 Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
-Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
-Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
-Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
 Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- PERMISSION GRANTED (CREDIT REQUIRED)
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
-Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
+
+
+## INTEGRATED MODS
+[B41] Bigger Character Avatar						- https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570		- INTEGRATED
+41.78+ Propane Torch Fix [B42 Supported]			- https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057		- INTEGRATED
+Actual Realistic Rifle Sling						- https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977		- INTEGRATED
+Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835		- INTEGRATED (MIT LICENSE)
+Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
+Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
+Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/?id=533622988		- INTEGRATED
+Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
+Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
+Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
+Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE
+
+
+## OBSOLETE MODS
+Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
+Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE
