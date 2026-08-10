@@ -354,6 +354,9 @@ function Harness.NewPlayer(Number, IsLocal)
 	-- A bag being carried rather than worn provides no hotbar slots
 	function Player:isHandItem(Item) return self.HandItem == Item end
 
+	function Player:getPrimaryHandItem() return self.PrimaryHand end
+	function Player:getSecondaryHandItem() return self.SecondaryHand end
+
 	-- Enough of the character surface for a timed action to run
 	function Player:faceThisObject() end
 	function Player:setMetabolicTarget() end
@@ -1452,6 +1455,58 @@ function Harness.SlotOrder(Hotbar)
 		Names[Index] = Slot.slotType
 	end
 	return Names
+end
+
+--// Weapons
+-- Condition runs 0 to conditionMax, and the max differs per item, which is why anything
+-- reading it has to work in fractions rather than raw numbers.
+function Harness.NewWeapon(Condition, ConditionMax)
+	local Weapon = Harness.NewInventoryItem("Axe")
+	Weapon.Condition = Condition or 10
+	Weapon.ConditionMax = ConditionMax or 10
+
+	function Weapon:getCondition() return self.Condition end
+	function Weapon:setCondition(Value) self.Condition = Value end
+	function Weapon:getConditionMax() return self.ConditionMax end
+	function Weapon:IsWeapon() return true end
+	function Weapon:getTex() return getTexture("media/ui/Axe.png") end
+
+	return Weapon
+end
+
+-- Food, books and the like report a max of zero, so they have no condition to show
+function Harness.NewPlainItem()
+	local Item = Harness.NewInventoryItem("Apple")
+	function Item:getCondition() return 0 end
+	function Item:getConditionMax() return 0 end
+	function Item:IsWeapon() return false end
+	return Item
+end
+
+--// Equipped Item Panel
+-- Mirrors ISEquippedItem, which draws the item in each hand into two boxes and reads
+-- getCondition only to decide what may be dragged in. Nothing is drawn for condition.
+ISEquippedItem = {}
+ISEquippedItem.__index = ISEquippedItem
+
+function ISEquippedItem:render()
+	self.VanillaRenders = (self.VanillaRenders or 0) + 1
+end
+
+function Harness.NewEquippedItemPanel(Player)
+	local Panel = Harness.NewUIElement(0, 0, 100, 100)
+	setmetatable(Panel, ISEquippedItem)
+
+	Panel.chr = Player
+	Panel.mainHand = { x = 0, y = 0, width = 40, height = 40 }
+	Panel.offHand = { x = 0, y = 50, width = 40, height = 40 }
+	Panel.Drawn = {}
+
+	function Panel:drawRect(X, Y, W, H, A, R, G, B)
+		table.insert(self.Drawn, { X = X, Y = Y, W = W, H = H, A = A, R = R, G = G, B = B })
+	end
+
+	return Panel
 end
 
 --// World Objects

@@ -37,4 +37,4 @@ The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/fi
 Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
-Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE
+Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE

@@ -42,6 +42,10 @@ whatever order suits you. Each container remembers its own place, so a bag keeps
 it after being dropped and picked up again. Sorting the loot window is opt in,
 and either window can be locked once you are happy with it.
 
+**Weapon Condition** - A small bar under each equipped weapon and each item on
+the hotbar, so you can see what is about to break without hovering it. Green
+while healthy, amber under half, red under a quarter.
+
 **Propane From Fuel Pumps** - Refill a propane tank at any working fuel pump.
 The base game has no way to refill one at all, so a spent tank is dead weight
 and welding has a hard ceiling. Costs pump fuel, and the server sets how much.
@@ -97,6 +101,13 @@ ran at all.
 | Reorder The Hotbar | [Reorder The Hotbar](https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337) | MIT licensed. Rewritten. Build 42 added the key lookup and the order saving it had to carry itself. |
 | Food Categories | [Better Sorting](https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159) by ChobitsCrazy | Idea only, see below. Written from scratch against the base game's own data. |
 | Propane From Fuel Pumps | [Pumps Have Propane](https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406) by Uncle Griz | Rewritten. Build 42 rebuilt fuel pumps as entities, so only the idea carried over. |
+| Weapon Condition | [Weapon Condition Indicator](https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426) by NoctisFalco | Idea only, see below. Built without reading its code. |
+
+**A note on Weapon Condition Indicator.** Its author does not permit
+redistribution or modified versions, so none of its files or code were opened,
+and the version here was written against the base game's own `getCondition` with
+no artwork at all, the bar being two rectangles. A weapon durability readout is
+a common idea implemented many times over; only that idea is shared.
 
 **A note on Better Sorting.** It is GPL-3.0, which cannot be combined with this
 project's licence, so none of its code or data is used or referred to here. Only

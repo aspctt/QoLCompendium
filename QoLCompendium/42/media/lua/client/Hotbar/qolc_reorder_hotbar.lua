@@ -353,6 +353,21 @@ end
 function ISHotbar:QolcRender()
 	ISHotbar.QolcVanillaRender(self)
 
+	-- Condition bars, if that feature is present. Drawn from here rather than by
+	-- overriding ISHotbar.render a second time, because this file already owns it and
+	-- two overrides of one function is how mods quietly erase each other.
+	if QolcDrawConditionBar then
+		local SlotX = self.margins + 1
+
+		for Index, _Slot in ipairs(self.availableSlot) do
+			local Item = self.attachedItems[Index]
+			if Item then
+				QolcDrawConditionBar(self, SlotX, self.margins + 1, self.slotWidth, self.slotHeight, Item)
+			end
+			SlotX = SlotX + self.slotWidth + self.slotPad
+		end
+	end
+
 	local ModData = self.character:getModData()
 	local X = GetButtonsX(self)
 	local Border = self.borderColor
