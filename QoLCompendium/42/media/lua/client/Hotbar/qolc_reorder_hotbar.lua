@@ -98,17 +98,25 @@ function QolcHotbarApplyOrder(Hotbar)
 
 	Hotbar.attachedItems = {}
 	local ModData = Hotbar.character:getModData()
+	local Moved = false
 
 	for Index, Slot in ipairs(Hotbar.availableSlot) do
 		if Slot.item then
 			Hotbar.attachedItems[Index] = Slot.item
 			Slot.item:setAttachedSlot(Index)
 		end
-		ModData[GetSlotKey(Slot.slotType)] = Index
+
+		local Key = GetSlotKey(Slot.slotType)
+		if ModData[Key] ~= Index then
+			ModData[Key] = Index
+			Moved = true
+		end
 	end
 
-	-- Vanilla's own record of the order, which also transmits it in multiplayer
-	Hotbar:savePosition()
+	-- Vanilla's own record of the order, which also transmits it in multiplayer.
+	-- Only when something actually moved: savePosition calls transmitModData, which
+	-- sends the whole of a player's mod data, and this runs on every hotbar refresh.
+	if Moved then Hotbar:savePosition() end
 end
 
 -- Vanilla's refresh drops slots whose clothing has been taken off, and matches items to
@@ -228,6 +236,17 @@ function ISHotbar:refresh()
 		VanillaRefresh(self)
 		self.needsRefresh = true
 		self.QolcReady = true
+		return
+	end
+
+	-- Vanilla's refresh does nothing at all unless worn items actually changed, because
+	-- OnClothingUpdated also fires for blood, holes and wetness. Its own comment calls
+	-- that "quite often". Reordering regardless meant a sort, a mod data write and, in
+	-- multiplayer, a transmitModData on every one of those, which is a flood of whole
+	-- player mod data to the server during any fight or rain.
+	local Changed = (not self.wornItems) or self:compareWornItems()
+	if not Changed then
+		VanillaRefresh(self)
 		return
 	end
 

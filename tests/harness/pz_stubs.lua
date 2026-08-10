@@ -1355,7 +1355,19 @@ end
 -- rebuild, exactly as vanilla reattaches them.
 function ISHotbar:refresh()
 	self.needsRefresh = false
-	if not self.wornItems then self.wornItems = {} end
+
+	-- Vanilla returns here unless worn items actually changed, because
+	-- OnClothingUpdated also fires for blood, holes and wetness. Everything below,
+	-- including savePosition and its transmitModData, is skipped on those.
+	local Changed = false
+	if not self.wornItems then
+		self.wornItems = {}
+		Changed = true
+	elseif self:compareWornItems() then
+		Changed = true
+	end
+
+	if not Changed then return end
 
 	local Carried = {}
 	for Index, Slot in ipairs(self.availableSlot) do

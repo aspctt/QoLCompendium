@@ -303,6 +303,57 @@ Test("the vanilla mouse up only runs for real slots", function()
 	AssertTrue(Hotbar.VanillaMouseUps > 0, "a slot press still reaches the game")
 end)
 
+--// Cost
+-- OnClothingUpdated fires for blood, holes and wetness as well as for actually changing
+-- clothes. Vanilla's own refresh returns immediately when nothing changed. Doing work
+-- regardless is cheap on one machine and very expensive on a server, because the save
+-- path calls transmitModData and that sends a player's whole mod data.
+Test("a refresh with nothing changed does no work", function()
+	Harness.IsClient = true
+	local Hotbar, Player = NewHotbar("Back", "Belt")
+
+	local Saves = Hotbar.SaveCount
+	local Transmits = Player.Transmits
+
+	for _ = 1, 20 do
+		Hotbar.WornChanged = false
+		Hotbar:refresh()
+	end
+
+	AssertEquals(Hotbar.SaveCount, Saves, "nothing changed, so nothing should be saved")
+	AssertEquals(Player.Transmits, Transmits, "and nothing should go to the server")
+end)
+
+Test("reapplying an unchanged order adds no save of its own", function()
+	-- Clothing genuinely changed, so vanilla rebuilds and saves once itself. Reapplying
+	-- the order on top must not save a second time, or every clothing change costs two
+	-- whole player mod data transmits instead of one.
+	Harness.IsClient = true
+	local Hotbar = NewHotbar("Back", "Belt", "Holster")
+
+	DragSlot(Hotbar, 1, 3)
+	local Saves = Hotbar.SaveCount
+	local Rounds = 10
+
+	for _ = 1, Rounds do
+		Hotbar.WornChanged = true
+		Hotbar:refresh()
+	end
+
+	AssertEquals(Hotbar.SaveCount - Saves, Rounds,
+		"one save per refresh, vanilla's own, and none added on top")
+end)
+
+Test("a real change still saves and transmits once", function()
+	Harness.IsClient = true
+	local Hotbar, Player = NewHotbar("Back", "Belt")
+	local Transmits = Player.Transmits
+
+	DragSlot(Hotbar, 1, 2)
+
+	AssertTrue(Player.Transmits > Transmits, "a genuine reorder must still reach the server")
+end)
+
 --// Multiplayer
 Test("a client transmits the new order", function()
 	Harness.IsClient = true
