@@ -153,6 +153,10 @@ end
 
 Harness.TooltipFont = "Small"
 
+-- Vanilla's tooltip padding at each font, measured from the game. The real field has no
+-- getter, so a mod adding a row has to match these or drift as the player changes font.
+Harness.TooltipPadLeft = { Small = 8, Medium = 10, Large = 11 }
+
 function getCore()
 	return CoreStub
 end
@@ -1510,10 +1514,10 @@ local function NewObjectTooltip()
 	local Tooltip = {}
 	Tooltip.Texts = {}
 
-	-- Where vanilla draws the item name and every stat row. Measured from the game at
-	-- the default scale, because the real padLeft is a public field with no getter and
-	-- cannot be read from lua. Anything a mod adds has to land on the same column.
-	Tooltip.padLeft = 8
+	-- Where vanilla draws the item name and every stat row, measured from the game per
+	-- tooltip font because the real padLeft has no getter and cannot be read from lua.
+	-- Anything a mod adds has to land on the same column at every font size.
+	Tooltip.padLeft = Harness.TooltipPadLeft[Harness.TooltipFont] or 8
 
 	function Tooltip:DrawText(Font, Text, X, Y, R, G, B, A)
 		table.insert(self.Texts, { Font = Font, Text = Text, X = X, Y = Y, R = R, G = G, B = B, A = A })

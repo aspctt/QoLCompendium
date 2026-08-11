@@ -28,15 +28,21 @@ local NAME_PREFIX = "IGUI_QoLC_Fabric_"
 -- tooltip so the line does not sit flush against the border.
 local ROW_PADDING = 4
 
--- Vanilla draws the item name and every stat row at the tooltip's padLeft, so this has
--- to be the same number or the line sits in its own column.
+-- Vanilla draws the item name and every stat row at the tooltip's padLeft, so our line
+-- has to use the same number or it sits in its own column.
 --
--- It is a plain number because padLeft is a public field with no getter and is not
--- reachable from lua. Reading it was tried and silently gave nothing, which is what left
--- the line three pixels adrift. So the value is measured from the game instead: the item
--- name and the stat rows start at eight, not at the five vanilla's own lua uses for the
--- tooltips it builds itself.
-local ROW_INSET = 8
+-- These are measured rather than read. padLeft is a public field with no getter and is
+-- not reachable from lua, and it is not the flat five that vanilla's own lua passes for
+-- the tooltips it builds itself. It also moves with the tooltip font, which is why this
+-- is a table rather than one number. There are only ever three fonts: ObjectTooltip
+-- checks for "Large" and "Medium" and treats everything else as small.
+local ROW_INSET = {
+	Small = 8,
+	Medium = 10,
+	Large = 11
+}
+
+local ROW_INSET_DEFAULT = 8
 
 -- Each fabric reads as itself. Leather is tan, denim is denim, and cotton is a bright
 -- near white so it stands out from the grey the rest of a tooltip is written in rather
@@ -51,9 +57,18 @@ local COLOURS = {
 local COLOUR_UNKNOWN = { r = 0.85, g = 0.85, b = 0.85 }
 
 --// Functions
+local function GetFontName()
+	return getCore() and getCore():getOptionTooltipFont()
+end
+
 local function GetFont()
-	local Name = getCore() and getCore():getOptionTooltipFont()
+	local Name = GetFontName()
 	return (Name and UIFont[Name]) or UIFont.Small
+end
+
+local function GetInset()
+	local Name = GetFontName()
+	return (Name and ROW_INSET[Name]) or ROW_INSET_DEFAULT
 end
 
 -- Returns the line to draw and its colour, or nothing for anything that is not clothing
@@ -107,6 +122,6 @@ function ISToolTipInv:render()
 
 	if not Content then return end
 
-	self.tooltip:DrawText(GetFont(), Text, ROW_INSET, Content - ROW_PADDING,
+	self.tooltip:DrawText(GetFont(), Text, GetInset(), Content - ROW_PADDING,
 		Colour.r, Colour.g, Colour.b, 1)
 end

@@ -114,6 +114,29 @@ Test("the line lines up with every other row", function()
 		"the line must share the column vanilla writes its rows in")
 end)
 
+Test("it stays lined up at every tooltip font", function()
+	-- Reported in game after the first fix: right at Small, adrift at Medium and worse
+	-- at Large. Vanilla's padding moves with the font, so one number cannot serve.
+	for _, Font in ipairs({ "Small", "Medium", "Large" }) do
+		Harness.TooltipFont = Font
+
+		local Panel = Render("Denim")
+		AssertEquals(Line(Panel).X, Panel.VanillaRowX,
+			"drifts at the " .. Font .. " tooltip font")
+	end
+
+	Harness.TooltipFont = "Small"
+end)
+
+Test("an unrecognised tooltip font still draws the line", function()
+	Harness.TooltipFont = "Gigantic"
+
+	local Panel = Render("Denim")
+	AssertNotNil(Line(Panel), "an unknown font must not lose the line entirely")
+
+	Harness.TooltipFont = "Small"
+end)
+
 Test("the line sits inside the box", function()
 	local Panel = Render("Cotton")
 	local Text = Line(Panel)
