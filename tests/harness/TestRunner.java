@@ -49,7 +49,8 @@ public class TestRunner {
 			+ checkConstantUsage("CharacterStat.", characterStats)
 			+ checkItemScripts()
 			+ checkSandboxOptions()
-			+ checkTexturePaths();
+			+ checkTexturePaths()
+			+ checkItemTypes();
 
 		// Discovery pass: load everything once just to learn the test names.
 		List<String> names;
@@ -555,6 +556,109 @@ public class TestRunner {
 
 		if (bad > 0) System.out.println();
 		return bad;
+	}
+
+	/**
+	 * Resolves every "Module.ItemName" literal in shipped mod source against the items
+	 * this build actually defines, in the mod first and then the game.
+	 *
+	 * A retired item name is silent at runtime. ScriptManager.getItem returns null, a
+	 * lookup keyed on the type simply never matches, and the feature does nothing with no
+	 * error anywhere. Clothing gets renamed between builds often enough that a table of
+	 * item types is worth checking on every run rather than by eye once.
+	 */
+	private static int checkItemTypes() throws IOException {
+		Set<String> known = readItemNames(new File(modRoot, "42/media/scripts"));
+		known.addAll(readItemNames(new File(gameDir, "media/scripts")));
+		System.out.println("Item types found in this build: " + known.size());
+
+		if (known.isEmpty()) {
+			System.out.println("  FAIL  no item scripts found, nothing could be checked");
+			return 1;
+		}
+
+		java.util.regex.Pattern literal = java.util.regex.Pattern
+			.compile("\"([A-Za-z][A-Za-z0-9_]*)\\.([A-Za-z0-9_]+)\"");
+		int bad = 0;
+
+		for (String path : loadFiles) {
+			File f = new File(path);
+			if (!f.getName().endsWith(".lua")) continue;
+			if (!f.getCanonicalPath().startsWith(modRoot)) continue;
+
+			BufferedReader r = new BufferedReader(new FileReader(f));
+			String line;
+			int n = 0;
+			try {
+				while ((line = r.readLine()) != null) {
+					n++;
+					int comment = line.indexOf("--");
+					if (comment >= 0) line = line.substring(0, comment);
+
+					java.util.regex.Matcher m = literal.matcher(line);
+					while (m.find()) {
+						String name = m.group(2);
+						// Only literals whose bare name is an item somewhere are meant as
+						// item types. Anything else is a texture path or a lua field and
+						// is none of this check's business.
+						if (known.contains(name)) continue;
+						if (!looksLikeItemType(m.group(1))) continue;
+
+						bad++;
+						System.out.println("  FAIL  no such item in this build: "
+							+ m.group(1) + "." + name + "  (" + f.getName() + ":" + n + ")");
+					}
+				}
+			} finally {
+				r.close();
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	/**
+	 * Modules that name items. Restricted so a stray "Events.OnTick" style literal is not
+	 * reported as a missing item, while a typo inside a real module still is.
+	 */
+	private static boolean looksLikeItemType(String module) {
+		return module.equals("Base") || module.equals("QoLC");
+	}
+
+	/** Every "item Name" declared under a scripts directory, bare names, no module. */
+	private static Set<String> readItemNames(File scripts) throws IOException {
+		Set<String> names = new HashSet<String>();
+		if (!scripts.isDirectory()) return names;
+
+		java.util.regex.Pattern decl = java.util.regex.Pattern
+			.compile("^\\s*item\\s+([A-Za-z0-9_.]+)\\s*$");
+
+		java.util.ArrayDeque<File> queue = new java.util.ArrayDeque<File>();
+		queue.add(scripts);
+
+		while (!queue.isEmpty()) {
+			File dir = queue.poll();
+			File[] children = dir.listFiles();
+			if (children == null) continue;
+
+			for (File f : children) {
+				if (f.isDirectory()) { queue.add(f); continue; }
+				if (!f.getName().endsWith(".txt")) continue;
+
+				BufferedReader r = new BufferedReader(new FileReader(f));
+				String line;
+				try {
+					while ((line = r.readLine()) != null) {
+						java.util.regex.Matcher m = decl.matcher(line);
+						if (m.matches()) names.add(m.group(1));
+					}
+				} finally {
+					r.close();
+				}
+			}
+		}
+		return names;
 	}
 
 	/** True when a "media/..." path exists in the mod's own trees or in the game. */

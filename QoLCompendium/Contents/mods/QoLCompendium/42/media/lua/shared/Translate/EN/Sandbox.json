@@ -9,5 +9,9 @@
     "Sandbox_QoLC_AdrenalineCrashPenalty": "Adrenaline Crash Penalty",
     "Sandbox_QoLC_AdrenalineCrashPenalty_tooltip": "How much extra fatigue is paid back on top of what adrenaline borrowed.",
     "Sandbox_QoLC_PropanePumpCost": "Propane Cost At A Pump",
-    "Sandbox_QoLC_PropanePumpCost_tooltip": "Fuel drawn from a pump to fill one propane tank. A jerry can holds 10, a pump holds 22000."
+    "Sandbox_QoLC_PropanePumpCost_tooltip": "Fuel drawn from a pump to fill one propane tank. A jerry can holds 10, a pump holds 22000.",
+    "Sandbox_QoLC_TailoringCutXpEnabled": "Tailoring From Cutting Clothes",
+    "Sandbox_QoLC_TailoringCutXpEnabled_tooltip": "Cutting a garment into strips teaches tailoring, and cutting gets quicker as the skill rises. Vanilla pays nothing for either.",
+    "Sandbox_QoLC_TailoringCutXp": "Tailoring Cutting Rate",
+    "Sandbox_QoLC_TailoringCutXp_tooltip": "Percentage of the experience a cut garment is worth. Denim and leather pay per strip, cotton pays nothing, uniforms pay a bonus on top."
 }

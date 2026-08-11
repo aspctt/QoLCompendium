@@ -343,6 +343,7 @@ function Harness.NewPlayer(Number, IsLocal)
 	local Player = {}
 	Player.Class = "IsoPlayer"
 	Player.Levels = {}
+	Player.Perks = {}
 	Player.ModData = {}
 	Player.Stats = NewStats()
 	Player.Moodles = NewMoodles(Player.Levels)
@@ -368,6 +369,14 @@ function Harness.NewPlayer(Number, IsLocal)
 
 	function Player:getPrimaryHandItem() return self.PrimaryHand end
 	function Player:getSecondaryHandItem() return self.SecondaryHand end
+
+	-- An untrained skill reads zero rather than nil, same as the real getPerkLevel
+	function Player:getPerkLevel(Perk)
+		if Perk == nil then error("getPerkLevel was given a nil Perk") end
+		return self.Perks[Perk] or 0
+	end
+
+	function Player:setPerkLevel(Perk, Level) self.Perks[Perk] = Level end
 
 	-- Enough of the character surface for a timed action to run
 	function Player:faceThisObject() end
@@ -586,9 +595,11 @@ end
 
 --// Crafting
 -- Stands in for CraftRecipeData. The real lists are Java ArrayLists, so they are indexed
--- from zero through get().
+-- from zero through get(). Inputs defaults to everything the recipe is holding, consumed
+-- and kept alike, which is what the real getAllInputItems returns.
 local function NewItemList(Item)
 	local List = {}
+	function List:size() return Item ~= nil and 1 or 0 end
 	function List:get(Index)
 		if Index == 0 then return Item end
 		return nil
@@ -596,11 +607,25 @@ local function NewItemList(Item)
 	return List
 end
 
-function Harness.NewCraftRecipeData(Created, Consumed, Kept)
+function Harness.NewCraftRecipeData(Created, Consumed, Kept, Inputs)
+	local All = Inputs
+	if not All then
+		All = {}
+		if Consumed ~= nil then table.insert(All, Consumed) end
+		if Kept ~= nil then table.insert(All, Kept) end
+	end
+
 	local Data = {}
 	function Data:getAllCreatedItems() return NewItemList(Created) end
 	function Data:getAllConsumedItems() return NewItemList(Consumed) end
 	function Data:getAllKeepInputItems() return NewItemList(Kept) end
+	function Data:getAllInputItems() return NewJavaList(All) end
+
+	-- What processDestroyAndUsedItems leaves behind. A performed recipe has already eaten
+	-- its inputs by the time it returns, so anything a mod wants to measure about them has
+	-- to be read first. Reproduced here so that ordering is a test rather than a comment.
+	function Data:Destroy() All = {} end
+
 	return Data
 end
 
@@ -1555,9 +1580,22 @@ function Harness.NewItemTooltip(Item)
 end
 
 --// Clothing
-function Harness.NewGarment(Fabric)
+-- Covered parts, holes and patches are what RecipeCodeOnCreate.ripClothing turns into a
+-- strip count, max(covered - (holes + patches), 1). The defaults describe a pristine
+-- jacket, so a spec only states the ones it is actually about.
+function Harness.NewGarment(Fabric, Type, Covered, Holes, Patches)
 	local Item = Harness.NewInventoryItem("Jacket")
+	Item.Type = Type or "Base.Jacket_Test"
+	Item.Covered = Covered or 7
+	Item.Holes = Holes or 0
+	Item.Patches = Patches or 0
+
 	function Item:getFabricType() return Fabric end
+	function Item:getFullType() return self.Type end
+	function Item:getNbrOfCoveredParts() return self.Covered end
+	function Item:getHolesNumber() return self.Holes end
+	function Item:getPatchesNumber() return self.Patches end
+
 	return Item
 end
 
@@ -1707,6 +1745,79 @@ end
 function ISBaseTimedAction:perform() self.Performed = true end
 function ISBaseTimedAction:stop() self.Stopped = true end
 function ISBaseTimedAction:setActionAnim() end
+
+--// Skills
+-- Perks are java singletons, compared by identity and never by name, so a string standing
+-- in for one behaves the same way everywhere a mod touches it.
+Perks = setmetatable({}, { __index = function(Table, Key) rawset(Table, Key, Key) return Key end })
+
+Harness.Xp = {}
+
+function Harness.ClearXp()
+	Harness.Xp = {}
+end
+
+-- Mirrors LuaManager.GlobalObject.addXp, which is the reason a mod may award experience
+-- from shared code without checking where it is running. On a server it sends a packet,
+-- in singleplayer it applies the experience directly, and on a multiplayer client it
+-- deliberately does nothing at all, because the server owns the character's skills.
+function addXp(Character, Perk, Amount)
+	if isClient() then return end
+	if Perk == nil then error("addXp was given a nil Perk") end
+
+	Harness.Xp[Perk] = (Harness.Xp[Perk] or 0) + Amount
+end
+
+--// Handcraft Action
+-- Mirrors media\lua\shared\Entity\TimedActions\ISHandcraftAction.lua. Only the two
+-- methods the compendium wraps are reproduced.
+--
+-- performRecipe is where vanilla actually executes a recipe. It is called from perform in
+-- singleplayer and from complete on a server, which is why a mod hooks it rather than
+-- either of those and gets the authoritative side for free.
+--
+-- getDuration returns craftRecipe:getTime(character) * 5. The real getTime shortens a
+-- craft by a twentieth of its base time per skill level above the requirement, but only
+-- for skills the recipe names in SkillRequired or xpAward. Ripping names none, so it
+-- returns the flat script time however good the character is, which is what the stub
+-- reproduces and what the compendium is here to change.
+local function NewHandcraftLogic(Data)
+	local Logic = {}
+	function Logic:getRecipeData() return Data end
+	return Logic
+end
+
+function Harness.NewCraftRecipe(Name, Time)
+	local Recipe = {}
+	function Recipe:getName() return Name end
+	function Recipe:getTime() return Time or 80 end
+	return Recipe
+end
+
+ISHandcraftAction = ISBaseTimedAction:derive("ISHandcraftAction")
+
+function ISHandcraftAction:performRecipe()
+	self.VanillaPerforms = (self.VanillaPerforms or 0) + 1
+
+	local Data = self.logic and self.logic:getRecipeData()
+	if Data and Data.Destroy then Data:Destroy() end
+end
+
+function ISHandcraftAction:getDuration()
+	if self.character:isTimedActionInstant() then return 1 end
+	if not self.craftRecipe then return -1 end
+
+	return self.craftRecipe:getTime(self.character) * 5
+end
+
+function Harness.NewHandcraftAction(Character, Recipe, Data)
+	local Action = ISBaseTimedAction.new(ISHandcraftAction, Character)
+	Action.character = Character
+	Action.craftRecipe = Recipe
+	Action.logic = NewHandcraftLogic(Data)
+
+	return Action
+end
 
 --// Context Menus
 -- Records what a mod added, so a spec can find an option by name and click it.

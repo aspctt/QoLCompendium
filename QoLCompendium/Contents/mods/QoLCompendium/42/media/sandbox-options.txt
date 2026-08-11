@@ -53,3 +53,23 @@ option QoLC.PropanePumpCost
     page = QoLC,
     translation = QoLC_PropanePumpCost,
 }
+
+/*
+ * Tailoring experience for cutting a garment into strips, which vanilla pays nothing at
+ * all for. Off returns ripping to vanilla, both the experience and the speed it gains
+ * with the skill. The rate scales what is awarded, so a host can grind it slower or
+ * faster without turning it off.
+ */
+option QoLC.TailoringCutXpEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_TailoringCutXpEnabled,
+}
+
+option QoLC.TailoringCutXp
+{
+    type = integer, min = 0, max = 500, default = 100,
+    page = QoLC,
+    translation = QoLC_TailoringCutXp,
+}

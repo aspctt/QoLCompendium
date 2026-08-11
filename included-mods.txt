@@ -23,7 +23,6 @@ Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfile
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
-Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- PERMISSION GRANTED (CREDIT REQUIRED)
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
@@ -42,6 +41,7 @@ Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/
 Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
 Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
+Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101		- INTEGRATED
 Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE
 
 
