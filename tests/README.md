@@ -57,6 +57,31 @@ exists because the mistake it catches was shipped at least once:
 - **Texture paths.** Every `getTexture` path is resolved against the mod's own trees and
   the game install. A wrong path is not an error at runtime: the texture is simply null
   and nothing draws.
+- **Item types.** Every `"Module.Item"` literal in shipped mod source is resolved against
+  the items this build defines, the mod's own scripts first and then the game's. A
+  retired clothing name is completely silent: the lookup simply stops matching.
+
+## Conflict passes
+
+Some guards decide **at file scope** whether a feature installs itself at all, because
+standing down before touching anything is the only arrangement where load order between
+two mods stops mattering. A spec cannot reach those: the decision was made before it ran.
+
+So the suite runs again, once per folder under `specs-conflicts/`, with the whole mod
+loaded a second time and that folder's name added to the mod list:
+
+```
+specs-conflicts/CleanHotBar/clean_hotbar_spec.lua
+```
+
+The folder name is the other mod's id, the `id=` line from its `mod.info` and what
+`getActivatedMods` returns. `run-tests.ps1` passes it through the `QOLC_MODS` environment
+variable, and `pz_stubs.lua` seeds `Harness.ActivatedMods` from it before any mod file
+loads. Adding a conflict is a folder and a spec, no runner changes.
+
+Every such spec asserts what did **not** happen, and an assertion of absence passes just
+as happily against the wrong mod list, so each one starts by proving the pass is really
+set up the way it claims.
 
 The `MoodleType` and `CharacterStat` tables exposed to tests are built from that same
 jar reflection, so a retired constant is nil in tests exactly as it is in game, and the

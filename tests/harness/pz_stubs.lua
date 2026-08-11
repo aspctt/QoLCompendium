@@ -1048,7 +1048,17 @@ function isServer() return Harness.IsServer end
 -- getActivatedMods returns a java ArrayList of mod ids, indexed from zero, the ids being
 -- the id= line from each mod.info. A spec adds one to stand another mod up beside this
 -- one and prove the compendium gets out of its way.
+-- Seeded before any mod file loads, because a guard deciding whether a feature installs
+-- itself at all runs at file scope and has already made its decision by the time a spec
+-- could change this. QOLC_EXTRA_MODS carries the other mods for the run, see the second
+-- pass in run-tests.ps1.
 Harness.ActivatedMods = { "QoLCompendium" }
+
+if QOLC_EXTRA_MODS then
+	for _, Name in ipairs(QOLC_EXTRA_MODS) do
+		table.insert(Harness.ActivatedMods, Name)
+	end
+end
 
 function getActivatedMods()
 	return NewJavaList(Harness.ActivatedMods)

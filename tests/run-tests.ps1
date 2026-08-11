@@ -116,21 +116,54 @@ if (Test-Path $ServerLua) {
     $LoadFiles += Get-ChildItem $ServerLua -Filter *.lua -Recurse |
                   Sort-Object Name | ForEach-Object { $_.FullName }
 }
-$LoadFiles += Get-ChildItem $Specs -Filter *_spec.lua | Sort-Object Name | ForEach-Object { $_.FullName }
+# The mod source is common to every pass. Only the specs and the mod list change.
+$ModFiles = $LoadFiles
 
-foreach ($f in $LoadFiles) {
+foreach ($f in $ModFiles) {
     if (-not (Test-Path $f)) { throw "Missing file in load order: $f" }
 }
 
 # --- run -------------------------------------------------------------------
 # Kahlua resolves stdlib.lua against the working directory, so run from the game dir.
 
-Push-Location $GameDir
-try {
-    & $Java -cp "$Jar;$Build" TestRunner $GameDir $ModRoot @LoadFiles
-    $code = $LASTEXITCODE
-} finally {
-    Pop-Location
+# The exit code comes back through a script variable rather than the return value,
+# because everything a PowerShell function writes to the output stream is part of what it
+# returns. Returning the code would swallow the whole test report into it.
+$script:PassCode = 0
+
+function Invoke-Pass {
+    param([string]$SpecDir, [string]$OtherMods)
+
+    $files = $ModFiles + (Get-ChildItem $SpecDir -Filter *_spec.lua | Sort-Object Name |
+             ForEach-Object { $_.FullName })
+
+    $env:QOLC_MODS = $OtherMods
+    Push-Location $GameDir
+    try {
+        & $Java -cp "$Jar;$Build" TestRunner $GameDir $ModRoot @files
+        $script:PassCode = $LASTEXITCODE
+    } finally {
+        Pop-Location
+        $env:QOLC_MODS = $null
+    }
+}
+
+Invoke-Pass -SpecDir $Specs -OtherMods ''
+$code = $script:PassCode
+
+# Some guards decide at file scope whether a feature installs itself at all, so they can
+# only be exercised by loading the whole mod again beside the mod they stand down for.
+# One pass per such mod, each with its own specs.
+$ConflictRoot = Join-Path $PSScriptRoot 'specs-conflicts'
+if (Test-Path $ConflictRoot) {
+    foreach ($dir in Get-ChildItem $ConflictRoot -Directory | Sort-Object Name) {
+        Write-Host ""
+        Write-Host "--- second pass, also loaded: $($dir.Name) ---"
+        Write-Host ""
+
+        Invoke-Pass -SpecDir $dir.FullName -OtherMods $dir.Name
+        if ($script:PassCode -ne 0) { $code = $script:PassCode }
+    }
 }
 
 exit $code

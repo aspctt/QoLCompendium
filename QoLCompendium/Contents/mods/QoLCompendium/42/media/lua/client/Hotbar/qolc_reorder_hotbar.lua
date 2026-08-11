@@ -21,6 +21,27 @@
 
 require "ISUI/ISHotbar"
 
+--// Guards
+-- Deliberately a local rather than a shared helper, for the same reason as the one in
+-- qolc_sling_hotbar.lua: this runs at file scope, and lua file load order between mod
+-- files is not guaranteed, so a cross file call here would be a load order landmine.
+--
+-- Clean HotBar ships its own reordering and replaces ISHotbar.render outright. Standing
+-- down before anything is installed is what makes load order stop mattering: whichever
+-- of the two loads first, the hotbar ends up entirely theirs. Leaving both in would give
+-- the player two sets of buttons and two drag systems fighting over one slot order, which
+-- is the overlap their own description warns about.
+local function OverrideBlocked()
+	if not getActivatedMods then return false end
+
+	local Mods = getActivatedMods()
+	if not Mods then return false end
+
+	return Mods:contains("CleanHotBar")
+end
+
+if OverrideBlocked() then return end
+
 --// Textures
 local TextureUnlocked = getTexture("media/textures/GUI/qolc_lock_open.png")
 local TextureLocked = getTexture("media/textures/GUI/qolc_lock_closed.png")

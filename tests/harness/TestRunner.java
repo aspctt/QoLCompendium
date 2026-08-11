@@ -127,6 +127,22 @@ public class TestRunner {
 		}
 		env.rawset("QOLC_SANDBOX_DEFAULTS", defaults);
 
+		// Mods standing beside this one for this run, from the QOLC_MODS environment
+		// variable. Some guards run at file scope and decide whether a feature installs
+		// itself at all, so the only way to exercise them is to load the whole mod again
+		// with a different mod list. See the second pass in run-tests.ps1.
+		KahluaTable extraMods = platform.newTable();
+		String mods = System.getenv("QOLC_MODS");
+		if (mods != null && mods.trim().length() > 0) {
+			String[] ids = mods.split(",");
+			int n = 0;
+			for (String id : ids) {
+				if (id.trim().length() == 0) continue;
+				extraMods.rawset(Double.valueOf(++n), id.trim());
+			}
+		}
+		env.rawset("QOLC_EXTRA_MODS", extraMods);
+
 		env.rawset("QOLC_GAME_DIR", gameDir);
 		return env;
 	}
