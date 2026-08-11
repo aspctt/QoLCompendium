@@ -294,6 +294,68 @@ Test("it is on by default", function()
 	AssertTrue(QolcConditionEnabled(), "should be on unless turned off")
 end)
 
+--// Conflicting Mods
+-- Clean HotBar draws its own condition on the same two hand slots and chains
+-- ISEquippedItem.render rather than replacing it, so ours keeps running underneath and
+-- the player gets two indicators on one slot.
+Test("nothing is drawn when Clean HotBar is installed", function()
+	table.insert(Harness.ActivatedMods, "CleanHotBar")
+
+	local Panel = NewPanel(Harness.NewWeapon(5, 10), Harness.NewWeapon(8, 10))
+	Panel:render()
+
+	AssertEquals(#Bars(Panel), 0, "Clean HotBar already draws this, ours must stand down")
+	AssertEquals(Panel.VanillaRenders, 1, "and vanilla must still draw the panel itself")
+end)
+
+Test("the hotbar half stands down too", function()
+	-- One gate covers both halves, because the hotbar draws through the same call
+	table.insert(Harness.ActivatedMods, "CleanHotBar")
+
+	local Panel = Harness.NewEquippedItemPanel(Harness.NewPlayer(0, true))
+	Panel.Drawn = {}
+
+	AssertFalse(QolcDrawCondition(Panel, 0, 0, 60, 60, Harness.NewWeapon(5, 10)),
+		"the shared draw call is what both halves go through")
+	AssertEquals(#Panel.Drawn, 0, "nothing reaches the screen")
+end)
+
+Test("the conflict beats the tick box rather than the other way round", function()
+	-- Otherwise a player with both mods sees two bars and no way to tell which tick box
+	-- belongs to which
+	table.insert(Harness.ActivatedMods, "CleanHotBar")
+	FindOption("ConditionEnabled"):setValue(true)
+
+	AssertFalse(QolcConditionEnabled(), "on is not on when another mod owns the slot")
+end)
+
+Test("an unrelated mod changes nothing", function()
+	-- NeatUI Framework is additive only: it defines its own NeatTool and NI* globals,
+	-- registers no events, and only fills in ISUIElement methods that do not already
+	-- exist. Nothing it does touches what this draws.
+	table.insert(Harness.ActivatedMods, "NeatUI_Framework")
+
+	local Panel = NewPanel(Harness.NewWeapon(5, 10))
+	Panel:render()
+
+	AssertEquals(#Bars(Panel), 1, "a mod we do not conflict with must not disable us")
+end)
+
+Test("the mod list is read once, not every frame", function()
+	-- Asked for every drawn slot on every frame otherwise, and the list cannot change
+	-- without restarting the game
+	local Calls = 0
+	local Vanilla = getActivatedMods
+	getActivatedMods = function() Calls = Calls + 1 return Vanilla() end
+
+	QolcConditionEnabled()
+	QolcConditionEnabled()
+	QolcConditionEnabled()
+
+	getActivatedMods = Vanilla
+	AssertTrue(Calls <= 1, "should be answered once and remembered, got " .. tostring(Calls))
+end)
+
 --// Translations
 Test("every option label resolves", function()
 	local Keys = {

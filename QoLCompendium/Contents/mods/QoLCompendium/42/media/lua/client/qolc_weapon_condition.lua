@@ -14,6 +14,11 @@
 --// The hotbar half is drawn from qolc_reorder_hotbar.lua rather than by overriding
 --// ISHotbar.render again. That file already owns the render, and a second override of
 --// the same function is how mods end up silently erasing each other.
+--//
+--// Stands down entirely when a mod that already draws condition on these slots is
+--// installed, see CONFLICTING_MODS. Clean HotBar is the case this was written for: it
+--// chains ISEquippedItem.render rather than replacing it, so without this both its
+--// indicator and ours are drawn on the same two hand slots.
 
 --// Textures
 -- The equipped hand slots are round. A rectangular fill spills out of them at the
@@ -51,6 +56,18 @@ local COLOUR_HEALTHY = { r = 0.30, g = 0.78, b = 0.30 }
 local COLOUR_CAUTION = { r = 0.85, g = 0.68, b = 0.20 }
 local COLOUR_DANGER = { r = 0.85, g = 0.22, b = 0.22 }
 
+--// Conflicts
+-- Mods that draw their own condition on the same slots. Both would be drawn otherwise,
+-- because Clean HotBar chains ISEquippedItem.render rather than replacing it, so ours
+-- still runs underneath its own indicator and the hand slots end up with two.
+--
+-- Keyed by mod id, which is the id= line in the other mod's mod.info and what
+-- getActivatedMods returns. Adding another one here is the whole of adding a conflict.
+local CONFLICTING_MODS = { CleanHotBar = true }
+
+local ConflictChecked = false
+local Conflicting = false
+
 --// Options
 local OPTIONS_ID = "QoLC"
 local Options = {}
@@ -80,7 +97,33 @@ local function ColourFor(Fraction)
 	return COLOUR_HEALTHY
 end
 
+-- Answered once and remembered. The mod list cannot change without restarting the game,
+-- and this is asked on every drawn slot on every frame.
+function QolcConditionConflict()
+	if ConflictChecked then return Conflicting end
+	ConflictChecked = true
+
+	local Mods = getActivatedMods and getActivatedMods()
+	if not Mods then return Conflicting end
+
+	-- A java ArrayList of mod ids, so contains does the work. Same shape as the guard in
+	-- qolc_sling_hotbar.lua.
+	for Name in pairs(CONFLICTING_MODS) do
+		if Mods:contains(Name) then
+			Conflicting = true
+			return true
+		end
+	end
+
+	return false
+end
+
 function QolcConditionEnabled()
+	-- Ahead of the option, because a mod already drawing this wins over a tick box. The
+	-- alternative is two indicators on one slot and a player who cannot turn either off
+	-- without knowing which mod drew which.
+	if QolcConditionConflict() then return false end
+
 	if not Options.Enabled then return true end
 	return Options.Enabled:getValue() and true or false
 end

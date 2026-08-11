@@ -227,6 +227,15 @@ local function NewJavaList(Items)
 	function List:size() return #Items end
 	function List:get(Index) return Items[Index + 1] end
 	function List:getItemByIndex(Index) return Items[Index + 1] end
+
+	-- Real ArrayList.contains, which mods use to test for another mod by id
+	function List:contains(Value)
+		for _, Item in ipairs(Items) do
+			if Item == Value then return true end
+		end
+		return false
+	end
+
 	return List
 end
 
@@ -1034,6 +1043,16 @@ Harness.IsServer = false
 
 function isClient() return Harness.IsClient end
 function isServer() return Harness.IsServer end
+
+--// Installed Mods
+-- getActivatedMods returns a java ArrayList of mod ids, indexed from zero, the ids being
+-- the id= line from each mod.info. A spec adds one to stand another mod up beside this
+-- one and prove the compendium gets out of its way.
+Harness.ActivatedMods = { "QoLCompendium" }
+
+function getActivatedMods()
+	return NewJavaList(Harness.ActivatedMods)
+end
 
 --// UI Elements
 -- Enough of ISUIElement for a mod to lay things out and be measured. Positions are real

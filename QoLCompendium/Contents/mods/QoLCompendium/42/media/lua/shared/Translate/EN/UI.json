@@ -15,7 +15,7 @@
     "UI_options_QoLC_Overlays_HyperthermiaStrength": "Hyperthermia Strength (%%)",
     "UI_options_QoLC_Overlays_HypothermiaStrength": "Hypothermia Strength (%%)",
     "UI_options_QoLC_Condition": "Weapon Condition",
-    "UI_options_QoLC_Condition_Desc": "Shows how worn a weapon or tool is, without hovering it.",
+    "UI_options_QoLC_Condition_Desc": "Shows how worn a weapon or tool is, without hovering it. Turns itself off if a mod that draws its own condition, such as Clean HotBar, is installed.",
     "UI_options_QoLC_Condition_Enabled": "Show Condition Bars",
     "UI_options_QoLC_Condition_Enabled_tooltip": "Draws a bar under each equipped weapon and each item on the hotbar. Green while healthy, amber under half, red under a quarter.",
     "UI_optionscreen_binding_[QoLC Extra Hotbar]": "QoL Compendium - Extra Hotbar",
