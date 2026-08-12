@@ -3,5 +3,8 @@
     "ContextMenu_SlingStyle2": "Back",
     "ContextMenu_QoLC_TakePropane": "Take Propane",
     "ContextMenu_QoLC_ReadOnePage": "Read (first page)",
-    "Tooltip_QoLC_ReadOnePage": "Still too advanced to learn from, but reading a page is enough to recognise another copy later."
+    "Tooltip_QoLC_ReadOnePage": "Still too advanced to learn from, but reading a page is enough to recognise another copy later.",
+    "ContextMenu_QoLC_GrabAmount": "Grab amount...",
+    "ContextMenu_QoLC_PutAmount": "Put amount away (%1)",
+    "ContextMenu_QoLC_TransferAmount": "How many? (max %1)"
 }

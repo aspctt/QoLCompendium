@@ -268,6 +268,13 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 	function Container:getContainingItem() return ContainingItem end
 	function Container:getParent() return Parent end
 
+	-- Containers can refuse an item outright, which is what build 42's grab menu checks
+	-- before offering anything at all
+	Container.Allowed = true
+
+	function Container:isItemAllowed(_Item) return self.Allowed end
+	function Container:isInCharacterInventory(_Character) return self.Type == "inventory" end
+
 	function Container:contains(Item)
 		for _, Held in ipairs(self.Items) do
 			if Held == Item then return true end
@@ -322,6 +329,12 @@ function Harness.NewInventoryItem(Name, WorldItem)
 	function Item:getName() return self.Name end
 	function Item:getID() return self.Id end
 	function Item:getWorldItem() return WorldItem end
+
+	-- Favourites are skipped by every vanilla transfer, so anything moving items has to
+	-- be able to ask
+	Item.Favorite = false
+	function Item:isFavorite() return self.Favorite end
+	function Item:getContainer() return self.Container end
 
 	return Item
 end
@@ -2194,6 +2207,121 @@ function ISContextMenu:getNew() return NewContextMenu() end
 Metabolics = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
 CharacterActionAnims = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
 
+--// Transfers
+-- Queued rather than performed, so a spec can count what would move and where to.
+Harness.Transfers = {}
+
+function Harness.ClearTransfers()
+	Harness.Transfers = {}
+end
+
+ISInventoryTransferAction = {}
+
+function ISInventoryTransferAction:new(Character, Item, From, To)
+	local Action = { character = Character, item = Item, from = From, to = To }
+	table.insert(Harness.Transfers, Action)
+	return Action
+end
+
+-- Vanilla walks to a container once before the first transfer and gives up if it cannot
+Harness.CanWalk = true
+
+luautils = luautils or {}
+
+function luautils.walkToContainer(_Container, _PlayerNum)
+	return Harness.CanWalk
+end
+
+-- A stack as the inventory pane hands one over: a display copy at index one and the real
+-- items after it. Anything reading the count has to allow for that.
+function Harness.NewStack(Container, Count, Name)
+	local Stack = { items = {} }
+	table.insert(Stack.items, Harness.NewInventoryItem(Name or "Nail"))
+
+	for _ = 1, Count do
+		local Item = Harness.NewInventoryItem(Name or "Nail")
+		Item.Container = Container
+		function Item:getContainer() return self.Container end
+		table.insert(Stack.items, Item)
+	end
+
+	return Stack
+end
+
+ISInventoryPane = ISInventoryPane or {}
+
+-- Flattens whatever the pane selected into real items, stacks included
+function ISInventoryPane.getActualItems(Items)
+	local Actual = {}
+
+	for _, Entry in ipairs(Items) do
+		if type(Entry) == "table" and type(Entry.items) == "table" then
+			for Index = 2, #Entry.items do table.insert(Actual, Entry.items[Index]) end
+		else
+			table.insert(Actual, Entry)
+		end
+	end
+
+	return Actual
+end
+
+-- Enough of the text box to open it, read what was typed and press its button
+ISTextBox = {}
+ISTextBox.__index = ISTextBox
+
+function ISTextBox:new(_X, _Y, _W, _H, Text, _Default, Target, OnClick, PlayerNum, P1, P2, P3)
+	local Box = setmetatable({}, ISTextBox)
+	Box.title = Text
+	Box.target = Target
+	Box.onclick = OnClick
+	Box.player = PlayerNum
+	Box.param1, Box.param2, Box.param3 = P1, P2, P3
+	Box.Typed = ""
+
+	Box.entry = {}
+	function Box.entry:getText() return Box.Typed end
+	function Box.entry:focus() Box.Focused = true end
+
+	local Ok = { internal = "OK" }
+	function Ok:triggerClick() Box:Confirm() end
+	Box.children = { Ok }
+
+	function Box:initialise() end
+	function Box:addToUIManager() Harness.OpenBox = self end
+
+	-- The real one calls onclick(target, button, param1, param2, param3, param4)
+	function Box:Confirm()
+		self.onclick(self.target, { internal = "OK", parent = self },
+			self.param1, self.param2, self.param3)
+	end
+
+	function Box:Type(Value)
+		self.Typed = tostring(Value)
+		return self
+	end
+
+	return Box
+end
+
+JoypadState = { players = {} }
+
+function setJoypadFocus() end
+
+-- The two windows every transfer reads: the character's own inventory as the destination
+-- for grabbing, and whatever is in the loot window as the destination for putting.
+function Harness.SetupTransferWindows(PlayerNum)
+	PlayerNum = PlayerNum or 0
+
+	local Player = Harness.Players[PlayerNum] or Harness.NewPlayer(PlayerNum, true)
+	local Loot = Harness.NewContainer("crate")
+
+	Harness.Pages[PlayerNum .. ":inventory"] = { inventory = Player.Inventory }
+	Harness.Pages[PlayerNum .. ":loot"] = { inventory = Loot, title = "Crate" }
+
+	Harness.ClearTransfers()
+	return Player, Loot
+end
+
 --// Literature
 -- SkillBook maps the skill a book teaches to the perk that skill trains. Vanilla builds
 -- it in XPSystem_SkillBook.lua and every literature path indexes it without checking, so
@@ -2250,6 +2378,43 @@ ISInventoryPaneContextMenu = ISInventoryPaneContextMenu or {}
 
 function ISInventoryPaneContextMenu.addToolTip()
 	return { description = "" }
+end
+
+function ISInventoryPaneContextMenu.isAnyAllowed(Container, _Items)
+	return Container.AllowsItems ~= false
+end
+
+function ISInventoryPaneContextMenu.isAllFav(Items)
+	for _, Item in ipairs(ISInventoryPane.getActualItems(Items)) do
+		if not Item:isFavorite() then return false end
+	end
+	return true
+end
+
+-- Mirrors build 42.20's doGrabMenu. The destination check is the part the original mod's
+-- copy predates: anything the target container refuses is not offered at all.
+function ISInventoryPaneContextMenu.doGrabMenu(Context, Items, PlayerNum)
+	local Destination = getPlayerInventory(PlayerNum).inventory
+
+	for _, Entry in ipairs(Items) do
+		if type(Entry) == "table" and type(Entry.items) == "table" then
+			if not Destination:isItemAllowed(Entry.items[1]) then
+				-- forbidden in the destination container
+			elseif #Entry.items > 2 then
+				Context:addOption(getText("ContextMenu_Grab_one"), Items, nil, PlayerNum)
+				Context:addOption(getText("ContextMenu_Grab_half"), Items, nil, PlayerNum)
+				Context:addOption(getText("ContextMenu_Grab_all"), Items, nil, PlayerNum)
+			else
+				Context:addOption(getText("ContextMenu_Grab"), Items, nil, PlayerNum)
+			end
+			return
+		elseif not Destination:isItemAllowed(Entry) then
+			-- forbidden in the destination container
+		else
+			Context:addOption(getText("ContextMenu_Grab"), Items, nil, PlayerNum)
+			return
+		end
+	end
 end
 
 function ISInventoryPaneContextMenu.onLiteratureItems() end

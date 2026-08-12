@@ -13,7 +13,6 @@ Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfile
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
-Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- PERMISSION GRANTED (CREDIT REQUIRED)
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 
@@ -44,6 +43,7 @@ Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
 Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101		- INTEGRATED
+Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- INTEGRATED (PERMISSION GRANTED, CREDIT REQUIRED). ALSO CREDIT KaliLynx FOR THE B42 VERSION 3389115640
 Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE
 
 
