@@ -1841,9 +1841,21 @@ function ISBaseTimedAction:stop() self.Stopped = true end
 function ISBaseTimedAction:setActionAnim() end
 
 --// Skills
--- Perks are java singletons, compared by identity and never by name, so a string standing
--- in for one behaves the same way everywhere a mod touches it.
-Perks = setmetatable({}, { __index = function(Table, Key) rawset(Table, Key, Key) return Key end })
+-- Perks are java singletons: compared by identity, never by name, and carrying their own
+-- id. getType returns the perk itself, which is what lets vanilla call it on a perk it
+-- already holds. Built on demand so a spec never has to declare one.
+Perks = setmetatable({}, {
+	__index = function(Table, Key)
+		local Perk = {}
+
+		function Perk:getId() return Key end
+		function Perk:getName() return Key end
+		function Perk:getType() return Perk end
+
+		rawset(Table, Key, Perk)
+		return Perk
+	end
+})
 
 Harness.Xp = {}
 
@@ -1860,6 +1872,79 @@ function addXp(Character, Perk, Amount)
 	if Perk == nil then error("addXp was given a nil Perk") end
 
 	Harness.Xp[Perk] = (Harness.Xp[Perk] or 0) + Amount
+end
+
+--// Experience
+-- getPerkBoost is the profession and trait boost level, 0 to 3, and is what the skills
+-- tooltip and the character creation screen both report.
+function Harness.NewXp(Boosts)
+	local Xp = {}
+	function Xp:getPerkBoost(Perk) return Boosts[Perk] or 0 end
+	function Xp:getMultiplier() return 0 end
+	return Xp
+end
+
+-- Mirrors the tail of build 42's ISSkillProgressBar:updateTooltip, which is the part the
+-- compendium rewrites. Vanilla appends the boost line for levels one to three and nothing
+-- at all otherwise, and does not exclude Fitness or Strength here even though the game
+-- gives them nothing for the second and third.
+ISSkillProgressBar = {}
+ISSkillProgressBar.__index = ISSkillProgressBar
+
+function ISSkillProgressBar:updateTooltip()
+	self.VanillaUpdates = (self.VanillaUpdates or 0) + 1
+	self.message = self.perk:getName() .. " level 1"
+
+	local Boost = self.char:getXp():getPerkBoost(self.perk:getType())
+	local Percent = nil
+	if Boost == 1 then Percent = "75%"
+	elseif Boost == 2 then Percent = "100%"
+	elseif Boost == 3 then Percent = "125%" end
+
+	if Percent then
+		self.message = self.message .. " <LINE> " .. getText("IGUI_XP_tooltipxpboost", Percent)
+	end
+end
+
+function Harness.NewSkillBar(Perk, Boost, Player)
+	Player = Player or Harness.NewPlayer(0, true)
+	Player.Xp = Harness.NewXp({ [Perk] = Boost or 0 })
+	function Player:getXp() return self.Xp end
+
+	local Bar = setmetatable({}, ISSkillProgressBar)
+	Bar.char = Player
+	Bar.perk = Perk
+
+	return Bar
+end
+
+-- Mirrors CharacterCreationProfession:drawXpBoostMap, which draws the same number through
+-- one right aligned call. Vanilla already leaves Fitness and Strength out here.
+CharacterCreationProfession = {}
+CharacterCreationProfession.__index = CharacterCreationProfession
+
+function CharacterCreationProfession:drawXpBoostMap(Y, Item)
+	self.VanillaDraws = (self.VanillaDraws or 0) + 1
+
+	local Level = Item.item.level
+	local Percent = "+ 75%"
+	if Level == 2 then Percent = "+ 100%"
+	elseif Level >= 3 then Percent = "+ 125%" end
+
+	if Item.item.perk ~= Perks.Fitness and Item.item.perk ~= Perks.Strength then
+		self:drawTextRight(Percent, 0, Y)
+	end
+
+	return Y + 20
+end
+
+function Harness.NewCreationScreen()
+	local Screen = setmetatable({}, CharacterCreationProfession)
+	Screen.Drawn = {}
+
+	function Screen:drawTextRight(Text) table.insert(self.Drawn, Text) end
+
+	return Screen
 end
 
 --// Handcraft Action

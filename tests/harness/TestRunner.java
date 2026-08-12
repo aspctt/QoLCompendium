@@ -225,8 +225,12 @@ public class TestRunner {
 					// The game runs every translation through String.format, so a bare
 					// percent is an invalid conversion and the whole string fails to
 					// render. Vanilla writes a literal percent as %%.
+					//
+					// %1 and %2 are the game's own positional arguments, substituted
+					// before that happens, so they are not bare percents. Vanilla's
+					// "XP Boost: +%1" is the example, and this check used to fail it.
 					String value = m.group(2);
-					if (value.replace("%%", "").indexOf('%') >= 0) {
+					if (value.replace("%%", "").replaceAll("%\\d", "").indexOf('%') >= 0) {
 						System.out.println("  FAIL  unescaped % in translation \"" + m.group(1)
 							+ "\"  (" + f.getName() + "), vanilla writes it as %%");
 						translationFailures++;

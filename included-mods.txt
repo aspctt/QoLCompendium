@@ -5,9 +5,7 @@ Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/share
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
 Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451
-Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040
 Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918
-Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- READ NOTES IN FOLDER
@@ -37,6 +35,7 @@ An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/shared
 Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835		- INTEGRATED (MIT LICENSE)
 Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
 Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
+Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040		- INTEGRATED. ORIGINAL CRASHES B42 VIA HasTrait AND ITS NUMBERS ARE WRONG, REBUILT FROM AddXP
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- INTEGRATED (PERMISSIVE). REBUILT FROM B42 TILE DATA, THE ORIGINAL FILE IS A B41 SUBSET
 Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/?id=533622988		- INTEGRATED
 Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
@@ -49,4 +48,5 @@ Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles
 
 ## OBSOLETE MODS
 Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
+Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548		- OBSOLETE, CONFIRMED IN GAME. B42 SHIPS Grab, Grab_one, Grab_half AND Grab_all
 Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE

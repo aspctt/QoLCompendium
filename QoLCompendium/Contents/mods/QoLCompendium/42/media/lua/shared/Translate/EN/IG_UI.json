@@ -7,5 +7,7 @@
     "IGUI_QoLC_Fabric_Leather": "Leather",
     "IGUI_QoLC_FlaggedBook1": "I'll remember I've seen this one.",
     "IGUI_QoLC_FlaggedBook2": "Too advanced for me. Noted, though.",
-    "IGUI_QoLC_FlaggedBook3": "I'll know this cover next time."
+    "IGUI_QoLC_FlaggedBook3": "I'll know this cover next time.",
+    "IGUI_QoLC_XpBoost": "XP Boost: x%1",
+    "IGUI_QoLC_XpBoostShort": "x %1"
 }
