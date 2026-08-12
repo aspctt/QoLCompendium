@@ -1390,6 +1390,55 @@ function Harness.NewInventoryPage(PlayerNum, OnCharacter)
 	return Page
 end
 
+-- Mirrors the part of build 42's ISInventoryPage:prerender that draws the weight and the
+-- title, which is all the compendium touches. Both go through drawTextRight, the weight
+-- anchored to the pin button and the title to a gap measured from a placeholder rather
+-- than from the label actually drawn. That placeholder is the bug.
+local WEIGHT_PLACEHOLDER = "9999.99 / 9999"
+
+function ISInventoryPage:prerender()
+	self.VanillaPrerenders = (self.VanillaPrerenders or 0) + 1
+
+	local Weight = self.weightLabel or "12.34 / 50"
+	self:drawTextRight(Weight, self.pinButton:getX() - 1, 0, 1, 1, 1, 1)
+
+	if self.title and not self.onCharacter then
+		local Reserved = getTextManager():MeasureStringX(UIFont.Small, WEIGHT_PLACEHOLDER) + 30
+
+		-- Vanilla appends the campfire's remaining fuel, or a note that a vehicle seat is
+		-- occupied, to the title before drawing it. A spec sets titleSuffix to get that.
+		local Text = self.title .. (self.titleSuffix or "")
+		self:drawTextRight(Text, self.width - 20 - Reserved, 4, 1, 1, 1, 1)
+	end
+end
+
+-- A loot window with a title and a weight, laid out the way vanilla lays one out
+function Harness.NewLootWindow(Title, WeightLabel, Width)
+	local Page = Harness.NewInventoryPage(0, false)
+	Page.width = Width or 400
+	Page.title = Title or "Crate"
+	Page.weightLabel = WeightLabel
+	Page.Drawn = {}
+
+	Page.pinButton = NewUIElement(Page.width - 40, 0, 16, 16)
+
+	function Page:drawTextRight(Text, X, Y)
+		table.insert(self.Drawn, {
+			Text = Text, X = X, Y = Y,
+			Left = X - getTextManager():MeasureStringX(UIFont.Small, Text)
+		})
+	end
+
+	function Page:Find(Text)
+		for _, Draw in ipairs(self.Drawn) do
+			if Draw.Text == Text then return Draw end
+		end
+		return nil
+	end
+
+	return Page
+end
+
 -- Reads the button order off the screen rather than out of the array, so a spec can
 -- prove the two agree
 function Harness.ButtonOrderByPosition(Page)
