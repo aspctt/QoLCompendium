@@ -44,10 +44,15 @@ Test("the torch is patched to sixteen uses on init", function()
 end)
 
 Test("patching twice does not stack", function()
+	-- Counted on the torch alone. Other features patch their own items on the same event
+	-- and some of them write every time by design, so a total across all items would
+	-- report their work as this one failing.
 	Harness.Fire("OnInitGlobalModData")
-	local CallsAfterFirst = Harness.DoParamCalls
+	local CallsAfterFirst = Harness.DoParamsFor["Base.BlowTorch"]
+
 	Harness.Fire("OnInitGlobalModData")
-	AssertEquals(Harness.DoParamCalls, CallsAfterFirst, "a second init should be a no op")
+	AssertEquals(Harness.DoParamsFor["Base.BlowTorch"], CallsAfterFirst,
+		"a second init should be a no op")
 end)
 
 Test("the propane tank itself is left alone", function()

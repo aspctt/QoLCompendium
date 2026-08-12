@@ -1,9 +1,6 @@
 ## TO DO MODS
-An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174		- READ NOTES IN FOLDER
-AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
 CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507
-Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING
-Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102
+Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102		- DO LAST
 Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
@@ -12,13 +9,11 @@ Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- READ NOTES IN FOLDER
 Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918
 Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548
-Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398
-Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE
+Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- READ NOTES IN FOLDER
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
 No More Modded Server Start Problems				- https://steamcommunity.com/sharedfiles/filedetails/?id=2954079051
-Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021
@@ -29,10 +24,18 @@ Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/s
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
 
 
+## TO DO MODS - NO REDISTRIBUTE
+AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
+Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING
+Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE
+Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE
+
+
 ## INTEGRATED MODS
 [B41] Bigger Character Avatar						- https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570		- INTEGRATED
 41.78+ Propane Torch Fix [B42 Supported]			- https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057		- INTEGRATED
 Actual Realistic Rifle Sling						- https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977		- INTEGRATED
+An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174		- INTEGRATED (COFFEE ICONS + FLAG AS SEEN). SORTING AND RENAMING OBSOLETE, B42 CATEGORISES AND NAMES NATIVELY
 Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835		- INTEGRATED (MIT LICENSE)
 Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
 Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH

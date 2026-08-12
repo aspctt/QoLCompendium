@@ -1,5 +1,7 @@
 {
     "ContextMenu_SlingStyle1": "Front",
     "ContextMenu_SlingStyle2": "Back",
-    "ContextMenu_QoLC_TakePropane": "Take Propane"
+    "ContextMenu_QoLC_TakePropane": "Take Propane",
+    "ContextMenu_QoLC_ReadOnePage": "Read (first page)",
+    "Tooltip_QoLC_ReadOnePage": "Still too advanced to learn from, but reading a page is enough to recognise another copy later."
 }

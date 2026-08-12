@@ -4,5 +4,8 @@
     "IGUI_QoLC_Fabric": "Fabric:",
     "IGUI_QoLC_Fabric_Cotton": "Cotton",
     "IGUI_QoLC_Fabric_Denim": "Denim",
-    "IGUI_QoLC_Fabric_Leather": "Leather"
+    "IGUI_QoLC_Fabric_Leather": "Leather",
+    "IGUI_QoLC_FlaggedBook1": "I'll remember I've seen this one.",
+    "IGUI_QoLC_FlaggedBook2": "Too advanced for me. Noted, though.",
+    "IGUI_QoLC_FlaggedBook3": "I'll know this cover next time."
 }

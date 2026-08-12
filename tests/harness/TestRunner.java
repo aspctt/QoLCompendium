@@ -26,6 +26,7 @@ public class TestRunner {
 	private static final List<String> loadFiles = new ArrayList<String>();
 	private static List<String> moodleTypes = new ArrayList<String>();
 	private static List<String> characterStats = new ArrayList<String>();
+	private static List<String> characterTraits = new ArrayList<String>();
 	private static final Map<String, float[]> statBounds = new LinkedHashMap<String, float[]>();
 	private static final Map<String, Object> sandboxDefaults = new LinkedHashMap<String, Object>();
 	private static int translationFailures = 0;
@@ -39,14 +40,18 @@ public class TestRunner {
 		modRoot = new File(args[1]).getCanonicalPath();
 		for (int i = 2; i < args.length; i++) loadFiles.add(args[i]);
 
-		moodleTypes = readMoodleTypes();
+		moodleTypes = readConstants("zombie.scripting.objects.MoodleType");
 		System.out.println("MoodleType constants found in this build: " + moodleTypes.size());
 
 		characterStats = readCharacterStats();
 		System.out.println("CharacterStat constants found in this build: " + characterStats.size());
 
+		characterTraits = readConstants("zombie.scripting.objects.CharacterTrait");
+		System.out.println("CharacterTrait constants found in this build: " + characterTraits.size());
+
 		int staticFailures = checkConstantUsage("MoodleType.", moodleTypes)
 			+ checkConstantUsage("CharacterStat.", characterStats)
+			+ checkConstantUsage("CharacterTrait.", characterTraits)
 			+ checkItemScripts()
 			+ checkSandboxOptions()
 			+ checkTexturePaths()
@@ -121,6 +126,10 @@ public class TestRunner {
 		env.rawset("CharacterStat", stats);
 		env.rawset("QOLC_STAT_BOUNDS", bounds);
 
+		KahluaTable traits = platform.newTable();
+		for (String n : characterTraits) traits.rawset(n, n);
+		env.rawset("CharacterTrait", traits);
+
 		KahluaTable defaults = platform.newTable();
 		for (Map.Entry<String, Object> e : sandboxDefaults.entrySet()) {
 			defaults.rawset(e.getKey(), e.getValue());
@@ -142,6 +151,26 @@ public class TestRunner {
 			}
 		}
 		env.rawset("QOLC_EXTRA_MODS", extraMods);
+
+		// Every item icon the mod ships, by the name an Icon= value would use. An Icon
+		// naming a texture that does not exist draws nothing and reports nothing, which
+		// is how the original literature mod ended up shipping five book icons that were
+		// never there.
+		KahluaTable textures = platform.newTable();
+		File[] iconDirs = {
+			new File(modRoot, "common/media/textures"),
+			new File(modRoot, "42/media/textures")
+		};
+		for (File dir : iconDirs) {
+			File[] files = dir.listFiles();
+			if (files == null) continue;
+			for (File f : files) {
+				String n = f.getName();
+				if (!n.startsWith("Item_") || !n.endsWith(".png")) continue;
+				textures.rawset(n.substring(5, n.length() - 4), Boolean.TRUE);
+			}
+		}
+		env.rawset("QOLC_ITEM_ICONS", textures);
 
 		env.rawset("QOLC_GAME_DIR", gameDir);
 		return env;
@@ -261,19 +290,23 @@ public class TestRunner {
 	/* ---------- static checks ---------- */
 
 	/** Reads the MoodleType constant names straight out of the shipped jar. */
-	private static List<String> readMoodleTypes() {
+	/**
+	 * The UPPER_SNAKE constants a class declares, read out of the installed jar. Build 42
+	 * renamed whole families of these at once, and a retired one is nil at runtime rather
+	 * than an error, so the mod source is checked against what this build really has.
+	 */
+	private static List<String> readConstants(String className) {
 		List<String> names = new ArrayList<String>();
 		try {
 			// false = do not run static initialisers, which would need a live game
-			Class<?> c = Class.forName("zombie.scripting.objects.MoodleType", false,
-				TestRunner.class.getClassLoader());
+			Class<?> c = Class.forName(className, false, TestRunner.class.getClassLoader());
 			for (Field f : c.getDeclaredFields()) {
 				if (!Modifier.isStatic(f.getModifiers())) continue;
 				if (!f.getName().matches("[A-Z][A-Z0-9_]*")) continue;
 				names.add(f.getName());
 			}
 		} catch (Throwable t) {
-			System.out.println("WARN   could not read MoodleType from the jar: " + t);
+			System.out.println("WARN   could not read " + className + " from the jar: " + t);
 		}
 		return names;
 	}

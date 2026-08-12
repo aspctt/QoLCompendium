@@ -255,6 +255,13 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 	function Container:getContainingItem() return ContainingItem end
 	function Container:getParent() return Parent end
 
+	function Container:contains(Item)
+		for _, Held in ipairs(self.Items) do
+			if Held == Item then return true end
+		end
+		return false
+	end
+
 	function Container:getItemWithIDRecursiv(Id)
 		for _, Item in ipairs(self.Items) do
 			if Item:getID() == Id then return Item end
@@ -353,6 +360,9 @@ function Harness.NewPlayer(Number, IsLocal)
 	Player.Class = "IsoPlayer"
 	Player.Levels = {}
 	Player.Perks = {}
+	Player.Traits = {}
+	Player.ReadPages = {}
+	Player.Said = {}
 	Player.ModData = {}
 	Player.Stats = NewStats()
 	Player.Moodles = NewMoodles(Player.Levels)
@@ -386,6 +396,20 @@ function Harness.NewPlayer(Number, IsLocal)
 	end
 
 	function Player:setPerkLevel(Perk, Level) self.Perks[Perk] = Level end
+
+	-- Reading. Pages read are tracked per book type rather than per copy, which is what
+	-- lets a character recognise a second copy of one they have already opened.
+	function Player:getAlreadyReadPages(Type) return self.ReadPages[Type] or 0 end
+	function Player:setAlreadyReadPages(Type, Pages) self.ReadPages[Type] = Pages end
+	function Player:tooDarkToRead() return self.TooDark == true end
+	function Player:Say(Text) table.insert(self.Said, Text) end
+
+	function Player:hasTrait(Trait)
+		if Trait == nil then error("hasTrait was given a nil CharacterTrait") end
+		return self.Traits[Trait] == true
+	end
+
+	function Player:setTrait(Trait, Value) self.Traits[Trait] = Value end
 
 	-- Enough of the character surface for a timed action to run
 	function Player:faceThisObject() end
@@ -697,6 +721,38 @@ Harness.ScriptItems = {
 	["Base.SilkShirt"] = { FabricType = "Silk" },
 }
 
+-- Skill books, the twenty four families build 42 ships, five volumes each. Generated
+-- rather than listed because the shape is entirely regular and a hand written list of a
+-- hundred and twenty would rot silently.
+--
+-- Ten families draw as Book_Generic tinted through IconColorMask, which is exactly the
+-- problem the compendium's icons solve, so the stub carries that distinction rather than
+-- pretending every book already has art of its own.
+Harness.DoParamsFor = {}
+
+Harness.SkillBookFamilies = {
+	"Aiming", "Blacksmith", "Butchering", "Carpentry", "Carving", "Cooking",
+	"Electrician", "Farming", "FirstAid", "Fishing", "FlintKnapping", "Foraging",
+	"Glassmaking", "Husbandry", "LongBlade", "Maintenance", "Masonry", "Mechanic",
+	"MetalWelding", "Pottery", "Reloading", "Tailoring", "Tracking", "Trapping"
+}
+
+local TINTED = {
+	Blacksmith = true, Butchering = true, Carving = true, FlintKnapping = true,
+	Glassmaking = true, LongBlade = true, Masonry = true, Pottery = true,
+	Tailoring = true, Tracking = true
+}
+
+for _, Family in ipairs(Harness.SkillBookFamilies) do
+	for Volume = 1, 5 do
+		Harness.ScriptItems["Base.Book" .. Family .. tostring(Volume)] = {
+			DisplayCategory = "SkillBook",
+			Icon = TINTED[Family] and "Book_Generic" or "Book8",
+			IconColorMask = TINTED[Family] and "Book_Generic_Mask" or nil
+		}
+	end
+end
+
 local function NewScriptItem(Name)
 	local Definition = Harness.ScriptItems[Name]
 	if not Definition then return nil end
@@ -710,6 +766,10 @@ local function NewScriptItem(Name)
 	function Item:getDisplayCategory() return Definition.DisplayCategory end
 	function Item:getFabricType() return Definition.FabricType end
 	function Item:getTooltip() return Definition.Tooltip end
+
+	-- The real one is a private field with no getter, so a mod cannot read it back. Only
+	-- the stub exposes it, which is what lets a spec prove the tint was turned off.
+	function Item:QolcIconColorMask() return Definition.IconColorMask end
 
 	-- Zero on anything that does not spoil, which is how the game distinguishes tinned
 	-- food from fresh
@@ -729,7 +789,12 @@ local function NewScriptItem(Name)
 		if not Key then error("DoParam could not parse: " .. tostring(Param)) end
 		local Number = tonumber(Value)
 		Definition[Key] = Number or Value
+
+		-- Counted per item as well as in total. A single total is shared by every feature
+		-- that patches a script, so one spec asserting "nothing happened on a second pass"
+		-- would break the moment an unrelated feature legitimately writes something.
 		Harness.DoParamCalls = (Harness.DoParamCalls or 0) + 1
+		Harness.DoParamsFor[Name] = (Harness.DoParamsFor[Name] or 0) + 1
 	end
 
 	return Item
@@ -1850,14 +1915,25 @@ end
 
 --// Context Menus
 -- Records what a mod added, so a spec can find an option by name and click it.
+-- Options live on a lowercase "options" because that is the field vanilla uses, and mods
+-- that adjust an entry vanilla added have to walk it by that name. Click dispatches the
+-- way ISContextMenu really does, target first and then the parameters.
 local function NewContextMenu()
 	local Menu = {}
-	Menu.Options = {}
+	Menu.options = {}
 
-	function Menu:addOption(Name, Target, Handler)
-		local Option = { name = Name, Handler = Handler }
-		function Option:Click() if self.Handler then self.Handler() end end
-		table.insert(self.Options, Option)
+	function Menu:addOption(Name, Target, Handler, P1, P2, P3)
+		local Option = {
+			name = Name, target = Target, onSelect = Handler,
+			param1 = P1, param2 = P2, param3 = P3
+		}
+
+		function Option:Click()
+			if self.notAvailable or not self.onSelect then return end
+			self.onSelect(self.target, self.param1, self.param2, self.param3)
+		end
+
+		table.insert(self.options, Option)
 		return Option
 	end
 
@@ -1865,7 +1941,7 @@ local function NewContextMenu()
 	function Menu:addGetUpOption(Name, Target, Handler) return self:addOption(Name, Target, Handler) end
 
 	function Menu:Find(Name)
-		for _, Option in ipairs(self.Options) do
+		for _, Option in ipairs(self.options) do
 			if Option.name == Name then return Option end
 		end
 		return nil
@@ -1880,6 +1956,88 @@ ISContextMenu = {}
 function ISContextMenu:getNew() return NewContextMenu() end
 
 Metabolics = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
+CharacterActionAnims = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
+
+--// Literature
+-- SkillBook maps the skill a book teaches to the perk that skill trains. Vanilla builds
+-- it in XPSystem_SkillBook.lua and every literature path indexes it without checking, so
+-- a skill missing from here throws exactly where the game would.
+SkillBook = setmetatable({}, {
+	__index = function(Table, Key)
+		local Entry = { perk = Key }
+		rawset(Table, Key, Entry)
+		return Entry
+	end
+})
+
+ISInventoryPane = ISInventoryPane or {}
+
+function ISInventoryPane.getActualUniqueItems(Items)
+	local Seen = {}
+	local Unique = {}
+
+	for _, Item in ipairs(Items) do
+		local Type = Item.getFullType and Item:getFullType()
+		if not Type or not Seen[Type] then
+			if Type then Seen[Type] = true end
+			table.insert(Unique, Item)
+		end
+	end
+
+	return Unique
+end
+
+-- A skill book. LvlSkillTrained is the level needed to learn from it, and vanilla refuses
+-- to read one more than a single level above the character.
+function Harness.NewSkillBook(Skill, LvlSkillTrained, Pages)
+	local Book = Harness.NewInventoryItem("Book")
+	Book.Skill = Skill or "Carpentry"
+	Book.Lvl = LvlSkillTrained or 3
+	Book.Pages = Pages or 220
+
+	function Book:getSkillTrained() return self.Skill end
+	function Book:getLvlSkillTrained() return self.Lvl end
+	function Book:getNumberOfPages() return self.Pages end
+	function Book:getFullType() return "Base.Book" .. self.Skill .. tostring(self.Lvl) end
+	function Book:setJobType(Value) self.JobType = Value end
+	function Book:setJobDelta(Value) self.JobDelta = Value end
+
+	return Book
+end
+
+-- Mirrors the branches of build 42's ISInventoryPaneContextMenu.doLiteratureMenu that the
+-- compendium reacts to: a book whose level is out of reach gets a disabled Read carrying
+-- the TooComplicated tooltip, and anything else gets a working one. Vanilla's other cases,
+-- too dark, pictures, recently read, empty notebooks and the recipe list, are not
+-- reproduced, because nothing here touches them.
+ISInventoryPaneContextMenu = ISInventoryPaneContextMenu or {}
+
+function ISInventoryPaneContextMenu.addToolTip()
+	return { description = "" }
+end
+
+function ISInventoryPaneContextMenu.onLiteratureItems() end
+
+function ISInventoryPaneContextMenu.doLiteratureMenu(Context, Items, PlayerNum)
+	local Player = getSpecificPlayer(PlayerNum)
+
+	for _, Item in ipairs(ISInventoryPane.getActualUniqueItems(Items)) do
+		if Item.getLvlSkillTrained and Item:getLvlSkillTrained() ~= -1
+			and Item:getLvlSkillTrained() > Player:getPerkLevel(SkillBook[Item:getSkillTrained()].perk) + 1 then
+
+			local Nope = Context:addOption(getText("ContextMenu_Read"))
+			Nope.notAvailable = true
+
+			local Tooltip = ISInventoryPaneContextMenu.addToolTip()
+			Tooltip.description = getText("ContextMenu_TooComplicated")
+			Nope.toolTip = Tooltip
+			return
+		end
+	end
+
+	Context:addOption(getText("ContextMenu_Read"), Items,
+		ISInventoryPaneContextMenu.onLiteratureItems, PlayerNum)
+end
 
 --// Player Windows
 -- Keyed "<playerNum>:inventory" and "<playerNum>:loot", which is how a spec decides

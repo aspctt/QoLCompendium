@@ -106,7 +106,7 @@ Test("an empty tank is filled", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	AssertNear(Tanks(Player)[1]:getCurrentUsesFloat(), 1, 0.000001, "the tank should be full")
@@ -117,7 +117,7 @@ Test("filling draws on the pump", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	AssertEquals(Pump:getPipedFuelAmount(), 22000 - SandboxVars.QoLC.PropanePumpCost,
@@ -129,7 +129,7 @@ Test("a half empty tank costs half as much", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	local Spent = 22000 - Pump:getPipedFuelAmount()
@@ -144,7 +144,7 @@ Test("a nearly dry pump gives a partial fill", function()
 	local Pump = Harness.NewFuelPump(math.floor(Cost / 2))
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	local Filled = Tanks(Player)[1]:getCurrentUsesFloat()
@@ -174,7 +174,7 @@ Test("the tank is synced for multiplayer", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	AssertTrue(Tanks(Player)[1].SyncCount > 0, "a drainable carries its charge as an item field")
@@ -186,7 +186,7 @@ Test("the action stops if the pump runs dry", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 
 	Pump:setPipedFuelAmount(0)
 	AssertFalse(Harness.ActionQueue[1]:isValid(), "an empty pump should end the action")
@@ -197,7 +197,7 @@ Test("the action stops once the tank is full", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 
 	Tanks(Player)[1]:setCurrentUsesFloat(1)
 	AssertFalse(Harness.ActionQueue[1]:isValid(), "a full tank should end the action")
@@ -212,7 +212,7 @@ Test("the server sets what propane costs", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	AssertEquals(Pump:getPipedFuelAmount(), 22000 - 500, "should have used the sandbox value")
@@ -225,7 +225,7 @@ Test("a save with no sandbox value still fills", function()
 	local Pump = Harness.NewFuelPump(22000)
 
 	local Menu = RightClick(Player, { Pump })
-	Menu:Find(TAKE_PROPANE).SubMenu.Options[1]:Click()
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
 	RunQueue()
 
 	AssertNear(Tanks(Player)[1]:getCurrentUsesFloat(), 1, 0.000001,
