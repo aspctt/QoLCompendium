@@ -55,7 +55,8 @@ public class TestRunner {
 			+ checkItemScripts()
 			+ checkSandboxOptions()
 			+ checkTexturePaths()
-			+ checkItemTypes();
+			+ checkItemTypes()
+			+ checkTileDefs();
 
 		// Discovery pass: load everything once just to learn the test names.
 		List<String> names;
@@ -708,6 +709,220 @@ public class TestRunner {
 			}
 		}
 		return names;
+	}
+
+	/**
+	 * Diffs every tile definition the mod ships against the installed build's own.
+	 *
+	 * A tileset can only be replaced whole, so fixing one property on eight flamingo tiles
+	 * means shipping all fifty tiles of vegetation_ornamental_01. Everything except that
+	 * one property is a copy, and a copy silently wins over whatever the game ships next.
+	 * That is the entire risk of the approach, and this is what converts it from a silent
+	 * revert into a failed build: any difference other than the intended one is reported,
+	 * and tools/generate_flamingo_tiles.py regenerates the file.
+	 */
+	private static int checkTileDefs() throws IOException {
+		File dir = new File(modRoot, "common/media");
+		File[] files = dir.listFiles();
+		if (files == null) return 0;
+
+		int bad = 0;
+		for (File f : files) {
+			if (!f.getName().endsWith(".tiles")) continue;
+			bad += checkTileDefFile(f);
+		}
+		return bad;
+	}
+
+	/** Intentional differences: the property, and the tiles it may be missing from. */
+	private static final String DROPPED_PROPERTY = "attachedFloor";
+	private static final String DROPPED_FROM = "Flamingo";
+
+	private static int checkTileDefFile(File file) throws IOException {
+		Map<String, Map<String, String>> ours;
+		try {
+			ours = readTileDefBinary(file);
+		} catch (IOException e) {
+			System.out.println("  FAIL  " + file.getName() + " could not be read: " + e.getMessage());
+			System.out.println("        regenerate with tools/generate_flamingo_tiles.py");
+			System.out.println();
+			return 1;
+		}
+
+		int bad = 0;
+		int checked = 0;
+		int intended = 0;
+
+		Map<String, Map<String, String>> theirs = readTileDefDump();
+
+		for (Map.Entry<String, Map<String, String>> e : ours.entrySet()) {
+			Map<String, String> mine = e.getValue();
+			Map<String, String> vanilla = theirs.get(e.getKey());
+			checked++;
+
+			if (vanilla == null) {
+				bad++;
+				System.out.println("  FAIL  " + file.getName() + " defines " + e.getKey()
+					+ ", which this build does not have");
+				continue;
+			}
+
+			// Every property we carry must match, and every one vanilla carries must be
+			// present, apart from the single one this is allowed to remove.
+			Set<String> keys = new HashSet<String>(mine.keySet());
+			keys.addAll(vanilla.keySet());
+
+			for (String key : keys) {
+				String a = mine.get(key);
+				String b = vanilla.get(key);
+				if (a != null && a.equals(b)) continue;
+
+				boolean allowed = a == null && key.equals(DROPPED_PROPERTY)
+					&& DROPPED_FROM.equals(vanilla.get("CustomName"));
+				if (allowed) { intended++; continue; }
+
+				bad++;
+				System.out.println("  FAIL  " + file.getName() + " " + e.getKey()
+					+ " " + key + ": ships " + (a == null ? "nothing" : "\"" + a + "\"")
+					+ ", this build has " + (b == null ? "nothing" : "\"" + b + "\""));
+			}
+		}
+
+		// Drift is only half of it. A file that matched vanilla exactly would pass every
+		// check above while fixing nothing, and still freeze the tileset, so the change
+		// this exists to make has to be present on every tile it applies to.
+		int expected = 0;
+		for (Map.Entry<String, Map<String, String>> e : theirs.entrySet()) {
+			if (!ours.containsKey(e.getKey())) continue;
+			if (DROPPED_FROM.equals(e.getValue().get("CustomName"))
+				&& e.getValue().containsKey(DROPPED_PROPERTY)) expected++;
+		}
+
+		if (bad == 0 && intended != expected) {
+			bad++;
+			System.out.println("  FAIL  " + file.getName() + " drops " + DROPPED_PROPERTY
+				+ " from " + intended + " " + DROPPED_FROM + " tiles, expected " + expected);
+		}
+
+		if (bad == 0) {
+			System.out.println("Tile definitions checked: " + checked + " tiles, "
+				+ intended + " intended change(s)");
+		} else {
+			System.out.println("        regenerate with tools/generate_flamingo_tiles.py");
+			System.out.println();
+		}
+		return bad;
+	}
+
+	/** "<tileset>_<index>" -> properties, from a .tiles binary. */
+	private static Map<String, Map<String, String>> readTileDefBinary(File file) throws IOException {
+		DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)));
+		Map<String, Map<String, String>> tiles = new LinkedHashMap<String, Map<String, String>>();
+		try {
+			byte[] magic = new byte[4];
+			in.readFully(magic);
+			if (!"tdef".equals(new String(magic, "UTF-8"))) {
+				System.out.println("  FAIL  " + file.getName() + " is not a tile definition file");
+				return tiles;
+			}
+
+			readLittleInt(in);                       // version
+			int sets = readLittleInt(in);
+
+			for (int s = 0; s < sets; s++) {
+				String name = readLine(in);
+				readLine(in);                        // png
+				readLittleInt(in);                   // width
+				readLittleInt(in);                   // height
+				readLittleInt(in);                   // tileset number within the file
+				int count = readLittleInt(in);
+
+				// Bounded on purpose. A count read out of a corrupt file is arbitrary, and
+				// without a ceiling the reader spins on empty strings instead of failing.
+				if (count < 0 || count > 4096) {
+					throw new IOException("implausible tile count " + count + " in " + name);
+				}
+
+				for (int t = 0; t < count; t++) {
+					int props = readLittleInt(in);
+					if (props == 0) continue;
+					if (props < 0 || props > 256) {
+						throw new IOException("implausible property count " + props
+							+ " on " + name + "_" + t);
+					}
+
+					Map<String, String> map = new LinkedHashMap<String, String>();
+					for (int p = 0; p < props; p++) {
+						String key = readLine(in);
+						map.put(key, readLine(in));
+					}
+					tiles.put(name + "_" + t, map);
+				}
+			}
+		} finally {
+			in.close();
+		}
+		return tiles;
+	}
+
+	/** The same shape, from the readable dump the game ships beside its own binary. */
+	private static Map<String, Map<String, String>> readTileDefDump() throws IOException {
+		Map<String, Map<String, String>> tiles = new LinkedHashMap<String, Map<String, String>>();
+		File dump = new File(gameDir, "media/newtiledefinitions.tiles.txt");
+		if (!dump.isFile()) return tiles;
+
+		BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(dump), "UTF-8"));
+		try {
+			String line;
+			String set = null;
+			int width = 8;
+			Map<String, String> current = null;
+
+			while ((line = r.readLine()) != null) {
+				String t = line.trim();
+
+				// A tile ends at its closing brace. Without this the tileset header that
+				// follows, size and id, is read as more properties of the last tile.
+				if (t.equals("}")) {
+					current = null;
+				} else if (t.startsWith("file = ")) {
+					set = t.substring(7).trim();
+				} else if (t.startsWith("size = ")) {
+					width = Integer.parseInt(t.substring(7).split(",")[0].trim());
+				} else if (t.equals("tile")) {
+					current = new LinkedHashMap<String, String>();
+				} else if (t.startsWith("xy = ") && current != null && set != null) {
+					String[] xy = t.substring(5).split(",");
+					int index = Integer.parseInt(xy[1].trim()) * width + Integer.parseInt(xy[0].trim());
+					tiles.put(set + "_" + index, current);
+				} else if (current != null && t.contains(" = ")) {
+					int at = t.indexOf(" = ");
+					String key = t.substring(0, at);
+					if (!key.equals("xy")) current.put(key, t.substring(at + 3).trim());
+				} else if (current != null && t.endsWith("=") && t.length() > 1) {
+					current.put(t.substring(0, t.length() - 1).trim(), "");
+				}
+			}
+		} finally {
+			r.close();
+		}
+		return tiles;
+	}
+
+	private static int readLittleInt(DataInputStream in) throws IOException {
+		return in.readUnsignedByte() | (in.readUnsignedByte() << 8)
+			| (in.readUnsignedByte() << 16) | (in.readUnsignedByte() << 24);
+	}
+
+	/** Strings in this format are newline terminated rather than length prefixed. */
+	private static String readLine(DataInputStream in) throws IOException {
+		StringBuilder sb = new StringBuilder();
+		int c;
+		while ((c = in.read()) != -1 && c != '\n') sb.append((char) c);
+		// Running off the end quietly is what turns a malformed file into a hang rather
+		// than a failure, because every later read then succeeds with nothing in it.
+		if (c == -1) throw new IOException("unexpected end of tile definition file");
+		return sb.toString();
 	}
 
 	/** True when a "media/..." path exists in the mod's own trees or in the game. */

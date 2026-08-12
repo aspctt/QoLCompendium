@@ -60,6 +60,11 @@ exists because the mistake it catches was shipped at least once:
 - **Item types.** Every `"Module.Item"` literal in shipped mod source is resolved against
   the items this build defines, the mod's own scripts first and then the game's. A
   retired clothing name is completely silent: the lookup simply stops matching.
+- **Tile definitions.** A tileset can only be replaced whole, so `qolc_flamingo.tiles`
+  carries fifty tiles copied from the game to change one property on eight of them. Every
+  one is diffed against the installed build: any difference other than the intended one
+  fails, and so does the intended one going missing, which would leave a file that freezes
+  the tileset while fixing nothing. Regenerate with `tools/generate_flamingo_tiles.py`.
 
 ## Conflict passes
 
