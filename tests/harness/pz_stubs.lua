@@ -1958,6 +1958,13 @@ function Harness.NewGenerator(Fuel, PowerUsing, Activated, X, Y, Z)
 	function Generator:isActivated() return self.Activated end
 	function Generator:getSquare() return self.Square end
 
+	-- The generator's own draw, and the one place the sandbox multiplier is already
+	-- folded in: the real one returns 0.02 times GeneratorFuelConsumption.
+	function Generator:getBasePowerConsumption()
+		local Rate = SandboxVars and tonumber(SandboxVars.GeneratorFuelConsumption)
+		return 0.02 * (Rate or 1)
+	end
+
 	Generator.Square = Harness.NewGridSquare(X or 100, Y or 100, Z or 0)
 	return Generator
 end

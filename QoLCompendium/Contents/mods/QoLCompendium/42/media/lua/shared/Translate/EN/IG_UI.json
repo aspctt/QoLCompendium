@@ -10,6 +10,8 @@
     "IGUI_QoLC_FlaggedBook3": "I'll know this cover next time.",
     "IGUI_QoLC_XpBoost": "XP Boost: x%1",
     "IGUI_QoLC_XpBoostShort": "x %1",
-    "IGUI_QoLC_GeneratorDaysHours": "Fuel remaining: %1 days, %2 hours",
-    "IGUI_QoLC_GeneratorHours": "Fuel remaining: %1 hours"
+    "IGUI_QoLC_GeneratorDaysHours": "%1 days, %2 hours",
+    "IGUI_QoLC_GeneratorHours": "%1 hours",
+    "IGUI_QoLC_GeneratorRemaining": "Fuel remaining: %1",
+    "IGUI_QoLC_GeneratorWouldLast": "Fuel would last: %1"
 }

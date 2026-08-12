@@ -36,14 +36,24 @@ Test("the sandbox consumption rate is applied", function()
 	AssertEquals(QolcGeneratorHoursLeft(Harness.NewGenerator(10, 0.1)), 200, "half the burn, twice the time")
 end)
 
-Test("a generator that is off has no answer", function()
-	-- It burns nothing, so there is no time to run out in
-	AssertNil(QolcGeneratorHoursLeft(Harness.NewGenerator(10, 0.1, false)), "switched off")
+Test("a generator that is off still gets an answer", function()
+	-- Reported in game: nothing showed on a stopped generator, which is exactly when the
+	-- number is worth having. It burns the same rate the moment it starts.
+	AssertEquals(QolcGeneratorHoursLeft(Harness.NewGenerator(10, 0.1, false)), 100, "switched off")
 end)
 
-Test("a generator drawing nothing has no answer", function()
-	-- Dividing by this would be an infinity, which is not a number to put on screen
-	AssertNil(QolcGeneratorHoursLeft(Harness.NewGenerator(10, 0)), "no load at all")
+Test("one that has never run falls back to its own base draw", function()
+	-- getTotalPowerUsing is only worked out once the game powers the surroundings, so it
+	-- reads zero on a generator that has never been switched on
+	local Generator = Harness.NewGenerator(10, 0, false)
+	AssertEquals(QolcGeneratorHoursLeft(Generator), 500, "ten fuel over a base of 0.02")
+end)
+
+Test("the base draw is not multiplied twice", function()
+	-- getBasePowerConsumption already has the sandbox rate in it. Applying it again would
+	-- halve or double the answer depending on the setting.
+	SandboxVars.GeneratorFuelConsumption = 2
+	AssertEquals(QolcGeneratorHoursLeft(Harness.NewGenerator(10, 0)), 250, "0.02 times two, once")
 end)
 
 Test("an empty tank is zero rather than nothing", function()
@@ -52,16 +62,25 @@ end)
 
 --// Reading It
 Test("days and hours are split out", function()
-	AssertContains(QolcGeneratorTimeText(100), "4", "four days")
-	AssertEquals(QolcGeneratorTimeText(100), getText("IGUI_QoLC_GeneratorDaysHours", "4", "4"), "and four hours")
+	AssertEquals(QolcGeneratorDuration(100), getText("IGUI_QoLC_GeneratorDaysHours", "4", "4"),
+		"a hundred hours is four days and four")
 end)
 
 Test("under a day reads as hours alone", function()
-	AssertEquals(QolcGeneratorTimeText(5), getText("IGUI_QoLC_GeneratorHours", "5"), "no days part")
+	AssertEquals(QolcGeneratorDuration(5), getText("IGUI_QoLC_GeneratorHours", "5"), "no days part")
 end)
 
 Test("part hours are not shown", function()
-	AssertEquals(QolcGeneratorTimeText(5.9), getText("IGUI_QoLC_GeneratorHours", "5"), "whole hours only")
+	AssertEquals(QolcGeneratorDuration(5.9), getText("IGUI_QoLC_GeneratorHours", "5"), "whole hours only")
+end)
+
+Test("the wording says whether it is counting down", function()
+	-- "Fuel remaining" on a stopped generator would read as though it were draining
+	local Running = QolcGeneratorTimeText(Harness.NewGenerator(10, 0.1, true))
+	local Stopped = QolcGeneratorTimeText(Harness.NewGenerator(10, 0.1, false))
+
+	AssertContains(Running, "remaining", "running")
+	AssertContains(Stopped, "would last", "stopped")
 end)
 
 --// The Window
@@ -70,18 +89,20 @@ Test("the line is added to the window text", function()
 
 	AssertContains(Text, "Fuel:", "vanilla's own lines must survive")
 	AssertContains(Text, "Condition", "all of them")
-	AssertContains(Text, QolcGeneratorTimeText(100), "and ours is appended")
+	AssertContains(Text, QolcGeneratorDuration(100), "and ours is appended")
 end)
 
-Test("a generator that is off gets no extra line", function()
+Test("a generator that is off gets the line too", function()
+	-- Reported in game as the line simply not being there. Standing at a stopped generator
+	-- deciding whether to fuel it is the moment the number matters most.
 	local Text = ISGeneratorInfoWindow.getRichText(Harness.NewGenerator(10, 0.1, false), true)
-	AssertEquals(string.find(Text, "Fuel remaining", 1, true), nil, "nothing to say")
+	AssertContains(Text, "would last", "worded as a projection rather than a countdown")
 end)
 
 Test("the short form drawn on the object is left alone", function()
 	-- Called with displayStats false, it has no stats block to append to
 	local Text = ISGeneratorInfoWindow.getRichText(Harness.NewGenerator(10, 0.1), false)
-	AssertEquals(string.find(Text, "Fuel remaining", 1, true), nil, "not that one")
+	AssertEquals(string.find(Text, "Fuel", 1, true), nil, "not that one")
 end)
 
 --// The Range Overlay

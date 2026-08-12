@@ -60,16 +60,33 @@ local function GetSandbox(Name, Default)
 	return Value
 end
 
--- Hours before the tank runs dry, or nil when it is not burning anything
+-- What the generator burns in an in game hour.
+--
+-- getTotalPowerUsing is the raw sum, the generator's own 0.02 plus everything it is
+-- powering, and the sandbox multiplier is applied to it separately by update. A generator
+-- that has never run has not had that sum worked out yet, and reads zero, so it falls back
+-- to getBasePowerConsumption. Note that one has the multiplier in it already: it is
+-- 0.02 times the same setting. Multiplying it again would halve or double the answer.
+local function GetBurnRate(Generator)
+	local Total = Generator:getTotalPowerUsing()
+
+	if Total and Total > 0 then
+		return Total * GetSandbox("GeneratorFuelConsumption", DEFAULT_FUEL_CONSUMPTION)
+	end
+
+	return Generator:getBasePowerConsumption()
+end
+
+-- Hours before the tank runs dry, or nil when there is nothing to work it out from.
+--
+-- Answered whether or not it is running. Before switching one on is exactly when the
+-- number is worth having, and a stopped generator still burns its own base rate the
+-- moment it starts.
 function QolcGeneratorHoursLeft(Generator)
 	if not Generator or not Generator.getFuel then return nil end
-	if not Generator:isActivated() then return nil end
 
-	local Burn = Generator:getTotalPowerUsing()
+	local Burn = GetBurnRate(Generator)
 	if not Burn or Burn <= 0 then return nil end
-
-	Burn = Burn * GetSandbox("GeneratorFuelConsumption", DEFAULT_FUEL_CONSUMPTION)
-	if Burn <= 0 then return nil end
 
 	local Fuel = Generator:getFuel()
 	if not Fuel or Fuel <= 0 then return 0 end
@@ -78,7 +95,7 @@ function QolcGeneratorHoursLeft(Generator)
 end
 
 -- Days and whole hours, so "2 days, 5 hours" rather than a bare 53
-function QolcGeneratorTimeText(Hours)
+function QolcGeneratorDuration(Hours)
 	if not Hours then return nil end
 
 	local Whole = math.floor(Hours)
@@ -90,6 +107,19 @@ function QolcGeneratorTimeText(Hours)
 	end
 
 	return getText("IGUI_QoLC_GeneratorHours", tostring(Rest))
+end
+
+-- Worded for what it is. Running, the fuel is going down; stopped, it is what the tank
+-- would give once it starts, which would read wrong as "remaining".
+function QolcGeneratorTimeText(Generator)
+	local Duration = QolcGeneratorDuration(QolcGeneratorHoursLeft(Generator))
+	if not Duration then return nil end
+
+	if Generator:isActivated() then
+		return getText("IGUI_QoLC_GeneratorRemaining", Duration)
+	end
+
+	return getText("IGUI_QoLC_GeneratorWouldLast", Duration)
 end
 
 -- Every floor tile the generator reaches on one level. Only the player's own level is
@@ -173,7 +203,7 @@ function ISGeneratorInfoWindow.getRichText(Object, DisplayStats)
 	-- add a line to
 	if not DisplayStats then return Text end
 
-	local Time = QolcGeneratorTimeText(QolcGeneratorHoursLeft(Object))
+	local Time = QolcGeneratorTimeText(Object)
 	if not Time then return Text end
 
 	return Text .. " <LINE> " .. Time
