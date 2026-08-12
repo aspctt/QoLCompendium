@@ -147,6 +147,19 @@ end
 
 -- A UIFont name, not a font. Vanilla hands back "Small", "Medium" and so on, which the
 -- caller then looks up in the UIFont table.
+-- The two highlight colours the game picks between to say yes or no. Only their channels
+-- are ever read, so a spec can tell which one a feature chose.
+local function NewColour(R, G, B)
+	local Colour = {}
+	function Colour:getR() return R end
+	function Colour:getG() return G end
+	function Colour:getB() return B end
+	return Colour
+end
+
+function CoreStub:getGoodHighlitedColor() return NewColour(0, 1, 0) end
+function CoreStub:getBadHighlitedColor() return NewColour(1, 0, 0) end
+
 function CoreStub:getOptionTooltipFont()
 	return Harness.TooltipFont
 end
@@ -388,6 +401,11 @@ function Harness.NewPlayer(Number, IsLocal)
 
 	function Player:getPrimaryHandItem() return self.PrimaryHand end
 	function Player:getSecondaryHandItem() return self.SecondaryHand end
+
+	-- Nil until a spec places them, the same as a character who is not in the world yet.
+	-- Anything reading it has to cope with that.
+	function Player:getSquare() return self.Square end
+	function Player:setSquare(Square) self.Square = Square end
 
 	-- An untrained skill reads zero rather than nil, same as the real getPerkLevel
 	function Player:getPerkLevel(Perk)
@@ -1923,6 +1941,83 @@ function addXp(Character, Perk, Amount)
 	Harness.Xp[Perk] = (Harness.Xp[Perk] or 0) + Amount
 end
 
+--// Generators
+-- Fuel runs zero to ten and getFuelPercentage is fuel times ten, which is the scale the
+-- game itself uses. totalPowerUsing is what the generator burns in an in game hour before
+-- the GeneratorFuelConsumption sandbox multiplier is applied.
+function Harness.NewGenerator(Fuel, PowerUsing, Activated, X, Y, Z)
+	local Generator = {}
+	Generator.Class = "IsoGenerator"
+	Generator.Fuel = Fuel or 10
+	Generator.PowerUsing = PowerUsing or 0.1
+	Generator.Activated = Activated ~= false
+
+	function Generator:getFuel() return self.Fuel end
+	function Generator:getFuelPercentage() return self.Fuel * 10 end
+	function Generator:getTotalPowerUsing() return self.PowerUsing end
+	function Generator:isActivated() return self.Activated end
+	function Generator:getSquare() return self.Square end
+
+	Generator.Square = Harness.NewGridSquare(X or 100, Y or 100, Z or 0)
+	return Generator
+end
+
+-- A square that reports where it is and whether it can carry power
+function Harness.NewGridSquare(X, Y, Z, Outside, Solid)
+	local Square = {}
+	Square.Outside = Outside == true
+	Square.Solid = Solid ~= false
+
+	function Square:getX() return X end
+	function Square:getY() return Y end
+	function Square:getZ() return Z end
+	function Square:isOutside() return self.Outside end
+	function Square:isSolidFloor() return self.Solid end
+	function Square:getFloor() return self.Solid and {} or nil end
+
+	return Square
+end
+
+IsoUtils = IsoUtils or {}
+
+function IsoUtils.DistanceToSquared(X1, Y1, X2, Y2)
+	local DX = X1 - X2
+	local DY = Y1 - Y2
+	return (DX * DX) + (DY * DY)
+end
+
+-- Every highlight drawn this frame, so a spec can count the area covered and read back
+-- the colour the generator's state chose.
+Harness.Highlights = {}
+
+function Harness.ClearHighlights()
+	Harness.Highlights = {}
+end
+
+function addAreaHighlight(X, Y, X2, Y2, Z, R, G, B, A)
+	table.insert(Harness.Highlights, { X = X, Y = Y, Z = Z, R = R, G = G, B = B, A = A })
+end
+
+-- Mirrors the parts of build 42's ISGeneratorInfoWindow the compendium touches. getRichText
+-- is a plain function rather than a method, which is how vanilla declares it.
+ISGeneratorInfoWindow = {}
+ISGeneratorInfoWindow.__index = ISGeneratorInfoWindow
+
+function ISGeneratorInfoWindow.getRichText(Object, DisplayStats)
+	if not DisplayStats then return " <INDENT:10> " end
+	return "Fuel: " .. tostring(math.ceil(Object:getFuelPercentage())) .. "% <LINE> Condition: 100"
+end
+
+function ISGeneratorInfoWindow:prerender() self.VanillaPrerenders = (self.VanillaPrerenders or 0) + 1 end
+function ISGeneratorInfoWindow:setVisible(Visible) self.Visible = Visible end
+function ISGeneratorInfoWindow:removeFromUIManager() self.Removed = true end
+
+function Harness.NewGeneratorWindow(Generator)
+	local Window = setmetatable({}, ISGeneratorInfoWindow)
+	Window.object = Generator
+	return Window
+end
+
 --// Experience
 -- getPerkBoost is the profession and trait boost level, 0 to 3, and is what the skills
 -- tooltip and the character creation screen both report.
@@ -2189,11 +2284,28 @@ function getSpecificPlayer(PlayerNum)
 end
 
 --// World
+-- Squares the world hands out when nothing was registered for that spot. The generator
+-- range walks thousands of them, so the default is a plain indoor floor and a spec only
+-- states the ones it is about.
+Harness.DefaultSquare = { Outside = false, Solid = true }
+
 function getCell()
 	local Cell = {}
+
 	function Cell:getGridSquare(X, Y, Z)
 		return Harness.Squares[tostring(X) .. "," .. tostring(Y) .. "," .. tostring(Z)]
 	end
+
+	-- The real one creates the square if the chunk is loaded and it does not exist yet,
+	-- which is how anything scanning an area reaches ground it has never touched
+	function Cell:getOrCreateGridSquare(X, Y, Z)
+		local Registered = Harness.Squares[tostring(X) .. "," .. tostring(Y) .. "," .. tostring(Z)]
+		if Registered then return Registered end
+
+		return Harness.NewGridSquare(X, Y, Z,
+			Harness.DefaultSquare.Outside, Harness.DefaultSquare.Solid)
+	end
+
 	return Cell
 end
 

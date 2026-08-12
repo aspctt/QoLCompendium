@@ -4,7 +4,6 @@ Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635
 Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
-Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- READ NOTES IN FOLDER
@@ -16,7 +15,6 @@ Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- PERMISSION GRANTED (CREDIT REQUIRED)
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
-Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937
 
 
 ## TO DO MODS - NO REDISTRIBUTE
@@ -38,6 +36,8 @@ Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails
 Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040		- INTEGRATED. ORIGINAL CRASHES B42 VIA HasTrait AND ITS NUMBERS ARE WRONG, REBUILT FROM AddXP
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- INTEGRATED (PERMISSIVE). REBUILT FROM B42 TILE DATA, THE ORIGINAL FILE IS A B41 SUBSET
 Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/?id=533622988		- INTEGRATED
+Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918		- INTEGRATED AS ONE FEATURE WITH VISIBLE GENERATOR RANGE. FOLDER HOLDS BETTER GENERATOR INFO, STILL MAINTAINED, SO IDEA ONLY
+Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937		- INTEGRATED. HARDCODED RANGE IS WRONG ON B42, WHICH MADE IT SANDBOX OPTIONS
 Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
 Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
