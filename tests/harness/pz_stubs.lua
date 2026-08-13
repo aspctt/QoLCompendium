@@ -2171,15 +2171,19 @@ local function NewContextMenu()
 	local Menu = {}
 	Menu.options = {}
 
-	function Menu:addOption(Name, Target, Handler, P1, P2, P3)
+	-- Vanilla carries ten parameters, and a submenu entry with a handful of arguments is
+	-- ordinary rather than exotic, so all ten are kept and dispatched.
+	function Menu:addOption(Name, Target, Handler, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)
 		local Option = {
 			name = Name, target = Target, onSelect = Handler,
-			param1 = P1, param2 = P2, param3 = P3
+			param1 = P1, param2 = P2, param3 = P3, param4 = P4, param5 = P5,
+			param6 = P6, param7 = P7, param8 = P8, param9 = P9, param10 = P10
 		}
 
 		function Option:Click()
 			if self.notAvailable or not self.onSelect then return end
-			self.onSelect(self.target, self.param1, self.param2, self.param3)
+			self.onSelect(self.target, self.param1, self.param2, self.param3, self.param4,
+				self.param5, self.param6, self.param7, self.param8, self.param9, self.param10)
 		end
 
 		table.insert(self.options, Option)
@@ -2306,6 +2310,37 @@ end
 JoypadState = { players = {} }
 
 function setJoypadFocus() end
+
+-- An item with the properties the duplicate reordering sorts on. Only the ones a spec
+-- states are readable, so asking for the wrong one on the wrong item type errors here the
+-- same way it would in game.
+function Harness.NewSortable(Kind, Values)
+	local Item = Harness.NewInventoryItem(Values.Name or "Knife")
+	Values = Values or {}
+
+	function Item:IsWeapon() return Kind == "weapon" end
+	function Item:IsDrainable() return Kind == "drainable" end
+	function Item:IsClothing() return Kind == "clothing" end
+	function Item:IsFood() return Kind == "food" end
+	function Item:IsInventoryContainer() return Kind == "bag" end
+	function Item:getBloodClothingType() return Values.BloodClothing and {} or nil end
+
+	-- Condition and blood level sit on InventoryItem, so every item answers them whatever
+	-- it is. The rest belong to a subclass and are only present on that kind, which is
+	-- what makes reading the wrong one fail here as it would in game.
+	function Item:getCondition() return Values.Condition or 0 end
+	function Item:getBloodLevel() return Values.Blood or 0 end
+
+	if Values.Remaining then function Item:getCurrentUsesFloat() return Values.Remaining end end
+	if Values.Hunger then function Item:getHungerChange() return Values.Hunger end end
+	if Values.Calories then function Item:getCalories() return Values.Calories end end
+	if Values.Dirt then function Item:getDirtiness() return Values.Dirt end end
+
+	Item.Packaged = Values.Packaged == true
+	function Item:isPackaged() return self.Packaged end
+
+	return Item
+end
 
 -- The two windows every transfer reads: the character's own inventory as the destination
 -- for grabbing, and whatever is in the loot window as the destination for putting.

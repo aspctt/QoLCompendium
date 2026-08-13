@@ -6,5 +6,11 @@
     "Tooltip_QoLC_ReadOnePage": "Still too advanced to learn from, but reading a page is enough to recognise another copy later.",
     "ContextMenu_QoLC_GrabAmount": "Grab amount...",
     "ContextMenu_QoLC_PutAmount": "Put amount away (%1)",
-    "ContextMenu_QoLC_TransferAmount": "How many? (max %1)"
+    "ContextMenu_QoLC_TransferAmount": "How many? (max %1)",
+    "ContextMenu_QoLC_ReorderByCondition": "Reorder by condition",
+    "ContextMenu_QoLC_ReorderByRemaining": "Reorder by remaining",
+    "ContextMenu_QoLC_ReorderByHunger": "Reorder by hunger filled",
+    "ContextMenu_QoLC_ReorderByCalories": "Reorder by calories",
+    "ContextMenu_QoLC_ReorderByBloodiness": "Reorder by bloodiness",
+    "ContextMenu_QoLC_ReorderByDirtiness": "Reorder by dirtiness"
 }

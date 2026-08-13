@@ -8,7 +8,8 @@ Test("both features share one options category", function()
 	local Expected = {
 		"UI_options_QoLC_BiggerAvatar",
 		"UI_options_QoLC_Overlays",
-		"UI_options_QoLC_Condition"
+		"UI_options_QoLC_Condition",
+		"UI_options_QoLC_Reorder"
 	}
 
 	local Category = PZAPI.ModOptions:getOptions("QoLC")

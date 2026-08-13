@@ -13,5 +13,6 @@
     "IGUI_QoLC_GeneratorDaysHours": "%1 days, %2 hours",
     "IGUI_QoLC_GeneratorHours": "%1 hours",
     "IGUI_QoLC_GeneratorRemaining": "Fuel remaining: %1",
-    "IGUI_QoLC_GeneratorWouldLast": "Fuel would last: %1"
+    "IGUI_QoLC_GeneratorWouldLast": "Fuel would last: %1",
+    "IGUI_QoLC_AlreadyInOrder": "These are already in that order."
 }
