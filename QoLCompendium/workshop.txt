@@ -1,15 +1,17 @@
 version=1
 id=3781012462
 title=QoL Compendium
+tags=Build 42;Balance;Clothing/Armor;Interface;Items;Literature;Multiplayer;Textures;QoL
+visibility=public
 description=[img]https://i.ibb.co/rK8yVgJz/Steam-Workshop-Description-Seperator.png[/img]
 description=
 description=QoL Compendium takes quality of life mods, rebuilds them for build 42, and merges them into one.
 description=
-description=They got here different ways. Some were abandoned. Some still work but carry bugs their authors have not got to. Some are freely licensed, and some only lent an idea. All of them are credited below.
+description=They got here different ways. Some were abandoned, some still work but carry bugs, some only lent an idea. All are credited below.
 description=
-description=Most are not ports. Build 41 code rarely survives the move intact, so where the original broke, guessed at a number, or was made obsolete by the base game, it was rewritten against what build 42 actually does.
+description=Most are not ports. Build 41 code rarely survives the move, so where the original broke or guessed at a number, it was rewritten against what build 42 does.
 description=
-description=[b]Build 42.20 or newer. Singleplayer and multiplayer. Safe to add to an existing save.[/b]
+description=[b]Build 42.20+. Singleplayer and multiplayer. Safe on an existing save.[/b]
 description=
 description=
 description=[img]https://i.ibb.co/xtVSd8Kn/Steam-Workshop-Contents-Seperator.png[/img]
@@ -17,74 +19,101 @@ description=
 description=[b]Rebuilt, and fixed on the way:[/b]
 description=
 description=[list]
-description=    [*][b]XP boosts read as a multiple.[/b] "+75%" is really x4, and Sprinting's first boost is x5. Fitness and Strength stay at x4 however many boosts they get. The original crashes the skills panel on build 42.
-description=    [*][b]Generator range.[/b] Build 42 made it a sandbox setting. The original still hardcodes it, so it draws the wrong area and is a floor short upwards for everyone.
-description=    [*][b]Flamingos stay visible.[/b] They are drawn in the floor layer, so furniture behind them or snow on them makes them disappear. Still broken in 42.20.
-description=    [*][b]Tailoring from cutting clothes.[/b] Vanilla pays nothing for it. Denim and leather now pay per strip, uniforms pay a bonus, and cutting speeds up as the skill rises.
-description=    [*][b]Skill book icons.[/b] Build 42 draws ten of the twenty four families with the same tinted sprite. All twenty four have their own now.
-description=    [*][b]Container titles.[/b] No longer run into the weight printed beside them.
-description=    [*][b]Adrenaline.[/b] Panic sheds fatigue, paid back with interest once you calm down.
+description=[*]XP boosts read as a multiple, not a percentage
+description=[*]Generator range follows the sandbox setting
+description=[*]Flamingos stay visible behind furniture and under snow
+description=[*]Tailoring experience for cutting clothes into strips
+description=[*]All twenty four skill book families get their own icon
+description=[*]Container titles no longer run into the weight beside them
+description=[*]Panic holds tiredness at bay, and pays it back after
+description=[*]Houses already standing open no longer sound their alarm
+description=[*]Reading a skill book eases boredom, unhappiness and stress
+description=[*]Sleep wears off boredom and unhappiness
+description=[*]A moodle plate squares off one more quarter per level
 description=[/list]
 description=
 description=[b]Everything else:[/b]
 description=
 description=[list]
-description=    [*][b]Weapon condition[/b] fills the slot with colour as it wears, green through amber to red
-description=    [*][b]Generator fuel time[/b], whether or not it is running
-description=    [*][b]Screen overlays[/b] for pain, panic, sickness and temperature
-description=    [*][b]Fabric type[/b] on clothing tooltips, coloured
-description=    [*][b]Flag a book as seen[/b] by reading its first page when it is still too advanced
-description=    [*][b]Hotbar reordering[/b], with a lock once the order suits
-description=    [*][b]Propane from fuel pumps.[/b] Build 42 has no other way to refill a tank
-description=    [*][b]Bigger character avatar[/b] in the info panel
-description=    [*][b]Rifle slings[/b], worn front or back
-description=    [*][b]Ammo and magazine icons[/b], so five handgun boxes stop sharing one picture
-description=    [*][b]Perishable food[/b] split from food that keeps, in the inventory categories
-description=    [*][b]A bigger welding torch[/b], and more welding out of a propane tank
+description=[*]Weapon condition bars on the hotbar and in your hands
+description=[*]Generator fuel time, running or not
+description=[*]Screen overlays for pain, panic, sickness and cold
+description=[*]Fabric type on clothing tooltips, coloured
+description=[*]Flag a book as seen when it is still too advanced
+description=[*]Hotbar reordering, with a lock once it suits
+description=[*]Propane refills at any working fuel pump
+description=[*]Bigger character avatar in the info panel
+description=[*]Rifle slings, worn front or back
+description=[*]Ammo and magazine icons, one per item
+description=[*]Perishable food split from food that keeps
+description=[*]A bigger welding torch, and more out of a tank
+description=[*]A magazine that teaches the Nutritionist trait
 description=[/list]
 description=
-description=Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone instead of each client running its own numbers.
+description=Every feature can be turned off on its own. Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone.
 description=
 description=
 description=[img]https://i.ibb.co/2wC3Ykd/Steam-Workshop-Compatibility-Seperator.png[/img]
 description=
-description=　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3461263912]Clean HotBar[/url] (weapon condition and hotbar reordering stand down)
-description=　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3437629766]Clean UI[/url] (the container title fix stands down)
-description=　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3433264162]NeatUI Framework[/url]
+description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3461263912]Clean HotBar[/url] (condition and reordering stand down)
+description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3437629766]Clean UI[/url] (the container title fix stands down)
+description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3433264162]NeatUI Framework[/url]
+description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] (ours stands down, theirs draws the stack)
 description=　✓ Any mod that adds skill books, clothing or ammo
-description=　✖ The individual mods this replaces, listed in the credits
+description=　✖ The mods this replaces, listed in the credits
 description=
-description=Where another mod already does one of these jobs, this one gets out of the way rather than drawing over it.
+description=Where another mod already does one of these jobs, this one gets out of the way.
 description=
 description=
 description=[img]https://i.ibb.co/d4CjJYgB/Steam-Workshop-Issues-Bugs-Seperator.png[/img]
 description=
 description=[list]
-description=    [*]Restart the game after enabling or updating. Reloading the save is not enough.
-description=    [*]See if the problem persists with only this mod active.
-description=    [*]If not, add your other mods back until it happens again.
-description=    [*]Say which feature, whether you are in singleplayer or multiplayer, and what you did.
-description=    [*]Post console errors with it. Report on the [url=https://steamcommunity.com:/linkfilter/?url=https://github.com/aspctt/QoLCompendium]GitHub repository[/url] or here.
-description=    [*]The mod id is [b]QoLCompendium[/b].
+description=[*]Restart the game after enabling or updating. Reloading the save is not enough.
+description=[*]See if it persists with only this mod active.
+description=[*]If not, add your mods back until it happens again.
+description=[*]Say which feature, singleplayer or multiplayer, and what you did.
+description=[*]Post console errors with it. Report on [url=https://github.com/aspctt/QoLCompendium]GitHub repository[/url] or here.
+description=[*]The mod id is [b]QoLCompendium[/b].
 description=[/list]
 description=
 description=
 description=[img]https://i.ibb.co/Z63wG3cw/Steam-Workshop-Credits-Seperator.png[/img]
 description=
-description=Every feature here began as someone else's mod. Search the names above on the Workshop and go thank them.
+description=Every feature here began as someone else's mod. All of them are below. Go and give them a thumbs up.
 description=
-description=[olist]
-description=    [*]Akyet, for the rifle sling models and textures, and Noir for the attachment code
-description=    [*]falcon33jp, for the ammo and magazine icons
-description=    [*]Everyone whose mod is rebuilt here, named feature by feature in the mod's NOTICE file
-description=[/olist]
+description=[list]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977]Actual Realistic Rifle Sling[/url] by Akyet and Noir
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835]Adrenaline - Panic Counters Tiredness[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813]Ammo & Magazine icon MOD[/url] by falcon33jp
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174]An Exhilaratingly Organized Literature Mod[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159]Better Sorting[/url] by ChobitsCrazy
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570]Bigger Character Avatar[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451]Fix Capacity Overlap[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040]Fix XP View[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465]Flamingo Fix[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918]Generator Time Remaining[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=533622988]Immersive Overlays[/url] by Stephanus van Zyl
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] by DahakaMVl
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057]Propane Torch Fix[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406]Pumps Have Propane[/url] by Uncle Griz
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990]Reading is not boring.[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889]Reasonable Crime Preventation Alarm[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021]Reorder Duplicates by Condition[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337]Reorder The Hotbar[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845]Show Clothes Material[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236]Sleep On It[/url] by Stultusaur
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101]Tailoring Fix[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645]Take Any Amount[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937]Visible Generator Range[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426]Weapon Condition Indicator[/url] by NoctisFalco
+description=[/list]
 description=
-description=Art and models cannot be written from a description, so those two are the original files. Everything else is written for this project.
+description=[b]Bundled original files, with permission or under licence:[/b] the rifle sling models and textures by Akyet with its attachment code by Noir, the ammo and magazine icons by falcon33jp, and the moodle plates by DahakaMVl. Art cannot be rewritten from a description. Everything else is written for this project.
 description=
-description=Nothing is included where the author asked that their work not be redistributed. Those features were either written from scratch without reading the original, or left out.
+description=Take Any Amount also thanks [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3389115640]KaliLynx[/url], who carried it to build 42. Full detail is in the NOTICE file.
 description=
-description=All Rights Reserved. Bundled third party files stay the property of their authors. If you are an author and want your work out of this, contact me and it goes.
+description=Nothing is included where the author asked that it not be redistributed. Those were written from scratch, or left out.
+description=
+description=All Rights Reserved. Bundled third party files stay their authors' property. If you are an author and want yours out, say so and it goes.
 description=
 description="Project Zomboid" is a trademark of The Indie Stone. This project is not associated with nor endorsed by The Indie Stone.
-tags=Build 42;Balance;Clothing/Armor;Interface;Items;Literature;Multiplayer;Textures;QoL
-visibility=public
