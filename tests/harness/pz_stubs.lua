@@ -308,6 +308,8 @@ function Harness.NewPropaneTank(Fraction)
 	Tank.Id = Harness.NextItemId
 	Harness.NextItemId = Harness.NextItemId + 1
 
+	Tank.WorldStaticModel = "PropaneTank"
+
 	function Tank:getFullType() return "Base.PropaneTank" end
 	function Tank:getName() return "Propane Tank" end
 	function Tank:getID() return self.Id end
@@ -443,7 +445,8 @@ function Harness.NewPlayer(Number, IsLocal)
 	function Player:setTrait(Trait, Value) self.Traits[Trait] = Value end
 
 	-- Enough of the character surface for a timed action to run
-	function Player:faceThisObject() end
+	function Player:faceThisObject(Object) self.Facing = Object end
+	function Player:shouldBeTurning() return self.Turning and true or false end
 	function Player:setMetabolicTarget() end
 	function Player:playSound(Name) return Name end
 	function Player:stopOrTriggerSound() end
@@ -645,6 +648,14 @@ function Harness.NewDrainable(MaxUses, Fraction)
 	function Item:getCondition() return self.Condition end
 	function Item:setCondition(Value) self.Condition = Value end
 	function Item:syncItemFields() self.SyncCount = self.SyncCount + 1 end
+
+	-- The bar the game paints across an item's icon while a job runs on it
+	function Item:setJobType(Value) self.JobType = Value end
+	function Item:setJobDelta(Value) self.JobDelta = Value end
+
+	-- Held and ground models. A drainable declares one or the other, rarely both.
+	function Item:getStaticModel() return self.StaticModel end
+	function Item:getWorldStaticModel() return self.WorldStaticModel end
 
 	function Item:getCurrentUses()
 		return math.floor(self.Fraction * self.MaxUses + 0.5)
@@ -2028,7 +2039,15 @@ end
 
 function ISBaseTimedAction:perform() self.Performed = true end
 function ISBaseTimedAction:stop() self.Stopped = true end
-function ISBaseTimedAction:setActionAnim() end
+function ISBaseTimedAction:setActionAnim(Name) self.Anim = Name end
+function ISBaseTimedAction:getJobDelta() return self.JobDelta or 0 end
+function ISBaseTimedAction:setJobDelta(Delta) self.JobDelta = Delta end
+
+-- Vanilla passes either a model name or an item, and either hand may be left alone
+function ISBaseTimedAction:setOverrideHandModels(Primary, Secondary)
+	self.PrimaryHand = Primary
+	self.SecondaryHand = Secondary
+end
 
 --// Skills
 -- Perks are java singletons: compared by identity, never by name, and carrying their own

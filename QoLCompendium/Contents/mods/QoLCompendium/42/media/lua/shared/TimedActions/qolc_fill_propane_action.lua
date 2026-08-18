@@ -4,6 +4,10 @@
 --// Fills a propane tank at a working fuel pump, drawing on the pump's own supply so it
 --// is not free and a pump can be emptied.
 --//
+--// It borrows its whole presentation from vanilla's ISTakeFuel, because to a player it
+--// is the same job at the same pump: the same animation, the tank held in hand the way
+--// a petrol can is, the same pump sound, and the same job bar across the item's icon.
+--//
 --// A propane tank is a drainable, measured in uses, while a pump holds fluid measured
 --// in units. The two are bridged by a sandbox value giving the cost in pump units of
 --// filling one tank from empty, so a server decides what it is worth.
@@ -20,6 +24,14 @@ QolcFillPropaneAction = ISBaseTimedAction:derive("QolcFillPropaneAction")
 local DEFAULT_COST = 20
 
 --// Functions
+-- The model to put in the character's hand while filling. Vanilla's ISTakeFuel passes
+-- the petrol can's StaticModel, but a propane tank declares only a WorldStaticModel, so
+-- fall back to that rather than animating an empty hand. Both resolve to the same mesh
+-- key, and the fallback keeps working if a tank ever gains a proper held model.
+local function HandModel(Item)
+	return Item:getStaticModel() or Item:getWorldStaticModel()
+end
+
 -- How many pump units a full tank costs. Server controlled, see the sandbox page.
 function QolcFillPropaneAction.GetCost()
 	local Vars = SandboxVars and SandboxVars.QoLC
@@ -38,23 +50,40 @@ function QolcFillPropaneAction:isValid()
 	return self.pump:getPipedFuelAmount() > 0
 end
 
+-- Turn to the pump before the animation starts, rather than filling side on
+function QolcFillPropaneAction:waitToStart()
+	self.character:faceThisObject(self.pump)
+	return self.character:shouldBeTurning()
+end
+
 function QolcFillPropaneAction:update()
 	self.character:faceThisObject(self.pump)
+	self.tank:setJobDelta(self:getJobDelta())
 	self.character:setMetabolicTarget(Metabolics.LightDomestic)
 end
 
+-- The same shape as vanilla's ISTakeFuel, because it is the same job at the same pump:
+-- the tank held in the off hand, the nozzle animation in the other, and the pump's own
+-- sound rather than the generator one that stood in for it.
 function QolcFillPropaneAction:start()
-	self:setActionAnim("Loot")
-	self.sound = self.character:playSound("GeneratorAddFuel")
+	self.tank:setJobType(getText("ContextMenu_QoLC_TakePropane"))
+	self.tank:setJobDelta(0.0)
+
+	self:setOverrideHandModels(nil, HandModel(self.tank))
+	self:setActionAnim("TakeGasFromPump")
+
+	self.sound = self.character:playSound("CanisterAddFuelFromGasPump")
 end
 
 function QolcFillPropaneAction:stop()
 	if self.sound then self.character:stopOrTriggerSound(self.sound) end
+	self.tank:setJobDelta(0.0)
 	ISBaseTimedAction.stop(self)
 end
 
 function QolcFillPropaneAction:perform()
 	if self.sound then self.character:stopOrTriggerSound(self.sound) end
+	self.tank:setJobDelta(0.0)
 
 	local Missing = 1 - self.tank:getCurrentUsesFloat()
 	if Missing <= 0 then

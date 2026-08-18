@@ -275,3 +275,72 @@ Test("a pump on another floor is not offered", function()
 	AssertNil(RightClick(Player, { Clicked }):Find(TAKE_PROPANE), "wrong floor")
 end)
 
+--// How It Looks
+-- Nothing here changes what the action does, but a filling animation that does not match
+-- the one vanilla plays at the same pump reads as a bug to a player.
+local function StartedAction(Player, Pump)
+	local Menu = RightClick(Player, { Pump })
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+
+	local Action = Harness.ActionQueue[1]
+	Action:start()
+	return Action
+end
+
+Test("filling plays the pump animation rather than a generic one", function()
+	local Player = NewPlayerWithTanks(0)
+	local Action = StartedAction(Player, Harness.NewFuelPump(22000))
+
+	AssertEquals(Action.Anim, "TakeGasFromPump", "the same animation vanilla uses at a pump")
+end)
+
+Test("the tank is held while filling", function()
+	local Player = NewPlayerWithTanks(0)
+	local Action = StartedAction(Player, Harness.NewFuelPump(22000))
+
+	-- A propane tank declares only a WorldStaticModel, so reaching for getStaticModel
+	-- alone would leave the character filling with an empty hand.
+	AssertEquals(Action.SecondaryHand, "PropaneTank", "the tank goes in the off hand")
+	AssertNil(Action.PrimaryHand, "the other hand works the pump")
+end)
+
+Test("the tank carries the job bar while it fills", function()
+	local Player = NewPlayerWithTanks(0)
+	local Pump = Harness.NewFuelPump(22000)
+	local Action = StartedAction(Player, Pump)
+	local Tank = Tanks(Player)[1]
+
+	AssertEquals(Tank.JobType, TAKE_PROPANE, "named on the icon")
+
+	Action.JobDelta = 0.5
+	Action:update()
+	AssertEquals(Tank.JobDelta, 0.5, "and filling as the action runs")
+
+	Action:perform()
+	AssertEquals(Tank.JobDelta, 0, "cleared when it finishes")
+end)
+
+Test("an interrupted fill clears the job bar too", function()
+	local Player = NewPlayerWithTanks(0)
+	local Action = StartedAction(Player, Harness.NewFuelPump(22000))
+
+	Action.JobDelta = 0.5
+	Action:update()
+	Action:stop()
+
+	AssertEquals(Tanks(Player)[1].JobDelta, 0, "no bar left stuck on the icon")
+end)
+
+Test("the character turns to the pump before filling", function()
+	local Player = NewPlayerWithTanks(0)
+	local Pump = Harness.NewFuelPump(22000)
+	local Menu = RightClick(Player, { Pump })
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+
+	Player.Turning = true
+	AssertTrue(Harness.ActionQueue[1]:waitToStart(), "wait while still turning")
+	AssertEquals(Player.Facing, Pump, "and turn towards the pump")
+
+	Player.Turning = false
+	AssertFalse(Harness.ActionQueue[1]:waitToStart(), "then start")
+end)
