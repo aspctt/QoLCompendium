@@ -289,3 +289,47 @@ Test("the vanilla panel is handed back on the way out to the main menu", functio
 	AssertNil(Harness.UIIndex(panel), "the panel is still on the element list")
 	AssertNotNil(Harness.UIIndex(vanilla), "vanilla never got the stack back")
 end)
+
+--// The Panel Vanilla Builds Behind Our Back
+-- IsoCamera.SetCharacterToFollow, which runs in singleplayer at load and on the change
+-- character key, does not reuse the moodle panel. It takes the registered one off the
+-- element list, constructs a fresh MoodlesUI, registers that, and adds it to the list:
+--
+--   getUI().remove(getMoodleUI(i))
+--   setMoodleUI(i, new MoodlesUI())
+--   getUI().add(getMoodleUI(i))
+--
+-- Our panel is not the registered one, so the remove finds nothing to take out and the
+-- add puts a second stack on the list beside ours. Reported against the standalone mod
+-- as seeing the quarters over the top of the vanilla moodles.
+local function CameraReplacesPanel(playerNum)
+	local Old = Harness.MoodlePanels[playerNum or 0]
+	UIManager.RemoveElement(Old)
+	return Harness.NewMoodlePanel(playerNum or 0)
+end
+
+Test("only one stack survives vanilla replacing its own panel", function()
+	local panel = Attach()
+	Harness.SetMoodle(MoodleType.HUNGRY, 2)
+	Frames(panel, 60)
+
+	CameraReplacesPanel(0)
+	Harness.Fire("OnTick")
+	Harness.RenderUI()
+
+	AssertEquals(#Harness.FindDraws("MoodleQuarters/"), 1, "our plate should be drawn once")
+	AssertEquals(#Harness.FindDraws("Status_Hunger.png"), 1, "and its icon once")
+end)
+
+Test("the replacement is taken over in the same tick it appears", function()
+	-- Detaching on one tick and attaching on the next leaves a tick drawing vanilla's
+	-- own stack, which reads as the quarters flickering off and back on.
+	local panel = Attach()
+	local fresh = CameraReplacesPanel(0)
+
+	Harness.Fire("OnTick")
+
+	AssertNotNil(MQ.panels[0], "we should have taken the new panel already")
+	AssertEquals(MQ.panels[0].vanilla, fresh, "and be following it, not the one it replaced")
+	AssertNil(Harness.UIIndex(fresh), "the new vanilla panel should be off the list")
+end)

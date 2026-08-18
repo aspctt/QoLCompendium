@@ -397,7 +397,17 @@ function MQ.update()
             if panel.detachRequested or UIManager.getMoodleUI(playerNum) ~= panel.vanilla then
                 MQ.detach(playerNum)
             end
-        elseif enabled and getSpecificPlayer(playerNum) ~= nil then
+        end
+
+        -- Attaching in the same pass as the detach rather than in an elseif, because
+        -- vanilla does not reuse its panel. IsoCamera.SetCharacterToFollow removes the
+        -- registered one, constructs a fresh MoodlesUI and adds that to the element
+        -- list, which in singleplayer happens at load and on the change character key.
+        -- Ours is not the registered panel, so that remove takes nothing out and the
+        -- add puts vanilla's stack on screen beside ours. Waiting a tick to take the
+        -- replacement over left that tick drawing vanilla's stack on its own, which is
+        -- the quarters flickering off and back on.
+        if MQ.panels[playerNum] == nil and enabled and getSpecificPlayer(playerNum) ~= nil then
             MQ.attach(playerNum)
         end
     end
