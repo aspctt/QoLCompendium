@@ -5,7 +5,6 @@ Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
-Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- READ NOTES IN FOLDER
 Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- EXPLICIT PERMISSION + I UPDATED THIS MOD TO B42. KEPT OUT FOR NOW, IT IS ALREADY MINE AND ALREADY CURRENT, SO ABSORBING IT MEANS MAINTAINING ONE FEATURE IN TWO PLACES
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
@@ -50,4 +49,5 @@ Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles
 CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507		- SKIPPED. MERGE MENU STILL EXISTS AND STILL READS cantBeConsolided, SO IT WOULD WORK, BUT B42 REFILLS THE LIGHTER VIA THE refillLighter RECIPE AND THE OTHER THREE BLOCKS LOOK DELIBERATE. 54 OF 150 DRAINABLES ARE BLOCKED, INCLUDING CAR BATTERIES AND FILTERS
 Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
 Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548		- OBSOLETE, CONFIRMED IN GAME. B42 SHIPS Grab, Grab_one, Grab_half AND Grab_all
+Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filedetails/?id=2920089312		- OBSOLETE. RecipeCodeOnCreate.genericFixer ALREADY ADDS min(maintenance * 5, 25) PERCENT, THE MOD'S EXACT FORMULA, PLUS xpAward = Maintenance AND A MAINTENANCE FAILURE CHANCE. WOULD ALSO MISFIRE: getAllFixing HOLDS ONLY 19 GUNS AND 10 VEHICLE REPAIRS NOW, WEAPON REPAIR MOVED TO craftRecipe
 Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE
