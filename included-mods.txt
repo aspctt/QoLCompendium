@@ -7,7 +7,6 @@ Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- EXPLICIT PERMISSION + I UPDATED THIS MOD TO B42. KEPT OUT FOR NOW, IT IS ALREADY MINE AND ALREADY CURRENT, SO ABSORBING IT MEANS MAINTAINING ONE FEATURE IN TWO PLACES
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
-Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
@@ -35,6 +34,7 @@ Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/
 Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918		- INTEGRATED AS ONE FEATURE WITH VISIBLE GENERATOR RANGE. FOLDER HOLDS BETTER GENERATOR INFO, STILL MAINTAINED, SO IDEA ONLY
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937		- INTEGRATED. HARDCODED RANGE IS WRONG ON B42, WHICH MADE IT SANDBOX OPTIONS
 Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
+Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990		- INTEGRATED. EVERY STAT ACCESSOR GONE ON B42, NOW CharacterStat KEYED. SKILL BOOKS ONLY, PAGES OFF THE ACTION SO IT WORKS ON AN MP CLIENT, NICOTINE STRESS PROTECTED
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889		- INTEGRATED. VEHICLE HALF THROWS ON B42 VIA getPartCount AND getPartByIndex. SETTINGS FILE REPLACED WITH SANDBOX OPTIONS
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021		- INTEGRATED. ORIGINAL THROWS ON B42 VIA getDirtyness, getUsedDelta AND getCharacterTraits():contains. FEWEST MOVES INSTEAD OF ITS OWN
 Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers

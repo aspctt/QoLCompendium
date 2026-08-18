@@ -20,5 +20,9 @@
     "Sandbox_QoLC_AlarmHouseRule_option2": "Open Doors And Broken Windows",
     "Sandbox_QoLC_AlarmHouseRule_option3": "Also Unlocked Doors",
     "Sandbox_QoLC_AlarmVehiclesEnabled": "Alarms On Open Vehicles",
-    "Sandbox_QoLC_AlarmVehiclesEnabled_tooltip": "Stops a car alarm sounding when a door or the trunk was left unlocked, a door or window stands open, or a window has been smashed out."
+    "Sandbox_QoLC_AlarmVehiclesEnabled_tooltip": "Stops a car alarm sounding when a door or the trunk was left unlocked, a door or window stands open, or a window has been smashed out.",
+    "Sandbox_QoLC_ReadingCalmEnabled": "Reading Settles The Mind",
+    "Sandbox_QoLC_ReadingCalmEnabled_tooltip": "Reading a skill book slowly eases boredom, unhappiness and stress. The base game gives skill books no morale value at all, only comics and newspapers.",
+    "Sandbox_QoLC_ReadingCalmRate": "Reading Calm Rate",
+    "Sandbox_QoLC_ReadingCalmRate_tooltip": "Percentage of the effect a page of a skill book is worth. Illness weakens it, and a fast reader gets less per page because they turn more of them."
 }

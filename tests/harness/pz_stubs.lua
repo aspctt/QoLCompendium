@@ -227,6 +227,12 @@ local function NewStats()
 		return true
 	end
 
+	-- The part of stress that comes from wanting a cigarette. Build 42 renamed this from
+	-- getStressFromCigarettes, and it is a component of STRESS rather than a stat of its
+	-- own, so anything easing stress has to decide whether to eat into it.
+	function Stats:getNicotineStress() return Values.Nicotine or 0 end
+	function Stats:setNicotineStress(Value) Values.Nicotine = Value end
+
 	return Stats
 end
 
@@ -400,6 +406,13 @@ function Harness.NewPlayer(Number, IsLocal)
 	Player.Asleep = false
 	Player.Transmits = 0
 
+	-- BodyDamage, reduced to the reading of infection the character can actually perceive.
+	-- Apparent rather than real, because a character does not know they are infected.
+	Player.BodyDamage = { Infection = 0 }
+	function Player.BodyDamage:getApparentInfectionLevel() return self.Infection end
+	function Player.BodyDamage:setFakeInfectionLevel(Value) self.Infection = Value end
+
+	function Player:getBodyDamage() return self.BodyDamage end
 	function Player:getMoodles() return self.Moodles end
 	function Player:getModData() return self.ModData end
 	function Player:getStats() return self.Stats end
@@ -2619,13 +2632,19 @@ end
 -- SkillBook maps the skill a book teaches to the perk that skill trains. Vanilla builds
 -- it in XPSystem_SkillBook.lua and every literature path indexes it without checking, so
 -- a skill missing from here throws exactly where the game would.
-SkillBook = setmetatable({}, {
-	__index = function(Table, Key)
-		local Entry = { perk = Key }
-		rawset(Table, Key, Entry)
-		return Entry
-	end
-})
+-- The real table is built key by key in XPSystem_SkillBook.lua and holds exactly these
+-- twenty four. Anything else reads nil, which is what tells a caller the item is not a
+-- skill book at all, so auto creating entries here would hide that distinction.
+SkillBook = {}
+
+for _, Skill in ipairs({
+	"Aiming", "Blacksmith", "Butchering", "Carpentry", "Carving", "Cooking",
+	"Electricity", "Farming", "FirstAid", "Fishing", "FlintKnapping", "Foraging",
+	"Glassmaking", "Husbandry", "LongBlade", "Maintenance", "Masonry", "Mechanics",
+	"MetalWelding", "Pottery", "Reloading", "Tailoring", "Tracking", "Trapping"
+}) do
+	SkillBook[Skill] = { perk = Perks[Skill] or Skill }
+end
 
 ISInventoryPane = ISInventoryPane or {}
 
@@ -2644,6 +2663,43 @@ function ISInventoryPane.getActualUniqueItems(Items)
 	return Unique
 end
 
+--// Reading
+-- ISReadABook, cut down to what an override needs to sit on top of: the action carries
+-- the book, the reader and a job delta, and update is called once a frame. Vanilla's own
+-- body advances the item's page count only inside "if not isClient()", which is modelled
+-- here because a mod reading that count breaks in multiplayer without it.
+ISReadABook = ISBaseTimedAction:derive("ISReadABook")
+
+function ISReadABook:getJobDelta() return self.JobDelta or 0 end
+
+function ISReadABook:update()
+	self.Updates = (self.Updates or 0) + 1
+
+	if isClient() then return end
+
+	local Total = self.item and self.item:getNumberOfPages() or 0
+	if Total > 0 then
+		self.item:setAlreadyReadPages(math.floor(Total * self:getJobDelta()))
+	end
+end
+
+function Harness.NewReading(Character, Book)
+	local Action = ISBaseTimedAction.new(ISReadABook, Character)
+	Action.character = Character
+	Action.item = Book
+	Action.JobDelta = 0
+
+	-- Winds the action forward to the given fraction and runs one update, the way the
+	-- queue would each frame.
+	function Action:Advance(Delta)
+		self.JobDelta = Delta
+		self:update()
+		return self
+	end
+
+	return Action
+end
+
 -- A skill book. LvlSkillTrained is the level needed to learn from it, and vanilla refuses
 -- to read one more than a single level above the character.
 function Harness.NewSkillBook(Skill, LvlSkillTrained, Pages)
@@ -2655,6 +2711,8 @@ function Harness.NewSkillBook(Skill, LvlSkillTrained, Pages)
 	function Book:getSkillTrained() return self.Skill end
 	function Book:getLvlSkillTrained() return self.Lvl end
 	function Book:getNumberOfPages() return self.Pages end
+	function Book:getAlreadyReadPages() return self.ReadPages or 0 end
+	function Book:setAlreadyReadPages(Value) self.ReadPages = Value end
 	function Book:getFullType() return "Base.Book" .. self.Skill .. tostring(self.Lvl) end
 	function Book:setJobType(Value) self.JobType = Value end
 	function Book:setJobDelta(Value) self.JobDelta = Value end

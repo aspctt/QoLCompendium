@@ -96,3 +96,23 @@ option QoLC.AlarmVehiclesEnabled
     page = QoLC,
     translation = QoLC_AlarmVehiclesEnabled,
 }
+
+/*
+ * Reading a skill book eases boredom, unhappiness and stress. Each page takes a share of
+ * what is left rather than a flat amount, so it settles a character without ever
+ * finishing the job, and the rate scales the lot for a host who wants it gentler. This
+ * is a roleplay preference more than a fix, which is why it is one switch away from off.
+ */
+option QoLC.ReadingCalmEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_ReadingCalmEnabled,
+}
+
+option QoLC.ReadingCalmRate
+{
+    type = integer, min = 0, max = 500, default = 100,
+    page = QoLC,
+    translation = QoLC_ReadingCalmRate,
+}

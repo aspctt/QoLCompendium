@@ -99,6 +99,11 @@ is smashed, does not sound its alarm, and neither does a car left unlocked.
 Anyone could have walked in long before you did. How far this goes is a sandbox
 setting, because counting unlocked doors covers far more houses than open ones.
 
+**Reading Settles The Mind** - Working through a skill book slowly eases
+boredom, unhappiness and stress. The base game gives skill books no morale value
+at all, only comics and newspapers. Each page takes a share of what is left, so
+it settles a character without ever finishing the job, and illness weakens it.
+
 
 Options
 -------
@@ -155,6 +160,7 @@ ran at all.
 | Take Any Amount | [Take Any Amount](https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645) | Permission granted with credit, see [NOTICE](NOTICE). Rewritten; the original replaces a vanilla function build 42 has since added a destination check to. |
 | Reorder Duplicates By Condition | [Reorder Duplicates by Condition](https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021) | Rewritten. Three accessors it uses are gone in build 42, and this queues the fewest moves rather than rewriting the whole container. |
 | Reasonable Alarms | [Reasonable Crime Preventation Alarm](https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889) | Rewritten. Its vehicle half throws on build 42, which moved vehicle parts behind a new accessor, and its settings file is a sandbox page here. |
+| Reading Settles The Mind | [Reading is not boring.](https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990) | Rewritten. Build 42 removed every stat accessor it used. Skill books only, and it counts pages off the action so it works on a multiplayer client. |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,
