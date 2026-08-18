@@ -1,8 +1,6 @@
 version=1
 id=3781012462
 title=QoL Compendium
-tags=Build 42;Balance;Clothing/Armor;Interface;Items;Literature;Multiplayer;Textures;QoL
-visibility=public
 description=[img]https://i.ibb.co/rK8yVgJz/Steam-Workshop-Description-Seperator.png[/img]
 description=
 description=QoL Compendium takes quality of life mods, rebuilds them for build 42, and merges them into one.
@@ -82,6 +80,8 @@ description=[img]https://i.ibb.co/Z63wG3cw/Steam-Workshop-Credits-Seperator.png[
 description=
 description=Every feature here began as someone else's mod. Every one of them is named, with a link, in the [url=https://github.com/aspctt/QoLCompendium]GitHub repository[/url]. Go and give them a thumbs up.
 description=
+description=[img]https://i.ibb.co/Z1xCbFs3/credits.png[/img]
+description=
 description=[b]Bundled original files, with permission or under licence:[/b] the rifle sling models and textures by Akyet with its attachment code by Noir, the ammo and magazine icons by falcon33jp, and the moodle plates by DahakaMVl. Art cannot be rewritten from a description. Everything else is written for this project.
 description=
 description=Take Any Amount also thanks [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3389115640]KaliLynx[/url], who carried it to build 42. Full detail is in the NOTICE file.
@@ -91,3 +91,5 @@ description=
 description=All Rights Reserved. Bundled third party files stay their authors' property. If you are an author and want yours out, say so and it goes.
 description=
 description="Project Zomboid" is a trademark of The Indie Stone. This project is not associated with nor endorsed by The Indie Stone.
+tags=Build 42;Balance;Clothing/Armor;Interface;Items;Literature;Multiplayer;Textures;QoL
+visibility=public
