@@ -12,5 +12,8 @@
     "ContextMenu_QoLC_ReorderByHunger": "Reorder by hunger filled",
     "ContextMenu_QoLC_ReorderByCalories": "Reorder by calories",
     "ContextMenu_QoLC_ReorderByBloodiness": "Reorder by bloodiness",
-    "ContextMenu_QoLC_ReorderByDirtiness": "Reorder by dirtiness"
+    "ContextMenu_QoLC_ReorderByDirtiness": "Reorder by dirtiness",
+    "ContextMenu_QoLC_PickLock": "Pick Lock",
+    "ContextMenu_QoLC_ForceLock": "Force Lock",
+    "ContextMenu_QoLC_ForceWindow": "Force Window Latch"
 }

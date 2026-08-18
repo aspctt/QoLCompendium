@@ -1,0 +1,134 @@
+/*
+ * Lockpicking. Just. Lockpicking., Workshop 2056238799
+ * Original by FMJ, updated for IWBUMS by MeTaLAnGeR, streamlined by Oh God Spiders No
+ *
+ * Build 42 has no lockpicking at all: no items, no recipes, and nothing on IsoDoor that
+ * opens a lock without the key. This brings it back.
+ *
+ * Rebuilt against build 42's script formats rather than carried over. The original
+ * declared its items with "Type = Normal", its recipes as "recipe Create Hairpin", and
+ * created its trait from lua through TraitFactory. Build 42 dropped all three: items take
+ * an ItemType, recipes are craftRecipe blocks, and TraitFactory does not exist any more,
+ * traits being script definitions like the one at the bottom of this file.
+ *
+ * The names carry a Qolc prefix so nothing here collides with the standalone mod, which
+ * uses the FMJ module.
+ */
+module Base
+{
+	/* --- Items --- */
+
+	item QolcLockpick
+	{
+		DisplayCategory = Tool,
+		ItemType = base:normal,
+		Weight = 0.005,
+		Icon = QolcLockPick,
+		Tooltip = Tooltip_QoLC_Lockpick,
+		Tags = base:qolclockpick,
+	}
+
+	item QolcHairpin
+	{
+		DisplayCategory = Junk,
+		ItemType = base:normal,
+		Weight = 0.005,
+		Icon = QolcBobbyPin,
+	}
+
+	/*
+	 * Two volumes, matching the original: the first teaches picking and how to make a
+	 * pick, the second teaches forcing a lock with a crowbar. LearnedRecipes is build 42's
+	 * name for what the original called TeachedRecipes.
+	 */
+	item QolcLockpickBook1
+	{
+		DisplayCategory = SkillBook,
+		ItemType = base:literature,
+		Weight = 0.1,
+		Icon = QolcMagazineLock01,
+		BoredomChange = -20,
+		StressChange = -15,
+		LearnedRecipes = QolcMakeLockpickFromHairpin;QolcMakeLockpickFromPaperclip;QolcMakeLockpickFromWire,
+		StaticModel = Magazine,
+		WorldStaticModel = MagazineCook1Ground,
+		Tags = base:magazine,
+		Tooltip = Tooltip_QoLC_LockpickBook1,
+	}
+
+	item QolcLockpickBook2
+	{
+		DisplayCategory = SkillBook,
+		ItemType = base:literature,
+		Weight = 0.1,
+		Icon = QolcMagazineLock02,
+		BoredomChange = -20,
+		StressChange = -15,
+		StaticModel = Magazine,
+		WorldStaticModel = MagazineCook1Ground,
+		Tags = base:magazine,
+		Tooltip = Tooltip_QoLC_LockpickBook2,
+	}
+
+	/* --- Recipes --- */
+
+	/*
+	 * A hairpin or a paperclip, bent into a pick. NeedToBeLearn keeps it behind the first
+	 * volume, the trait, or the Burglar profession.
+	 */
+	craftRecipe QolcMakeLockpickFromHairpin
+	{
+		time = 50,
+		category = Survivalist,
+		timedAction = Making,
+		NeedToBeLearn = true,
+		Tags = InHandCraft,
+		inputs
+		{
+			item 1 [Base.QolcHairpin],
+		}
+		outputs
+		{
+			item 1 Base.QolcLockpick,
+		}
+	}
+
+	craftRecipe QolcMakeLockpickFromPaperclip
+	{
+		time = 50,
+		category = Survivalist,
+		timedAction = Making,
+		NeedToBeLearn = true,
+		Tags = InHandCraft,
+		inputs
+		{
+			item 1 [Base.Paperclip],
+		}
+		outputs
+		{
+			item 1 Base.QolcLockpick,
+		}
+	}
+
+	/*
+	 * Wire cut down with any blade. The blade is kept, as the original had it.
+	 */
+	craftRecipe QolcMakeLockpickFromWire
+	{
+		time = 50,
+		category = Survivalist,
+		timedAction = Making,
+		NeedToBeLearn = true,
+		Tags = InHandCraft,
+		inputs
+		{
+			item 1 tags[base:sharpknife] mode:keep,
+			item 1 [Base.Wire],
+		}
+		outputs
+		{
+			item 1 Base.QolcLockpick,
+		}
+	}
+
+}

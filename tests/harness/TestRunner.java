@@ -27,6 +27,7 @@ public class TestRunner {
 	private static List<String> moodleTypes = new ArrayList<String>();
 	private static List<String> characterStats = new ArrayList<String>();
 	private static List<String> characterTraits = new ArrayList<String>();
+	private static List<String> proceduralNames = new ArrayList<String>();
 	private static final Map<String, float[]> statBounds = new LinkedHashMap<String, float[]>();
 	private static final Map<String, Object> sandboxDefaults = new LinkedHashMap<String, Object>();
 	private static int translationFailures = 0;
@@ -49,13 +50,18 @@ public class TestRunner {
 		characterTraits = readConstants("zombie.scripting.objects.CharacterTrait");
 		System.out.println("CharacterTrait constants found in this build: " + characterTraits.size());
 
+		proceduralNames = readProceduralNames();
+		System.out.println("Loot tables found in this build: " + proceduralNames.size());
+
 		int staticFailures = checkConstantUsage("MoodleType.", moodleTypes)
 			+ checkConstantUsage("CharacterStat.", characterStats)
 			+ checkConstantUsage("CharacterTrait.", characterTraits)
 			+ checkItemScripts()
 			+ checkSandboxOptions()
 			+ checkTexturePaths()
+			+ checkTextureFolders()
 			+ checkItemTypes()
+			+ checkRecipeNames()
 			+ checkTileDefs();
 
 		// Discovery pass: load everything once just to learn the test names.
@@ -172,6 +178,16 @@ public class TestRunner {
 			}
 		}
 		env.rawset("QOLC_ITEM_ICONS", textures);
+
+		// Every loot table vanilla defines, so the stub builds its own from the real
+		// names. A distribution naming a table that does not exist writes into nothing,
+		// and the game skips it without a word, so the only way to catch a typo is for
+		// the harness to know which names are real.
+		KahluaTable procedural = platform.newTable();
+		for (int i = 0; i < proceduralNames.size(); i++) {
+			procedural.rawset(Double.valueOf(i + 1), proceduralNames.get(i));
+		}
+		env.rawset("QOLC_PROCEDURAL_NAMES", procedural);
 
 		env.rawset("QOLC_GAME_DIR", gameDir);
 		return env;
@@ -384,6 +400,12 @@ public class TestRunner {
 						while (end < line.length()
 							&& (Character.isLetterOrDigit(line.charAt(end)) || line.charAt(end) == '_')) end++;
 						String name = line.substring(at, end);
+						// Constants are UPPER_SNAKE. A member starting lower case is a
+						// method on the class rather than one of its constants, which is
+						// how a mod defined trait has to be looked up: CharacterTrait.get
+						// takes a ResourceLocation, there being no compiled constant for
+						// anything the base game does not ship.
+						if (name.length() > 0 && Character.isLowerCase(name.charAt(0))) continue;
 						if (name.length() > 0 && !known.contains(name)) {
 							bad++;
 							System.out.println("  FAIL  unknown " + prefix + name
@@ -933,6 +955,69 @@ public class TestRunner {
 	}
 
 	/** True when a "media/..." path exists in the mod's own trees or in the game. */
+	/**
+	 * Texture paths assembled with string.format. The placeholders make the full name
+	 * unknowable from source, so what is checked is the directory the path starts with:
+	 * it has to exist and hold something. That is enough to catch a folder deleted or
+	 * renamed out from under the code, which a literal by literal check cannot see.
+	 */
+	private static int checkTextureFolders() throws IOException {
+		java.util.regex.Pattern call = java.util.regex.Pattern
+			.compile("string\\.format\\s*\\(\\s*\"(media/[^\"]*?)%");
+		int bad = 0;
+
+		for (String path : loadFiles) {
+			File f = new File(path);
+			if (!f.getName().endsWith(".lua")) continue;
+			if (!f.getCanonicalPath().startsWith(modRoot)) continue;
+
+			BufferedReader r = new BufferedReader(new FileReader(f));
+			String line;
+			int n = 0;
+			try {
+				while ((line = r.readLine()) != null) {
+					n++;
+					int comment = line.indexOf("--");
+					if (comment >= 0) line = line.substring(0, comment);
+
+					java.util.regex.Matcher m = call.matcher(line);
+					while (m.find()) {
+						String prefix = m.group(1);
+						int slash = prefix.lastIndexOf('/');
+						if (slash < 0) continue;
+
+						String dir = prefix.substring(0, slash);
+						if (resolveTextureFolder(dir)) continue;
+						bad++;
+						System.out.println("  FAIL  texture folder empty or missing: " + dir
+							+ "  (" + f.getName() + ":" + n + ")");
+					}
+				}
+			} finally {
+				r.close();
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	private static boolean resolveTextureFolder(String folder) {
+		String relative = folder.startsWith("media/") ? folder.substring("media/".length()) : folder;
+
+		File[] roots = {
+			new File(modRoot, "common/media"),
+			new File(modRoot, "42/media"),
+			new File(gameDir, "media")
+		};
+		for (File root : roots) {
+			File dir = new File(root, relative);
+			String[] held = dir.list();
+			if (dir.isDirectory() && held != null && held.length > 0) return true;
+		}
+		return false;
+	}
+
 	private static boolean resolveTexture(String texture) {
 		String relative = texture.startsWith("media/") ? texture.substring("media/".length()) : texture;
 
@@ -953,6 +1038,60 @@ public class TestRunner {
 		return m.find() ? m.group(1) : null;
 	}
 
+	/**
+	 * Every craftRecipe this mod ships needs a display name in Recipes.json, keyed by the
+	 * recipe's own name. Without one the crafting menu prints the raw name, which is how
+	 * "QolcMakeLockpickFromHairpin" reached a player's screen: nothing errors, nothing
+	 * warns, the recipe simply reads like a variable.
+	 */
+	private static int checkRecipeNames() throws IOException {
+		File scripts = new File(modRoot, "42/media/scripts");
+		if (!scripts.isDirectory()) return 0;
+
+		Set<String> keys = readTranslationKeys(
+			new File(modRoot, "42/media/lua/shared/Translate/EN/Recipes.json"));
+		if (keys.isEmpty()) return 0;
+
+		// A recipe block that names one the base game already ships is an override, adding
+		// an OnCreate hook or the like, and the name it displays under is vanilla's. Only
+		// a recipe this mod introduces needs a name of its own.
+		keys.addAll(readTranslationKeys(new File(gameDir,
+			"media/lua/shared/Translate/EN/Recipes.json")));
+
+		java.util.ArrayDeque<File> queue = new java.util.ArrayDeque<File>();
+		queue.add(scripts);
+
+		int bad = 0;
+		java.util.regex.Pattern p = java.util.regex.Pattern
+			.compile("(?m)^\\s*craftRecipe\\s+(\\S+)\\s*$");
+
+		while (!queue.isEmpty()) {
+			File dir = queue.poll();
+			File[] children = dir.listFiles();
+			if (children == null) continue;
+
+			for (File f : children) {
+				if (f.isDirectory()) { queue.add(f); continue; }
+				if (!f.getName().endsWith(".txt")) continue;
+
+				String body = readAll(f).replaceAll("(?s)/\\*.*?\\*/", "");
+				java.util.regex.Matcher m = p.matcher(body);
+				while (m.find()) {
+					String name = m.group(1);
+					if (!keys.contains(name)) {
+						bad++;
+						System.out.println("  FAIL  craftRecipe " + name
+							+ " has no name in Recipes.json, the menu shows the raw name"
+							+ "  (" + f.getName() + ")");
+					}
+				}
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
 	private static Set<String> readTranslationKeys(File f) throws IOException {
 		Set<String> keys = new HashSet<String>();
 		if (!f.isFile()) return keys;
@@ -960,6 +1099,20 @@ public class TestRunner {
 			.compile("\"(.+?)\"\\s*:").matcher(readAll(f));
 		while (m.find()) keys.add(m.group(1));
 		return keys;
+	}
+
+	/** The name of every table in vanilla's ProceduralDistributions, in file order. */
+	private static List<String> readProceduralNames() throws IOException {
+		List<String> found = new ArrayList<String>();
+		File file = new File(gameDir, "media/lua/server/Items/ProceduralDistributions.lua");
+		if (!file.isFile()) return found;
+
+		java.util.regex.Matcher m = java.util.regex.Pattern
+			.compile("^\\t(\\w+)\\s*=\\s*\\{", java.util.regex.Pattern.MULTILINE)
+			.matcher(readAll(file));
+		while (m.find()) found.add(m.group(1));
+
+		return found;
 	}
 
 	private static String readAll(File f) throws IOException {

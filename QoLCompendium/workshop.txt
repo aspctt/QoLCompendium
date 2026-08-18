@@ -48,6 +48,7 @@ description=[*]Ammo and magazine icons, one per item
 description=[*]Perishable food split from food that keeps
 description=[*]A bigger welding torch, and more out of a tank
 description=[*]A magazine that teaches the Nutritionist trait
+description=[*]Lockpicking, with picks, manuals and a crowbar
 description=[/list]
 description=
 description=Every feature can be turned off on its own. Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone.
@@ -93,6 +94,7 @@ description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=23419
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465]Flamingo Fix[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918]Generator Time Remaining[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=533622988]Immersive Overlays[/url] by Stephanus van Zyl
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799]Lockpicking. Just. Lockpicking.[/url] by FMJ, MeTaLAnGeR and Oh God Spiders No
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] by DahakaMVl
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057]Propane Torch Fix[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406]Pumps Have Propane[/url] by Uncle Griz
@@ -104,6 +106,7 @@ description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=19227
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236]Sleep On It[/url] by Stultusaur
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101]Tailoring Fix[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645]Take Any Amount[/url]
+description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105]The Nutritionist[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937]Visible Generator Range[/url]
 description=[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426]Weapon Condition Indicator[/url] by NoctisFalco
 description=[/list]

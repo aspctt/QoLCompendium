@@ -15,5 +15,15 @@
     "IGUI_QoLC_GeneratorRemaining": "Fuel remaining: %1",
     "IGUI_QoLC_GeneratorWouldLast": "Fuel would last: %1",
     "IGUI_QoLC_AlreadyInOrder": "These are already in that order.",
-    "IGUI_QoLC_LearnedNutrition": "So that's what I have been eating."
+    "IGUI_QoLC_LearnedNutrition": "So that's what I have been eating.",
+    "IGUI_QoLC_LockLevel1": "Very Easy",
+    "IGUI_QoLC_LockLevel2": "Easy",
+    "IGUI_QoLC_LockLevel3": "Medium",
+    "IGUI_QoLC_LockLevel4": "Hard",
+    "IGUI_QoLC_LockLevel5": "Very Hard",
+    "IGUI_QoLC_LockLevel6": "Jammed",
+    "IGUI_QoLC_LockJammed": "This lock is wrecked. Nothing is opening it now.",
+    "IGUI_QoLC_PickStuck": "It's stuck in there.",
+    "IGUI_QoLC_PickBroken": "Snapped it.",
+    "IGUI_QoLC_LearnedForcing": "A crowbar and the right angle, then."
 }

@@ -58,5 +58,8 @@
     "UI_optionscreen_binding_Hotbar 13": "Hotbar 13",
     "UI_optionscreen_binding_Hotbar 14": "Hotbar 14",
     "UI_optionscreen_binding_Hotbar 15": "Hotbar 15",
-    "UI_optionscreen_binding_Hotbar 16": "Hotbar 16"
+    "UI_optionscreen_binding_Hotbar 16": "Hotbar 16",
+    "Tooltip_QoLC_Lockpick": "Thin enough to work a pin tumbler, with a screwdriver for tension.",
+    "Tooltip_QoLC_LockpickBook1": "Teaches how to make a pick, and how to use one.",
+    "Tooltip_QoLC_LockpickBook2": "Teaches how to lever a lock open with a crowbar."
 }

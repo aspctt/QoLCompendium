@@ -63,6 +63,37 @@ project's licence.
     floor tiles and that dropping attachedFloor is what fixes them. That is the
     whole insight and it is Woodstock's.
 
+  Lockpicking
+    From "Lockpicking. Just. Lockpicking.", Steam Workshop 2056238799.
+    Original by FMJ, updated for IWBUMS by MeTaLAnGeR, streamlined and fixed by
+    Oh God Spiders No.
+    Stated terms: none published with the mod. Included on the say so of this
+    project's author, who confirmed permission to build on it.
+
+    Bundled: four inventory icons and two sound files, the lockpicking loop and
+    the window being forced. Artwork and audio cannot be rewritten from a
+    description.
+
+    Taken: the design and its numbers. The chance to pick a lock, the timings,
+    which traits move them and by how much, the two rolls that stick or snap a
+    pick, and where the manuals spawn are all the original's judgement.
+
+    Rewritten for this project: everything that touched an api. Build 42 deleted
+    TraitFactory and ProfessionFactory outright and will not take a trait from a
+    mod at all, so the original's Nimble Fingers is gone and what it gave now
+    rides on the burglar profession. The build 41 recipe format is gone, so all
+    three recipes are craftRecipe blocks. Thirty nine
+    calls to HasTrait took a string, which build 42 no longer accepts, and two of
+    the traits they named, Lucky and Unlucky, no longer exist. Four of the five
+    sounds it played have been retired from the base game and are replaced with
+    vanilla ones that survive.
+
+    Added here: where the hairpin spawns. The original defined a raw hairpin but
+    never put one in a loot table, and build 42 has none of its own, so the
+    recipe that bends one into a pick had nothing to work from.
+
+    Not taken: its bundled copy of ItemTweaker, and its Necroforge support file.
+
   Moodle Quarters
     From "Moodle Quarters", Steam Workshop 2854030563, by DahakaMVl.
     Stated terms: explicit permission, given by the author in writing on the

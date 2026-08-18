@@ -1,0 +1,35 @@
+/*
+ * The two sounds the lockpicking mod brought with it, registered the way build 42 wants.
+ *
+ * Build 42 moved audio onto FMOD, and every one of the 3038 sounds it ships names an
+ * event in a bank rather than a file. A clip can still point at a file instead, which
+ * vanilla does exactly once for the tutorial zombie, and that is the only route a mod has
+ * for audio of its own. Without a block like this the file is simply never found and the
+ * action plays in silence.
+ *
+ * Everything else this feature plays is a vanilla sound, because four of the five the
+ * original used no longer exist: doorlocked, PZ_MetalSnap, sledgehammer and crackwood are
+ * all gone, and only unlockDoor survives, spelled UnlockDoor.
+ */
+module Base
+{
+	sound QolcLockpicking
+	{
+		category = Item,
+		clip
+		{
+			file = media/sound/QolcLockpicking.ogg,
+			distanceMax = 20,
+		}
+	}
+
+	sound QolcForceWindow
+	{
+		category = Item,
+		clip
+		{
+			file = media/sound/QolcForceWindow.ogg,
+			distanceMax = 25,
+		}
+	}
+}

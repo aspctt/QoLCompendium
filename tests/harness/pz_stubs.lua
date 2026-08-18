@@ -294,6 +294,14 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return false
 	end
 
+	function Container:FindAndReturn(Type)
+		for _, Held in ipairs(self.Items) do
+			if Held.getType and Held:getType() == Type then return Held end
+			if Held.getFullType and Held:getFullType() == Type then return Held end
+		end
+		return nil
+	end
+
 	function Container:getItemWithIDRecursiv(Id)
 		for _, Item in ipairs(self.Items) do
 			if Item:getID() == Id then return Item end
@@ -449,6 +457,44 @@ function Harness.NewPlayer(Number, IsLocal)
 
 	function Player:getPrimaryHandItem() return self.PrimaryHand end
 	function Player:getSecondaryHandItem() return self.SecondaryHand end
+	function Player:setPrimaryHandItem(Item) self.PrimaryHand = Item end
+	function Player:setSecondaryHandItem(Item) self.SecondaryHand = Item end
+	function Player:isTimedActionInstant() return self.InstantActions and true or false end
+
+	-- Build 42 keeps known recipes as a plain list of names on the character. Reading that
+	-- back has two forms, and the short one is not a question about this character at all.
+	-- It looks the name up in the build 41 recipe table first, finds nothing for anything
+	-- declared as a craftRecipe, and falls through to the SeeNotLearntRecipe sandbox option,
+	-- which is on by default. So the short form answers true for every recipe this mod adds,
+	-- learned or not. isRecipeActuallyKnown skips that, and is what the crafting screen asks.
+	Player.Recipes = {}
+
+	function Player:isRecipeKnown(Name, CheckOnly)
+		if not CheckOnly and SandboxVars.SeeNotLearntRecipe ~= false then return true end
+
+		return self.Recipes[Name] == true
+	end
+
+	function Player:isRecipeActuallyKnown(Name) return self:isRecipeKnown(Name, true) end
+	function Player:getKnownRecipes() return NewJavaList(self.Recipes) end
+
+	-- Carries the honest check itself, so a caller has no reason to guard it.
+	function Player:learnRecipe(Name)
+		if self:isRecipeActuallyKnown(Name) then return false end
+
+		self.Recipes[Name] = true
+		return true
+	end
+
+	function Player:getXp()
+		local Owner = self
+		local Xp = {}
+		function Xp:AddXP(Perk, Amount)
+			Owner.Xp = Owner.Xp or {}
+			Owner.Xp[Perk] = (Owner.Xp[Perk] or 0) + Amount
+		end
+		return Xp
+	end
 
 	-- Nil until a spec places them, the same as a character who is not in the world yet.
 	-- Anything reading it has to cope with that.
@@ -725,7 +771,7 @@ end
 --// Sandbox
 -- Server controlled balance. Seeded from the defaults TestRunner parsed out of
 -- 42/media/sandbox-options.txt, so these numbers are never restated here.
-SandboxVars = { QoLC = {} }
+SandboxVars = { QoLC = {}, SeeNotLearntRecipe = true }
 
 -- Vanilla's own frequency settings, which sit beside QoLC rather than inside it. One is
 -- never, so four is a world that has alarms in it for a spec to disarm.
@@ -1122,8 +1168,17 @@ Harness.VehicleNames = {
 ProceduralDistributions = { list = {} }
 VehicleDistributions = {}
 
+-- The hand written list above covers the tables a spec names directly. The rest come
+-- from vanilla itself, read out of ProceduralDistributions by the runner, so a mistyped
+-- table name has nowhere to land here either.
 for _, Name in ipairs(Harness.ProceduralNames) do
 	ProceduralDistributions.list[Name] = NewLootTable()
+end
+
+for _, Name in ipairs(QOLC_PROCEDURAL_NAMES or {}) do
+	if not ProceduralDistributions.list[Name] then
+		ProceduralDistributions.list[Name] = NewLootTable()
+	end
 end
 
 for _, Name in ipairs(Harness.VehicleNames) do
@@ -1186,12 +1241,27 @@ end
 -- is the value ZombRand will return.
 Harness.NextRandom = 0
 
+-- A queue for the cases where consecutive rolls mean different things, as in picking a
+-- lock: one roll decides whether it opens, the next whether the pick sticks, the next
+-- whether it snaps. Seeding one value cannot tell those apart. Once the queue runs dry
+-- it falls back to NextRandom, so a spec only states the rolls it cares about.
+Harness.RandomQueue = {}
+
+function Harness.SetRandom(Values)
+	Harness.RandomQueue = {}
+	for Index, Value in ipairs(Values or {}) do Harness.RandomQueue[Index] = Value end
+end
+
 function ZombRand(Low, High)
 	if High == nil then
 		High = Low
 		Low = 0
 	end
-	local Value = Low + Harness.NextRandom
+
+	local Next = Harness.NextRandom
+	if #Harness.RandomQueue > 0 then Next = table.remove(Harness.RandomQueue, 1) end
+
+	local Value = Low + Next
 	if Value >= High then return High - 1 end
 	return Value
 end
@@ -2405,6 +2475,18 @@ function ISBaseTimedAction:setOverrideHandModels(Primary, Secondary)
 	self.SecondaryHand = Secondary
 end
 
+function ISBaseTimedAction:setOverrideHandModelsString(Primary, Secondary)
+	self.PrimaryHandModel = Primary
+	self.SecondaryHandModel = Secondary
+end
+
+-- An anim node can take more than the action name. The barricade levering ones want a
+-- second variable naming the height, and without it the character stands still.
+function ISBaseTimedAction:setAnimVariable(Key, Value)
+	self.AnimVariables = self.AnimVariables or {}
+	self.AnimVariables[Key] = Value
+end
+
 --// Skills
 -- Perks are java singletons: compared by identity, never by name, and carrying their own
 -- id. getType returns the perk itself, which is what lets vanilla call it on a perk it
@@ -2895,6 +2977,14 @@ function ISReadABook:perform()
 	return true
 end
 
+-- complete is the half that teaches. Vanilla calls ReadLiterature here, which hands the
+-- reader everything in the item's LearnedRecipes, so anything that grants knowledge from
+-- a book hooks this rather than perform.
+function ISReadABook:complete()
+	self.Completed = true
+	return true
+end
+
 function ISReadABook:update()
 	self.Updates = (self.Updates or 0) + 1
 
@@ -3076,4 +3166,174 @@ function Harness.PlaceItemOnGround(X, Y, Z, Item)
 
 	Harness.Squares[tostring(X) .. "," .. tostring(Y) .. "," .. tostring(Z)] = Square
 	return Square
+end
+
+--// Lockpicking
+-- The slice of the world a lock feature touches: doors and windows that can be locked,
+-- the sounds it makes, the tools it swaps into your hands, and the walk to get there.
+Harness.WorldSounds = {}
+Harness.Noises = {}
+Harness.Modals = {}
+Harness.WalkedTo = nil
+
+-- Build 42 resolves a trait a mod defined by name rather than by constant, get taking a
+-- ResourceLocation. Anything the base game ships has a constant instead, which TestRunner
+-- injects straight from the jar.
+Harness.ModTraits = {}
+
+ResourceLocation = {}
+
+function ResourceLocation.of(Text)
+	local Namespace, Path = Harness.ResourceLocation(Text)
+	return Namespace .. ":" .. Path
+end
+
+function CharacterTrait.get(Location)
+	if Location == nil then return nil end
+	if Harness.ModTraits[Location] == nil then Harness.ModTraits[Location] = Location end
+
+	return Harness.ModTraits[Location]
+end
+
+-- A sound the world hears, as opposed to one only the player hears.
+local SoundManagerStub = {}
+
+function SoundManagerStub:playUISound(Name)
+	table.insert(Harness.UISounds, Name)
+end
+
+function SoundManagerStub:PlayWorldSound(Name, _Loop, Square, _Min, _Radius, _Volume, _Walls)
+	local Sound = { Name = Name, Square = Square, Stopped = false }
+	function Sound:stop() self.Stopped = true end
+
+	table.insert(Harness.WorldSounds, Sound)
+	return Sound
+end
+
+function getSoundManager() return SoundManagerStub end
+
+-- What draws zombies. Radius and volume both matter to a spec about being quiet.
+function addSound(Object, X, Y, Z, Volume, Radius)
+	table.insert(Harness.Noises,
+		{ Object = Object, X = X, Y = Y, Z = Z, Volume = Volume, Radius = Radius })
+end
+
+function luautils.okModal(Text, _Yes)
+	table.insert(Harness.Modals, Text)
+end
+
+-- Swaps tools into the hands and hands back what was there, which is what lets an action
+-- put the character's own weapon back afterwards.
+function luautils.equipItems(Character, Primary, Secondary)
+	local WasPrimary = Character:getPrimaryHandItem()
+	local WasSecondary = Character:getSecondaryHandItem()
+
+	local function Resolve(Wanted)
+		if Wanted == nil then return nil end
+		if type(Wanted) ~= "string" then return Wanted end
+
+		local Inventory = Character:getInventory()
+		return Inventory and Inventory:FindAndReturn(Wanted) or nil
+	end
+
+	Character:setPrimaryHandItem(Resolve(Primary))
+	Character:setSecondaryHandItem(Resolve(Secondary))
+
+	return WasPrimary, WasSecondary
+end
+
+-- The walk succeeds by default. A spec that cares makes it fail, which is how a player
+-- being unable to reach the door is reproduced.
+Harness.CanWalk = true
+
+function luautils.walkToObject(_Character, Object)
+	Harness.WalkedTo = Object
+	return Harness.CanWalk
+end
+
+function luautils.walkAdjWindowOrDoor(_Character, _Square, Object)
+	Harness.WalkedTo = Object
+	return Harness.CanWalk
+end
+
+function luautils.weaponLowerCondition(Item, _Character, _Damage)
+	if not Item then return end
+	Item.Condition = (Item.Condition or 10) - 1
+end
+
+-- Values: Open, Locked, LockedByKey, Exterior, Barricaded, KeyId. Doors and windows share
+-- most of their surface, so one factory covers both and the class name decides which.
+local function NewLockable(Class, Values)
+	Values = Values or {}
+
+	local Object = {}
+	Object.Class = Class
+	Object.ModData = {}
+	Object.KeyId = Values.KeyId or 1
+	Object.Locked = Values.Locked ~= false
+	Object.Opened = Values.Open and true or false
+	Object.Toggles = 0
+	Object.Hits = 0
+
+	-- Inside and Outside say whether each side of the door is in a building. A front door
+	-- has one of each; an interior door has a building on both sides.
+	local function NewSide(InBuilding)
+		local Side = Harness.NewObjectSquare(0, 0, 0, {})
+		function Side:getBuilding() return InBuilding and { Def = true } or nil end
+		return Side
+	end
+
+	-- Exterior says which shape of door this is. A front door has a building on one side
+	-- only; an interior door has one on both, which is what makes it not a way in.
+	local Interior = Values.Exterior == false
+	local Near = NewSide(true)
+	local Far = NewSide(Interior)
+
+	function Object:getModData() return self.ModData end
+	function Object:getSquare() return Values.Square or Near end
+	function Object:getOppositeSquare() return Far end
+	function Object:IsOpen() return self.Opened end
+	function Object:isLocked() return self.Locked end
+	function Object:setIsLocked(Value) self.Locked = Value and true or false end
+	function Object:isBarricaded() return Values.Barricaded and true or false end
+	function Object:getKeyId() return self.KeyId end
+	function Object:setKeyId(Value) self.KeyId = Value end
+
+	if Class == "IsoDoor" then
+		function Object:isLockedByKey() return Values.LockedByKey ~= false end
+		function Object:setLockedByKey(Value) Values.LockedByKey = Value and true or false end
+		-- The game's own rule, which is narrower than the name suggests: this square
+		-- flagged exterior and a building on the far side.
+		function Object:isExterior()
+			if Values.Exterior == nil then return false end
+			return Values.Exterior and true or false
+		end
+		function Object:ToggleDoorSilent() self.Opened = true self.Toggles = self.Toggles + 1 end
+	else
+		function Object:isSmashed() return Values.Smashed and true or false end
+		function Object:isDestroyed() return Values.Destroyed and true or false end
+		function Object:isPermaLocked() return Values.PermaLocked and true or false end
+		function Object:setPermaLocked(Value) Values.PermaLocked = Value and true or false end
+		function Object:ToggleWindow() self.Opened = true self.Toggles = self.Toggles + 1 end
+		function Object:WeaponHit() self.Hits = self.Hits + 1 end
+	end
+
+	return Object
+end
+
+function Harness.NewDoorLock(Values) return NewLockable("IsoDoor", Values) end
+function Harness.NewWindowLock(Values) return NewLockable("IsoWindow", Values) end
+
+-- A tool, with the condition and door damage a crowbar needs.
+function Harness.NewTool(Type, Condition)
+	local Item = Harness.NewInventoryItem(Type)
+	Item.Condition = Condition or 10
+	Item.DoorDamage = 5
+
+	function Item:getType() return Type end
+	function Item:getCondition() return self.Condition end
+	function Item:getDoorDamage() return self.DoorDamage end
+	function Item:setDoorDamage(Value) self.DoorDamage = Value end
+
+	return Item
 end

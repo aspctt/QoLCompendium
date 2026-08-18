@@ -77,11 +77,15 @@ Test("aliased vehicle tables are not added to twice", function()
 		"the stub should mirror vanilla's aliasing")
 end)
 
-Test("the retired camping and redneck spawns are gone", function()
+-- These three were dropped as spawn locations. The test used to say the tables themselves
+-- were gone from build 42, which was never true: it passed only because the harness built
+-- its loot tables from a hand written list that happened to leave them out. All three are
+-- still in vanilla. What matters is that no sling is put in them.
+Test("the retired camping and redneck spawns hold no sling", function()
 	Register()
 	for _, Name in ipairs({ "CampingStoreGear", "CampingStoreBackpacks", "WardrobeRedneck" }) do
-		AssertNil(ProceduralDistributions.list[Name],
-			Name .. " should no longer be targeted at all")
+		AssertNotNil(ProceduralDistributions.list[Name], Name .. " is still a real table")
+		AssertNil(WeightIn(Procedural(Name)), Name .. " should no longer be targeted")
 	end
 end)
 

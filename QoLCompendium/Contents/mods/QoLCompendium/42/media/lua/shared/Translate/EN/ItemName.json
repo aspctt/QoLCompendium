@@ -1,5 +1,9 @@
 {
     "Base.SlingAFront": "Rifle Sling",
     "Base.SlingABack": "Rifle Sling",
-    "Base.QolcNutritionistMag": "The Nutritionist"
+    "Base.QolcNutritionistMag": "The Nutritionist",
+    "Base.QolcLockpick": "Lockpick",
+    "Base.QolcHairpin": "Hairpin",
+    "Base.QolcLockpickBook1": "Locksmith's Handbook Vol. 1",
+    "Base.QolcLockpickBook2": "Locksmith's Handbook Vol. 2"
 }

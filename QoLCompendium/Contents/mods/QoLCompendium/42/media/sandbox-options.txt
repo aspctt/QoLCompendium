@@ -150,6 +150,18 @@ option QoLC.NutritionistMagEnabled
 }
 
 /*
+ * Lockpicking, which the base game has none of: no picks, no recipes, and nothing on a
+ * door that opens a lock without its key. Off stops the books spawning and takes the
+ * options off the menu; picks already made stay in the world as junk.
+ */
+option QoLC.LockpickingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_LockpickingEnabled,
+}
+
+/*
  * Switches for the three features that change balance rather than presentation. They sit
  * here rather than in mod options for the reason the rest of this page exists: a per
  * client setting would let one player on a server refill propane, weld twice as long, or
