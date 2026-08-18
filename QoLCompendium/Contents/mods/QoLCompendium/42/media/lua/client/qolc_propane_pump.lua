@@ -21,6 +21,15 @@ local TANK_TYPE = "Base.PropaneTank"
 -- Roughly the pace of filling a jerry can, scaled by how empty the tank is.
 local FILL_TIME_FULL = 300
 
+-- How far around the clicked square to look for the pump itself.
+--
+-- Reported in game as no option appearing at all. A fuel pump is several tiles and the
+-- part you right click is usually not the object carrying the fuel, so looking only at
+-- the square under the cursor finds nothing. Vanilla has the same problem and solves it
+-- the same way: ISVehiclePartMenu.getNearbyFuelPump sweeps minus two to plus two around
+-- the vehicle's tank rather than testing one square.
+local PUMP_SEARCH = 2
+
 --// Functions
 -- Vanilla's own test for a pump worth using, taken from getNearbyFuelPump. Covers both
 -- having power and having fuel left, so nothing else has to be checked.
@@ -29,20 +38,43 @@ local function IsWorkingPump(Object)
 	return Object:getPipedFuelAmount() > 0
 end
 
+local function PumpOnSquare(Square)
+	local Objects = Square and Square:getObjects()
+	if not Objects then return nil end
+
+	for Index = 0, Objects:size() - 1 do
+		local Candidate = Objects:get(Index)
+		if IsWorkingPump(Candidate) then return Candidate end
+	end
+
+	return nil
+end
+
 local function FindPump(WorldObjects)
+	local Origin = nil
+
 	for _, Object in ipairs(WorldObjects) do
 		if IsWorkingPump(Object) then return Object end
 
-		-- The square's other objects are worth a look, since a right click lands on
-		-- whichever one happens to be on top
 		local Square = Object.getSquare and Object:getSquare()
-		local Objects = Square and Square:getObjects()
+		local Found = PumpOnSquare(Square)
+		if Found then return Found end
 
-		if Objects then
-			for Index = 0, Objects:size() - 1 do
-				local Candidate = Objects:get(Index)
-				if IsWorkingPump(Candidate) then return Candidate end
-			end
+		Origin = Origin or Square
+	end
+
+	-- Nothing under the cursor, so sweep the tiles around it
+	if not Origin then return nil end
+
+	local Cell = getCell()
+	if not Cell then return nil end
+
+	for X = -PUMP_SEARCH, PUMP_SEARCH do
+		for Y = -PUMP_SEARCH, PUMP_SEARCH do
+			local Found = PumpOnSquare(Cell:getGridSquare(
+				Origin:getX() + X, Origin:getY() + Y, Origin:getZ()))
+
+			if Found then return Found end
 		end
 	end
 

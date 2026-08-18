@@ -236,3 +236,42 @@ end)
 Test("the context menu label resolves", function()
 	AssertNotNil(Translations["ContextMenu_QoLC_TakePropane"], "missing the Take Propane label")
 end)
+
+--// Finding The Pump
+-- Reported in game: right clicking a gas station pump offered nothing at all. A pump is
+-- several tiles and the part under the cursor is usually not the object holding the fuel,
+-- which is why vanilla's own getNearbyFuelPump sweeps the tiles around a position rather
+-- than testing one square.
+Test("a pump on a neighbouring tile is still found", function()
+	local Player = Harness.NewPlayer(0, true)
+	Player.Inventory.Items = { Harness.NewPropaneTank(0) }
+
+	-- The click lands on bare scenery, the pump is two tiles over
+	Harness.NewObjectSquare(12, 10, 0, { Harness.NewFuelPump(22000) })
+	local Clicked = Harness.NewSceneryWith({}, 10, 10, 0)
+
+	AssertNotNil(RightClick(Player, { Clicked }):Find(TAKE_PROPANE),
+		"the option should appear from the tile beside it")
+end)
+
+Test("the sweep does not reach across the street", function()
+	local Player = Harness.NewPlayer(0, true)
+	Player.Inventory.Items = { Harness.NewPropaneTank(0) }
+
+	Harness.NewObjectSquare(20, 10, 0, { Harness.NewFuelPump(22000) })
+	local Clicked = Harness.NewSceneryWith({}, 10, 10, 0)
+
+	AssertNil(RightClick(Player, { Clicked }):Find(TAKE_PROPANE),
+		"ten tiles away is not this pump")
+end)
+
+Test("a pump on another floor is not offered", function()
+	local Player = Harness.NewPlayer(0, true)
+	Player.Inventory.Items = { Harness.NewPropaneTank(0) }
+
+	Harness.NewObjectSquare(10, 10, 1, { Harness.NewFuelPump(22000) })
+	local Clicked = Harness.NewSceneryWith({}, 10, 10, 0)
+
+	AssertNil(RightClick(Player, { Clicked }):Find(TAKE_PROPANE), "wrong floor")
+end)
+

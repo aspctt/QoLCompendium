@@ -1866,18 +1866,32 @@ function Harness.NewFuelPump(Fuel)
 	return Pump
 end
 
--- Anything else on the square, so a spec can prove a right click that lands on a wall
--- or a sign still finds the pump beside it.
-function Harness.NewSceneryWith(Neighbours)
-	local Objects = Neighbours or {}
+-- A square carrying objects, registered so getCell():getGridSquare can find it. That is
+-- how anything sweeping the tiles around a click reaches its neighbours.
+function Harness.NewObjectSquare(X, Y, Z, Objects)
+	Objects = Objects or {}
 
 	local Square = {}
+	function Square:getX() return X or 0 end
+	function Square:getY() return Y or 0 end
+	function Square:getZ() return Z or 0 end
+
 	function Square:getObjects()
 		local List = {}
 		function List:size() return #Objects end
 		function List:get(Index) return Objects[Index + 1] end
 		return List
 	end
+
+	Harness.Squares[tostring(X or 0) .. "," .. tostring(Y or 0) .. "," .. tostring(Z or 0)] = Square
+	return Square
+end
+
+-- Anything else on the square, so a spec can prove a right click that lands on a wall
+-- or a sign still finds the pump beside it. Coordinates default to the origin, and a
+-- spec that cares about neighbours states them.
+function Harness.NewSceneryWith(Neighbours, X, Y, Z)
+	local Square = Harness.NewObjectSquare(X or 0, Y or 0, Z or 0, Neighbours or {})
 
 	local Object = {}
 	Object.Class = "IsoObject"
