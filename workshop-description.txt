@@ -77,6 +77,8 @@ Where another mod already does one of these jobs, this one gets out of the way.
 
 Every feature here began as someone else's mod. Every one of them is named, with a link, in the [url=https://github.com/aspctt/QoLCompendium]GitHub repository[/url]. Go and give them a thumbs up.
 
+[img]https://i.ibb.co/Z1xCbFs3/credits.png[/img]
+
 [b]Bundled original files, with permission or under licence:[/b] the rifle sling models and textures by Akyet with its attachment code by Noir, the ammo and magazine icons by falcon33jp, and the moodle plates by DahakaMVl. Art cannot be rewritten from a description. Everything else is written for this project.
 
 Take Any Amount also thanks [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3389115640]KaliLynx[/url], who carried it to build 42. Full detail is in the NOTICE file.
