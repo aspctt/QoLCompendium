@@ -170,10 +170,7 @@ end)
 Test("an attached item travels with its slot", function()
 	local Hotbar = NewHotbar("Back", "Belt", "Holster")
 
-	local Item = Harness.NewInventoryItem("Axe")
-	Item.AttachedSlot = nil
-	function Item:setAttachedSlot(Index) self.AttachedSlot = Index end
-
+	local Item = Harness.NewHotbarItem("Holster")
 	Hotbar.attachedItems[3] = Item
 	Hotbar.availableSlot[3].item = Item
 
@@ -181,7 +178,7 @@ Test("an attached item travels with its slot", function()
 
 	AssertEquals(Order(Hotbar), "Holster,Belt,Back", "the holster should be first")
 	AssertEquals(Hotbar.attachedItems[1], Item, "and its item should have come with it")
-	AssertEquals(Item.AttachedSlot, 1, "the item should know its new slot")
+	AssertEquals(Item:getAttachedSlot(), 1, "the item should know its new slot")
 end)
 
 Test("a new slot appears at the end rather than the front", function()
@@ -385,4 +382,62 @@ Test("the order is kept per character, not globally", function()
 
 	AssertEquals(Order(BarOne), "Belt,Back", "the first character reordered")
 	AssertEquals(Order(BarTwo), "Back,Belt", "the second should be untouched")
+end)
+
+--// Surviving A Rejoin
+-- Reported on a dedicated server: reordering the hotbar puts items back into the
+-- inventory on rejoin, and a weapon losing condition drops off the bar. Both go through
+-- the removal loop in ISHotbar:update, which checks that an item's own recorded slot
+-- still lands on a slot that will take it.
+local function Attach(Hotbar, Index, AttachmentType)
+	local Item = Harness.NewHotbarItem(AttachmentType)
+	Item.Container = Hotbar.chr.Inventory
+	table.insert(Hotbar.chr.Inventory.Items, Item)
+
+	Hotbar.attachedItems[Index] = Item
+	Item:setAttachedSlot(Index)
+	Item:setAttachedSlotType(Hotbar.availableSlot[Index].slotType)
+
+	return Item
+end
+
+Test("an item keeps its place through an ordinary update", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	local Item = Attach(Hotbar, 1, "Back")
+
+	Hotbar:update()
+	AssertEquals(Hotbar.attachedItems[1], Item, "nothing changed, nothing should move")
+	AssertEquals(Hotbar.Detached or 0, 0, "and nothing detached")
+end)
+
+Test("a reordered hotbar survives the update loop", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	local Item = Attach(Hotbar, 2, "Belt")
+
+	Hotbar.character:getModData()["BeltQolcHotbarIndex"] = 1
+	Hotbar.character:getModData()["BackQolcHotbarIndex"] = 2
+	QolcHotbarApplyOrder(Hotbar)
+
+	Hotbar:update()
+	AssertEquals(Hotbar.Detached or 0, 0, "the item should not be taken off the bar")
+end)
+
+Test("a reordered hotbar survives a rejoin", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	local Item = Attach(Hotbar, 2, "Belt")
+
+	Hotbar.character:getModData()["BeltQolcHotbarIndex"] = 1
+	Hotbar.character:getModData()["BackQolcHotbarIndex"] = 2
+	QolcHotbarApplyOrder(Hotbar)
+
+	local Fresh = Harness.RejoinHotbar(Hotbar)
+	Fresh:update()
+
+	AssertEquals(Fresh.Detached or 0, 0, "nothing should be put back in the inventory")
+	AssertEquals(Fresh.attachedItems[Item:getAttachedSlot()], Item, "still on the bar")
+
+	-- The index and the type are two halves of one record on the item, and both travel in
+	-- SyncItemFieldsPacket. They have to still name the same slot after the round trip.
+	AssertEquals(Fresh.availableSlot[Item:getAttachedSlot()].slotType, Item:getAttachedSlotType(),
+		"the recorded type has to name the slot the index points at")
 end)

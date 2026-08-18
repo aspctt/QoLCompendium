@@ -103,7 +103,7 @@ local function GetPreferredIndexes(Character, Slots)
 	return Preferred
 end
 
-function QolcHotbarApplyOrder(Hotbar)
+function QolcHotbarApplyOrder(Hotbar, ForceSave)
 	local Preferred = GetPreferredIndexes(Hotbar.character, Hotbar.availableSlot)
 
 	-- Items travel with their slot rather than their position, so the mapping has to be
@@ -119,11 +119,15 @@ function QolcHotbarApplyOrder(Hotbar)
 
 	Hotbar.attachedItems = {}
 	local ModData = Hotbar.character:getModData()
-	local Moved = false
+	local Saved = ModData["hotbar"]
+	local Moved = ForceSave and true or false
 
 	for Index, Slot in ipairs(Hotbar.availableSlot) do
 		if Slot.item then
 			Hotbar.attachedItems[Index] = Slot.item
+
+			-- Only the index. An item's other half, its slot type, never goes stale here
+			-- because every path moves a slot with its item still on it.
 			Slot.item:setAttachedSlot(Index)
 		end
 
@@ -132,11 +136,22 @@ function QolcHotbarApplyOrder(Hotbar)
 			ModData[Key] = Index
 			Moved = true
 		end
+
+		-- Vanilla's own record has to agree with the order on screen even when none of
+		-- our own numbers changed.
+		--
+		-- Reported on a dedicated server as items going back into the inventory on
+		-- rejoin. Every vanilla refresh rebuilds availableSlot in vanilla's order and
+		-- writes that to modData.hotbar, and this sorts it back afterwards. When the
+		-- preferred indexes were already stored, nothing above sets Moved, so vanilla's
+		-- record kept vanilla's order while the screen showed ours. On rejoin the slots
+		-- come back in vanilla's order, each item's stored index points at whatever now
+		-- sits there, and ISHotbar:update takes off everything that no longer fits.
+		if not Saved or Saved[Index] ~= Slot.slotType then Moved = true end
 	end
 
-	-- Vanilla's own record of the order, which also transmits it in multiplayer.
-	-- Only when something actually moved: savePosition calls transmitModData, which
-	-- sends the whole of a player's mod data, and this runs on every hotbar refresh.
+	-- savePosition calls transmitModData, which sends a player's whole mod data, and this
+	-- runs on every hotbar refresh. Hence saving only when the order really did change.
 	if Moved then Hotbar:savePosition() end
 end
 
@@ -272,8 +287,19 @@ function ISHotbar:refresh()
 	end
 
 	MoveDepartingSlotsToBack(self)
+
+	-- Vanilla saves the order partway through its own rebuild, before we have sorted it,
+	-- so the record it leaves behind is vanilla's order and not the player's. Holding that
+	-- save back until the order is final keeps a clothing change at one transmit rather
+	-- than two, and leaves the saved record agreeing with the bar on screen.
+	local Own = rawget(self, "savePosition")
+	local Pending = false
+	self.savePosition = function() Pending = true end
+
 	VanillaRefresh(self)
-	QolcHotbarApplyOrder(self)
+
+	self.savePosition = Own
+	QolcHotbarApplyOrder(self, Pending)
 end
 
 local VanillaLoadPosition = ISHotbar.loadPosition

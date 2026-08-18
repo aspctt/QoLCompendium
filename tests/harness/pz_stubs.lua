@@ -1522,9 +1522,19 @@ ISHotbar.__index = ISHotbar
 
 Harness.HotkeyPresses = {}
 
+-- What each slot will take. Vanilla maps an attachment type to the model to hang there;
+-- only which types are accepted matters here. A slot takes its own name by default, so a
+-- spec that does not care can ignore this entirely.
+Harness.SlotAttachments = {}
+
 function ISHotbar:getSlotDef(Name)
 	if not Name then return nil end
-	return { type = Name, name = Name, attachments = {} }
+
+	local Accepts = Harness.SlotAttachments[Name] or { Name }
+	local Attachments = {}
+	for _, Type in ipairs(Accepts) do Attachments[Type] = Name end
+
+	return { type = Name, name = Name, attachments = Attachments }
 end
 
 function ISHotbar:compareWornItems()
@@ -1611,6 +1621,92 @@ function ISHotbar:refresh()
 
 	self.RefreshCount = (self.RefreshCount or 0) + 1
 	self:savePosition()
+end
+
+-- A hotbar item, carrying the two fields the game stores on it and serialises with it.
+-- Both travel in SyncItemFieldsPacket as well, which is why a client that updates one
+-- and not the other is a multiplayer problem rather than a local one.
+function Harness.NewHotbarItem(AttachmentType, Name)
+	local Item = Harness.NewInventoryItem(Name or "Axe")
+	Item.AttachmentType = AttachmentType or "Axe"
+	Item.AttachedSlot = -1
+	Item.AttachedSlotType = nil
+	Item.Broken = false
+
+	function Item:getAttachmentType() return self.AttachmentType end
+	function Item:getAttachedSlot() return self.AttachedSlot end
+	function Item:setAttachedSlot(Index) self.AttachedSlot = Index end
+	function Item:getAttachedSlotType() return self.AttachedSlotType end
+	function Item:setAttachedSlotType(Type) self.AttachedSlotType = Type end
+	function Item:isBroken() return self.Broken end
+
+	return Item
+end
+
+-- Mirrors vanilla's canBeAttached: a slot takes an item when its definition lists that
+-- item's attachment type.
+function ISHotbar:canBeAttached(Slot, Item)
+	if not Slot or not Slot.def then return false end
+
+	for Type in pairs(Slot.def.attachments or {}) do
+		if Item:getAttachmentType() == Type then return true end
+	end
+
+	return false
+end
+
+-- Mirrors the removal loop in vanilla's ISHotbar:update, which runs every frame. An item
+-- whose recorded slot index no longer lands on a slot that accepts it is taken off the
+-- hotbar and left in the inventory. This is the path both multiplayer reports go through,
+-- and nothing here modelled it before.
+function ISHotbar:update()
+	for Index, Item in pairs(self.attachedItems) do
+		local Slot = self.availableSlot[Item:getAttachedSlot()]
+
+		if not Slot or not self:canBeAttached(Slot, Item)
+			or not self.chr:getInventory():contains(Item) or Item:isBroken() then
+			self.attachedItems[Index] = nil
+			Item:setAttachedSlot(-1)
+			Item:setAttachedSlotType(nil)
+			self.Detached = (self.Detached or 0) + 1
+		end
+	end
+end
+
+-- Everything the game keeps about the hotbar across a disconnect: the slot order in the
+-- player's mod data, and each item's own attached slot and type. Rebuilding from only
+-- those is what a rejoin actually does.
+function Harness.RejoinHotbar(Hotbar)
+	local Player = Hotbar.chr
+	local Items = {}
+
+	for _, Item in pairs(Hotbar.attachedItems) do table.insert(Items, Item) end
+
+	local Fresh = Harness.NewUIElement(0, 0, 400, 76)
+	setmetatable(Fresh, ISHotbar)
+
+	Fresh.SlotTypes = Hotbar.SlotTypes
+	Fresh.character = Player
+	Fresh.chr = Player
+	Fresh.availableSlot = {}
+	Fresh.attachedItems = {}
+	Fresh.slotWidth, Fresh.slotHeight = 60, 60
+	Fresh.slotPad, Fresh.margins = 4, 4
+	Fresh.Drawn = {}
+
+	function Fresh:getMouseX() return 0 end
+	function Fresh:getMouseY() return 0 end
+
+	Fresh:loadPosition()
+
+	-- The items come back knowing which slot they were on, and the game puts them where
+	-- that says rather than where they were on screen
+	for _, Item in ipairs(Items) do
+		local At = Item:getAttachedSlot()
+		if Fresh.availableSlot[At] then Fresh.attachedItems[At] = Item end
+	end
+
+	return Fresh
 end
 
 function ISHotbar:onMouseUp(X, Y)
