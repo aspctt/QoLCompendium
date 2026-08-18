@@ -24,5 +24,11 @@
     "Sandbox_QoLC_ReadingCalmEnabled": "Reading Settles The Mind",
     "Sandbox_QoLC_ReadingCalmEnabled_tooltip": "Reading a skill book slowly eases boredom, unhappiness and stress. The base game gives skill books no morale value at all, only comics and newspapers.",
     "Sandbox_QoLC_ReadingCalmRate": "Reading Calm Rate",
-    "Sandbox_QoLC_ReadingCalmRate_tooltip": "Percentage of the effect a page of a skill book is worth. Illness weakens it, and a fast reader gets less per page because they turn more of them."
+    "Sandbox_QoLC_ReadingCalmRate_tooltip": "Percentage of the effect a page of a skill book is worth. Illness weakens it, and a fast reader gets less per page because they turn more of them.",
+    "Sandbox_QoLC_SlingEnabled": "Rifle Slings",
+    "Sandbox_QoLC_SlingEnabled_tooltip": "Wear a rifle or other long weapon on a sling. Off stops them spawning in loot and on dead soldiers. The recipe stays available, and slings already owned keep working.",
+    "Sandbox_QoLC_PropanePumpEnabled": "Propane From Fuel Pumps",
+    "Sandbox_QoLC_PropanePumpEnabled_tooltip": "Refill a propane tank at a working fuel pump. The base game has no other way to refill one, so turning this off restores a hard ceiling on welding.",
+    "Sandbox_QoLC_BlowtorchEnabled": "Bigger Welding Torch",
+    "Sandbox_QoLC_BlowtorchEnabled_tooltip": "A torch holds 16 uses instead of 10, and a propane tank refills it 30 times instead of about 7. Off restores the vanilla numbers."
 }

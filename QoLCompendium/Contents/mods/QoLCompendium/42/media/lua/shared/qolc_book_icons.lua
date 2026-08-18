@@ -64,6 +64,7 @@ local function Apply(Item, Icon)
 end
 
 local function OnInitGlobalModData()
+	if QolcFeatureEnabled and not QolcFeatureEnabled("BookIcons") then return end
 	if not ScriptManager or not ScriptManager.instance then return end
 
 	local Missing = 0

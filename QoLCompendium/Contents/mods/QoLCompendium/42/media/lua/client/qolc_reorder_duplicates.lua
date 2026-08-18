@@ -218,6 +218,8 @@ local function AddSort(Context, Key, Player, Items, Container)
 end
 
 local function OnFillInventoryObjectContextMenu(PlayerNum, Context, Items)
+	if Options.ReorderEnabled and not Options.ReorderEnabled:getValue() then return end
+
 	local Player = getSpecificPlayer(PlayerNum)
 	if not Player then return end
 
@@ -254,6 +256,8 @@ local function CreateModOptions()
 	ModOptions:addTitle("UI_options_QoLC_Reorder")
 	ModOptions:addDescription("UI_options_QoLC_Reorder_Desc")
 
+	Options.ReorderEnabled = ModOptions:addTickBox("ReorderEnabled",
+		"UI_options_QoLC_Reorder_Enabled", true, "UI_options_QoLC_Reorder_Enabled_tooltip")
 	Options.ReorderSpeak = ModOptions:addTickBox("ReorderSpeak",
 		"UI_options_QoLC_Reorder_Speak", true, "UI_options_QoLC_Reorder_Speak_tooltip")
 	Options.ReorderExtras = ModOptions:addTickBox("ReorderExtras",

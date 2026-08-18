@@ -5,8 +5,9 @@
 --// redneck wardrobes, survivor caches and hunter trucks. Narrowed here to the places
 --// a sling would plausibly come from: police, gun stores, and the military.
 --//
---// Server side, so the tables are built once and authoritatively. Deliberately has no
---// mod options, loot balance has to match across a multiplayer session.
+--// Server side, so the tables are built once and authoritatively. Switched from the
+--// sandbox page rather than mod options, because loot balance has to match across a
+--// multiplayer session.
 
 --// Tuning
 -- Weights use the same scale as vanilla ProceduralDistributions.
@@ -67,7 +68,20 @@ local function AddTo(Container, Weight)
 end
 
 --// Registration
+--// Switch
+-- Server controlled, because this is balance rather than presentation. A per client
+-- setting would let one player on a server play to different numbers than the rest.
+local function QolcEnabled()
+	local Vars = SandboxVars and SandboxVars.QoLC
+	local Value = Vars and Vars.SlingEnabled
+
+	if Value ~= nil then return Value and true or false end
+	return true
+end
+
 local function OnPreDistributionMerge()
+	if not QolcEnabled() then return end
+
 	local Missing = {}
 
 	local Procedural = ProceduralDistributions and ProceduralDistributions.list

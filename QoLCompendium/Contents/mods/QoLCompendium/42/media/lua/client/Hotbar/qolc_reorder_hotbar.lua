@@ -104,6 +104,8 @@ local function GetPreferredIndexes(Character, Slots)
 end
 
 function QolcHotbarApplyOrder(Hotbar, ForceSave)
+	if not QolcFeatureEnabled("Hotbar") then return end
+
 	local Preferred = GetPreferredIndexes(Hotbar.character, Hotbar.availableSlot)
 
 	-- Items travel with their slot rather than their position, so the mapping has to be
@@ -260,6 +262,7 @@ end
 -- past it, so without this every click on them would also fire the final slot.
 local VanillaGetSlotIndexAt = ISHotbar.getSlotIndexAt
 function ISHotbar:getSlotIndexAt(X, Y)
+	if not QolcFeatureEnabled("Hotbar") then return VanillaGetSlotIndexAt(self, X, Y) end
 	if X >= GetButtonsX(self) then return -1 end
 	return VanillaGetSlotIndexAt(self, X, Y)
 end
@@ -338,6 +341,8 @@ end
 -- Vanilla has no onMouseDown or onMouseMove on the hotbar, so these are additions
 -- rather than overrides.
 function ISHotbar:onMouseDown(X, Y)
+	if not QolcFeatureEnabled("Hotbar") then return end
+
 	self.QolcPressedAt = getTimestampMs()
 
 	local Index = self:getSlotIndexAt(X, Y)
@@ -349,6 +354,7 @@ function ISHotbar:onMouseDown(X, Y)
 end
 
 function ISHotbar:onMouseMove(_DX, _DY)
+	if not QolcFeatureEnabled("Hotbar") then return end
 	if not self.QolcDragIndex then return end
 
 	local DX = self:getMouseX() - self.QolcDragStartX
@@ -417,6 +423,8 @@ end
 
 --// Rendering
 function ISHotbar:QolcRender()
+	if not QolcFeatureEnabled("Hotbar") then return ISHotbar.QolcVanillaRender(self) end
+
 	-- Condition fills, if that feature is present. Drawn from here rather than by
 	-- overriding ISHotbar.render a second time, because this file already owns it and
 	-- two overrides of one function is how mods quietly erase each other.

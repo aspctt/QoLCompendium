@@ -111,6 +111,13 @@ Options
 Anything cosmetic is configurable in **Options -> Mods**, with each feature in
 its own section. These settings are per player.
 
+Every feature can be turned off on its own. Features with nothing else to
+configure share a **Features** list of tick boxes at the top; features with
+settings of their own keep their switch beside those settings. Skill book icons,
+ammo icons and the split food categories are stamped onto item scripts as the
+game loads them, so those three take effect on the next start rather than
+immediately.
+
 Anything that changes game balance lives in the **QoL Compendium** sandbox page
 instead, set when the world is created or by the server admin. That way every
 player in a multiplayer game is playing to the same numbers, rather than each

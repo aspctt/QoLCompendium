@@ -116,3 +116,34 @@ option QoLC.ReadingCalmRate
     page = QoLC,
     translation = QoLC_ReadingCalmRate,
 }
+
+/*
+ * Switches for the three features that change balance rather than presentation. They sit
+ * here rather than in mod options for the reason the rest of this page exists: a per
+ * client setting would let one player on a server refill propane, weld twice as long, or
+ * find slings in loot while another cannot.
+ *
+ * Turning the sling off stops it spawning in loot and on dead soldiers. Its recipe and
+ * its clothing items are script definitions rather than lua, so they always exist and
+ * anything already owned keeps working.
+ */
+option QoLC.SlingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_SlingEnabled,
+}
+
+option QoLC.PropanePumpEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_PropanePumpEnabled,
+}
+
+option QoLC.BlowtorchEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_BlowtorchEnabled,
+}

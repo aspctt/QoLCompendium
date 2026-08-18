@@ -201,7 +201,7 @@ function ISGeneratorInfoWindow.getRichText(Object, DisplayStats)
 
 	-- The short form, drawn on the object rather than in the window, has no stats to
 	-- add a line to
-	if not DisplayStats then return Text end
+	if not DisplayStats or not QolcFeatureEnabled("Generator") then return Text end
 
 	local Time = QolcGeneratorTimeText(Object)
 	if not Time then return Text end
@@ -211,7 +211,7 @@ end
 
 local VanillaPrerender = ISGeneratorInfoWindow.prerender
 function ISGeneratorInfoWindow:prerender(...)
-	if Active and self.object then Draw(self.object) end
+	if Active and self.object and QolcFeatureEnabled("Generator") then Draw(self.object) end
 	return VanillaPrerender(self, ...)
 end
 
@@ -220,7 +220,7 @@ end
 -- first.
 local VanillaSetVisible = ISGeneratorInfoWindow.setVisible
 function ISGeneratorInfoWindow:setVisible(Visible, ...)
-	if Visible then Active = true else Stop() end
+	if Visible and QolcFeatureEnabled("Generator") then Active = true else Stop() end
 	return VanillaSetVisible(self, Visible, ...)
 end
 

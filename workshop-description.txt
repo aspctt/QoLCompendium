@@ -42,6 +42,8 @@ Most are not ports. Build 41 code rarely survives the move intact, so where the 
     [*][b]A bigger welding torch[/b], and more welding out of a propane tank
 [/list]
 
+Every feature can be turned off on its own, so you can take the parts you want and leave the rest.
+
 Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone instead of each client running its own numbers.
 
 

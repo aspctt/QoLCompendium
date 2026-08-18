@@ -6,6 +6,7 @@ Test("both features share one options category", function()
 	-- Named rather than counted, so adding a feature fails here until it is listed, and
 	-- a feature that quietly loses its heading fails too.
 	local Expected = {
+		"UI_options_QoLC_Features",
 		"UI_options_QoLC_BiggerAvatar",
 		"UI_options_QoLC_Overlays",
 		"UI_options_QoLC_Condition",

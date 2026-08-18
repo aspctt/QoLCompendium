@@ -98,6 +98,8 @@ end
 --// Overrides
 local VanillaRender = ISToolTipInv.render
 function ISToolTipInv:render()
+	if not QolcFeatureEnabled("Material") then return VanillaRender(self) end
+
 	local Text, Colour = GetCachedLine(self.item)
 	if not Text then return VanillaRender(self) end
 

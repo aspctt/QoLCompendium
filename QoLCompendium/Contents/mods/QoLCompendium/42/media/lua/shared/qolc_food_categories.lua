@@ -27,6 +27,7 @@ local ROT_DAYS_SENTINEL = 3650
 
 --// Functions
 local function OnInitGlobalModData()
+	if QolcFeatureEnabled and not QolcFeatureEnabled("FoodCategories") then return end
 	if not getAllItems then return end
 
 	local Items = getAllItems()

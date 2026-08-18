@@ -178,6 +178,7 @@ end
 local VanillaGrabMenu = ISInventoryPaneContextMenu.doGrabMenu
 function ISInventoryPaneContextMenu.doGrabMenu(Context, Items, PlayerNum)
 	VanillaGrabMenu(Context, Items, PlayerNum)
+	if not QolcFeatureEnabled("TakeAmount") then return end
 
 	-- Only where vanilla decided the stack was worth splitting. That decision already
 	-- accounts for heavy items and for containers refusing the item.
@@ -201,6 +202,8 @@ function ISInventoryPaneContextMenu.doGrabMenu(Context, Items, PlayerNum)
 end
 
 local function OnFillInventoryObjectContextMenu(PlayerNum, Context, Items)
+	if not QolcFeatureEnabled("TakeAmount") then return end
+
 	local Player = getSpecificPlayer(PlayerNum)
 	local Loot = getPlayerLoot(PlayerNum)
 	if not Player or not Loot or not Loot.inventory then return end

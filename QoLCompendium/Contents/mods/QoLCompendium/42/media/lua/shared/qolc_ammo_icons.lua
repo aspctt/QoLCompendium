@@ -41,6 +41,7 @@ local ICONS = {
 
 --// Functions
 local function OnInitGlobalModData()
+	if QolcFeatureEnabled and not QolcFeatureEnabled("AmmoIcons") then return end
 	if not ScriptManager or not ScriptManager.instance then return end
 
 	for Name, Icon in pairs(ICONS) do

@@ -6,8 +6,8 @@
 --// changes the economy: a larger torch, and more welding out of a propane tank.
 --//
 --// Shared rather than server, so a multiplayer client and its server agree on the numbers.
---// Deliberately has no mod options: this is balance, not cosmetics, and a per client
---// setting would desync from the server.
+--// Switched from the sandbox page rather than mod options: this is balance, not
+--// cosmetics, and a per client setting would desync from the server.
 
 --// Tuning
 -- 16 uses per torch and 30 refills per tank, so 480 welding uses out of a full tank.
@@ -23,6 +23,17 @@ local function GetPropanePerTorch(Tank)
 	local MaxUses = Tank:getMaxUses()
 	if not MaxUses or MaxUses <= 0 then return nil end
 	return MaxUses / REFILLS_PER_TANK
+end
+
+--// Switch
+-- Server controlled, because this is balance rather than presentation. A per client
+-- setting would let one player on a server play to different numbers than the rest.
+local function QolcEnabled()
+	local Vars = SandboxVars and SandboxVars.QoLC
+	local Value = Vars and Vars.BlowtorchEnabled
+
+	if Value ~= nil then return Value and true or false end
+	return true
 end
 
 --// Recipe Hooks
@@ -71,6 +82,8 @@ end
 -- Applied through ScriptManager rather than a script file, because the item is already
 -- defined by the base game and this is the form the build 42 mod shipped with.
 local function OnInitGlobalModData()
+	if not QolcEnabled() then return end
+
 	if not ScriptManager or not ScriptManager.instance then return end
 
 	local Item = ScriptManager.instance:getItem("Base.BlowTorch")

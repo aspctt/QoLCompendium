@@ -105,6 +105,7 @@ end
 local VanillaUpdateTooltip = ISSkillProgressBar.updateTooltip
 function ISSkillProgressBar:updateTooltip(...)
 	VanillaUpdateTooltip(self, ...)
+	if not QolcFeatureEnabled("XpView") then return end
 
 	if not self.message or not self.perk or not self.char then return end
 
@@ -127,6 +128,8 @@ end
 -- the same shape the fabric tooltip uses, and keeps vanilla's layout entirely its own.
 local VanillaDrawXpBoostMap = CharacterCreationProfession.drawXpBoostMap
 function CharacterCreationProfession:drawXpBoostMap(Y, Item, ...)
+	if not QolcFeatureEnabled("XpView") then return VanillaDrawXpBoostMap(self, Y, Item, ...) end
+
 	local Entry = Item and Item.item
 	local Perk = Entry and Entry.perk
 

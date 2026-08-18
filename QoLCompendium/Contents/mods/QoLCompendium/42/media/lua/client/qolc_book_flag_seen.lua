@@ -60,6 +60,7 @@ end
 local VanillaLiteratureMenu = ISInventoryPaneContextMenu.doLiteratureMenu
 function ISInventoryPaneContextMenu.doLiteratureMenu(Context, Items, PlayerNum)
 	VanillaLiteratureMenu(Context, Items, PlayerNum)
+	if not QolcFeatureEnabled("FlagBook") then return end
 
 	local Option = FindTooComplicated(Context)
 	if not Option then return end

@@ -30,6 +30,17 @@ local FILL_TIME_FULL = 300
 -- the vehicle's tank rather than testing one square.
 local PUMP_SEARCH = 2
 
+--// Switch
+-- Server controlled, because this is balance rather than presentation. A per client
+-- setting would let one player on a server play to different numbers than the rest.
+local function QolcEnabled()
+	local Vars = SandboxVars and SandboxVars.QoLC
+	local Value = Vars and Vars.PropanePumpEnabled
+
+	if Value ~= nil then return Value and true or false end
+	return true
+end
+
 --// Functions
 -- Vanilla's own test for a pump worth using, taken from getNearbyFuelPump. Covers both
 -- having power and having fuel left, so nothing else has to be checked.
@@ -110,6 +121,7 @@ end
 
 local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Test)
 	if Test then return end
+	if not QolcEnabled() then return end
 
 	local Player = getSpecificPlayer(PlayerNum)
 	if not Player then return end

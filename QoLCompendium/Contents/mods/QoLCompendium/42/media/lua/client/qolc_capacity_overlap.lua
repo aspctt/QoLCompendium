@@ -60,6 +60,7 @@ local VanillaPrerender = ISInventoryPage.prerender
 function ISInventoryPage:prerender()
 	-- The character's own inventory draws its title on the left with drawText and never
 	-- collides with anything, so there is nothing to do there
+	if not QolcFeatureEnabled("Capacity") then return VanillaPrerender(self) end
 	if self.onCharacter or not self.title then return VanillaPrerender(self) end
 
 	local Own = rawget(self, "drawTextRight")
