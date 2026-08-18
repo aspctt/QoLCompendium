@@ -1,5 +1,4 @@
 ## TO DO MODS
-CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507
 Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102		- DO LAST
 Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
@@ -48,6 +47,7 @@ Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles
 
 
 ## OBSOLETE MODS
+CanBeConsolided Mod									- https://steamcommunity.com/sharedfiles/filedetails/?id=1912072507		- SKIPPED. MERGE MENU STILL EXISTS AND STILL READS cantBeConsolided, SO IT WOULD WORK, BUT B42 REFILLS THE LIGHTER VIA THE refillLighter RECIPE AND THE OTHER THREE BLOCKS LOOK DELIBERATE. 54 OF 150 DRAINABLES ARE BLOCKED, INCLUDING CAR BATTERIES AND FILTERS
 Drink 6 pack and 12 pack MOD for build 41			- https://steamcommunity.com/sharedfiles/filedetails/?id=2205858043		- MOSTLY OBSOLETE, B42 PACKS BEER AND WINE NATIVELY. ONLY POP AND WHISKEY MISSING
 Grab To Current Inventory (for Build 41)			- https://steamcommunity.com/sharedfiles/filedetails/?id=1941172548		- OBSOLETE, CONFIRMED IN GAME. B42 SHIPS Grab, Grab_one, Grab_half AND Grab_all
 Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?id=2880299874		- OBSOLETE, B42 MOVED THE ROLL INTO JAVA AND COMMENTED OUT THE LUA ONE
