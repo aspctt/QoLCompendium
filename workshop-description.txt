@@ -23,6 +23,7 @@ Most are not ports. Build 41 code rarely survives the move intact, so where the 
     [*][b]Adrenaline.[/b] Panic sheds fatigue, paid back with interest once you calm down.
     [*][b]Alarms on open houses.[/b] A house whose door already stands open, or whose window is smashed, no longer sounds its alarm, and neither does a car left unlocked. The original's vehicle half throws on build 42, which moved vehicle parts behind a new accessor.
     [*][b]Reading settles the mind.[/b] A skill book slowly eases boredom, unhappiness and stress. Build 42 gives skill books no morale value at all, only comics and newspapers, and every stat accessor the original used has since been removed.
+    [*][b]Sleep on it.[/b] Boredom and unhappiness wear off while you sleep. Build 42 freezes both instead, so a night changes neither.
 [/list]
 
 [b]Everything else:[/b]

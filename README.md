@@ -104,6 +104,10 @@ boredom, unhappiness and stress. The base game gives skill books no morale value
 at all, only comics and newspapers. Each page takes a share of what is left, so
 it settles a character without ever finishing the job, and illness weakens it.
 
+**Sleep On It** - Boredom and unhappiness wear off while a character sleeps. The
+base game freezes both instead, so a night's sleep changes neither. A full eight
+hours clears boredom outright, and the rate is a server setting.
+
 
 Options
 -------
@@ -168,6 +172,7 @@ ran at all.
 | Reorder Duplicates By Condition | [Reorder Duplicates by Condition](https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021) | Rewritten. Three accessors it uses are gone in build 42, and this queues the fewest moves rather than rewriting the whole container. |
 | Reasonable Alarms | [Reasonable Crime Preventation Alarm](https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889) | Rewritten. Its vehicle half throws on build 42, which moved vehicle parts behind a new accessor, and its settings file is a sandbox page here. |
 | Reading Settles The Mind | [Reading is not boring.](https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990) | Rewritten. Build 42 removed every stat accessor it used. Skill books only, and it counts pages off the action so it works on a multiplayer client. |
+| Sleep On It | [Sleep On It](https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236) by Stultusaur | Rewritten. Already a build 42 version, so this is for shape: its client command round trip changed the server's copy without syncing it back, and it only ever covered the first player. |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,

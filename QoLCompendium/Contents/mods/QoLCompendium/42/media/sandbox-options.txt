@@ -118,6 +118,25 @@ option QoLC.ReadingCalmRate
 }
 
 /*
+ * Sleeping wears off boredom and unhappiness. The base game freezes both while a
+ * character is asleep, so a night changes neither. The rate scales what a night is
+ * worth: at the default, eight hours clears boredom outright.
+ */
+option QoLC.SleepRecoveryEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_SleepRecoveryEnabled,
+}
+
+option QoLC.SleepRecoveryRate
+{
+    type = integer, min = 0, max = 500, default = 100,
+    page = QoLC,
+    translation = QoLC_SleepRecoveryRate,
+}
+
+/*
  * Switches for the three features that change balance rather than presentation. They sit
  * here rather than in mod options for the reason the rest of this page exists: a per
  * client setting would let one player on a server refill propane, weld twice as long, or

@@ -227,6 +227,12 @@ local function NewStats()
 		return true
 	end
 
+	-- add and remove go through set, so they land inside the same bounds the game would
+	-- clamp them to. Vanilla uses these rather than set wherever it nudges a stat, see
+	-- IsoPlayer.petAnimal and BodyDamage.UpdateBoredom.
+	function Stats:add(Stat, Value) return self:set(Stat, self:get(Stat) + Value) end
+	function Stats:remove(Stat, Value) return self:set(Stat, self:get(Stat) - Value) end
+
 	-- The part of stress that comes from wanting a cigarette. Build 42 renamed this from
 	-- getStressFromCigarettes, and it is a component of STRESS rather than a stat of its
 	-- own, so anything easing stress has to decide whether to eat into it.

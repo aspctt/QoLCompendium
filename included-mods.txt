@@ -7,7 +7,6 @@ Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
 Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- EXPLICIT PERMISSION + I UPDATED THIS MOD TO B42. KEPT OUT FOR NOW, IT IS ALREADY MINE AND ALREADY CURRENT, SO ABSORBING IT MEANS MAINTAINING ONE FEATURE IN TWO PLACES
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
-Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 
@@ -39,6 +38,7 @@ Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/
 Reorder Duplicates by Condition						- https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021		- INTEGRATED. ORIGINAL THROWS ON B42 VIA getDirtyness, getUsedDelta AND getCharacterTraits():contains. FEWEST MOVES INSTEAD OF ITS OWN
 Reorder Containers - Backpack Orders				- https://steamcommunity.com/sharedfiles/filedetails/?id=2901962885		- MIT LICENSE. HELD BACK, SEE disabled/reorder-containers
 Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337		- INTEGRATED (MIT LICENSE)
+Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236		- INTEGRATED. ALREADY A B42 VERSION, SO REWRITTEN FOR SHAPE NOT REPAIR. DROPPED ITS CLIENT COMMAND ROUND TRIP, WHICH CHANGED THE SERVER'S COPY AND NEVER SYNCED IT BACK. COVERS EVERY LOCAL PLAYER, NOT JUST THE FIRST
 Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101		- INTEGRATED
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- INTEGRATED (PERMISSION GRANTED, CREDIT REQUIRED). ALSO CREDIT KaliLynx FOR THE B42 VERSION 3389115640
