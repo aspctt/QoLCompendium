@@ -5,8 +5,6 @@ Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
-More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
-The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
 
 
@@ -41,6 +39,7 @@ Reorder The Hotbar									- https://steamcommunity.com/sharedfiles/filedetails/
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236		- INTEGRATED. ALREADY A B42 VERSION, SO REWRITTEN FOR SHAPE NOT REPAIR. DROPPED ITS CLIENT COMMAND ROUND TRIP, WHICH CHANGED THE SERVER'S COPY AND NEVER SYNCED IT BACK. COVERS EVERY LOCAL PLAYER, NOT JUST THE FIRST
 Show Clothes Material								- https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845		- INTEGRATED
 Tailoring Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101		- INTEGRATED
+The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105		- INTEGRATED. getTraits AND ITS STRING NAMES ARE GONE ON B42, NOW getCharacterTraits KEYED BY CharacterTrait. DROPPED ITS ReadLiterature METATABLE SWAP. GRANTS NUTRITIONIST2, WHICH Food.DoTooltip ACCEPTS
 Take Any Amount (file from updated ver.)			- https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645		- INTEGRATED (PERMISSION GRANTED, CREDIT REQUIRED). ALSO CREDIT KaliLynx FOR THE B42 VERSION 3389115640
 Weapon Condition Indicator [41.60+]					- https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426		- NO REDISTRIBUTE. IDEA ONLY, BUILT CLEAN ROOM WITHOUT READING ITS CODE
 

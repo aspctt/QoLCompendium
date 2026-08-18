@@ -14,5 +14,6 @@
     "IGUI_QoLC_GeneratorHours": "%1 hours",
     "IGUI_QoLC_GeneratorRemaining": "Fuel remaining: %1",
     "IGUI_QoLC_GeneratorWouldLast": "Fuel would last: %1",
-    "IGUI_QoLC_AlreadyInOrder": "These are already in that order."
+    "IGUI_QoLC_AlreadyInOrder": "These are already in that order.",
+    "IGUI_QoLC_LearnedNutrition": "So that's what I have been eating."
 }

@@ -477,6 +477,29 @@ function Harness.NewPlayer(Number, IsLocal)
 
 	function Player:setTrait(Trait, Value) self.Traits[Trait] = Value end
 
+	-- Build 42 moved traits off the character into their own object. The names are gone
+	-- with them: get, set, add and remove all take a CharacterTrait. It reads and writes
+	-- the same store hasTrait does, or a trait added at run time would not be seen.
+	function Player:getCharacterTraits()
+		local Owner = self
+		local Traits = {}
+
+		function Traits:get(Trait)
+			if Trait == nil then error("CharacterTraits:get was given a nil CharacterTrait") end
+			return Owner.Traits[Trait] == true
+		end
+
+		function Traits:add(Trait)
+			if Trait == nil then error("CharacterTraits:add was given a nil CharacterTrait") end
+			Owner.Traits[Trait] = true
+		end
+
+		function Traits:remove(Trait) Owner.Traits[Trait] = nil end
+		function Traits:set(Trait, Value) Owner.Traits[Trait] = Value and true or nil end
+
+		return Traits
+	end
+
 	-- Enough of the character surface for a timed action to run
 	function Player:faceThisObject(Object) self.Facing = Object end
 	function Player:shouldBeTurning() return self.Turning and true or false end
@@ -2862,6 +2885,15 @@ end
 ISReadABook = ISBaseTimedAction:derive("ISReadABook")
 
 function ISReadABook:getJobDelta() return self.JobDelta or 0 end
+
+-- Vanilla's perform is what finishes a read: it clears the job bar and puts the item
+-- back or consumes it. Recorded rather than reproduced, so a spec can prove an override
+-- let it run.
+function ISReadABook:perform()
+	self.Performed = true
+	if self.item and self.item.setJobDelta then self.item:setJobDelta(0) end
+	return true
+end
 
 function ISReadABook:update()
 	self.Updates = (self.Updates or 0) + 1

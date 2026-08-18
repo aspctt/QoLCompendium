@@ -113,6 +113,12 @@ level it climbs, so the stack tells you how bad each moodle is at a glance
 rather than by counting icons. Stands down on its own if you already run the
 standalone mod.
 
+**The Nutritionist** - A magazine that teaches the Nutritionist trait, so food
+tooltips start showing calories and the rest of the breakdown. The base game has
+no way to learn a trait after character creation at all, so otherwise it costs
+two points at the start or means taking Fitness Instructor. It spawns wherever
+cooking magazines do, at half their odds.
+
 
 Options
 -------
@@ -179,6 +185,7 @@ ran at all.
 | Reading Settles The Mind | [Reading is not boring.](https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990) | Rewritten. Build 42 removed every stat accessor it used. Skill books only, and it counts pages off the action so it works on a multiplayer client. |
 | Sleep On It | [Sleep On It](https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236) by Stultusaur | Rewritten. Already a build 42 version, so this is for shape: its client command round trip changed the server's copy without syncing it back, and it only ever covered the first player. |
 | Moodle Quarters | [Moodle Quarters](https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563) by DahakaMVl | **Bundles the original plate art.** Explicit permission. The build 42 support is this project author's own work, merged upstream, so it is carried across unchanged. See [NOTICE](NOTICE). |
+| The Nutritionist | [The Nutritionist](https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105) | Rewritten. Build 42 replaced the trait API, so every call it made is gone. Its metatable swap of ReadLiterature is dropped as unnecessary. |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,

@@ -137,6 +137,19 @@ option QoLC.SleepRecoveryRate
 }
 
 /*
+ * A magazine that teaches the Nutritionist trait, so food tooltips start showing
+ * calories and the rest. The base game has no way to learn a trait after character
+ * creation at all, so this is the only route besides spending two points at the start or
+ * taking Fitness Instructor. Off stops it spawning; a copy already found still works.
+ */
+option QoLC.NutritionistMagEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_NutritionistMagEnabled,
+}
+
+/*
  * Switches for the three features that change balance rather than presentation. They sit
  * here rather than in mod options for the reason the rest of this page exists: a per
  * client setting would let one player on a server refill propane, weld twice as long, or

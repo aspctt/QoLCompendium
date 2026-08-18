@@ -34,5 +34,7 @@
     "Sandbox_QoLC_PropanePumpEnabled": "Propane From Fuel Pumps",
     "Sandbox_QoLC_PropanePumpEnabled_tooltip": "Refill a propane tank at a working fuel pump. The base game has no other way to refill one, so turning this off restores a hard ceiling on welding.",
     "Sandbox_QoLC_BlowtorchEnabled": "Bigger Welding Torch",
-    "Sandbox_QoLC_BlowtorchEnabled_tooltip": "A torch holds 16 uses instead of 10, and a propane tank refills it 30 times instead of about 7. Off restores the vanilla numbers."
+    "Sandbox_QoLC_BlowtorchEnabled_tooltip": "A torch holds 16 uses instead of 10, and a propane tank refills it 30 times instead of about 7. Off restores the vanilla numbers.",
+    "Sandbox_QoLC_NutritionistMagEnabled": "The Nutritionist Magazine",
+    "Sandbox_QoLC_NutritionistMagEnabled_tooltip": "Adds a magazine that teaches the Nutritionist trait, putting nutrition on the food the base game keeps quiet about: fresh produce, meat, foraged food and anything you cook. Tinned and boxed food already shows its label to anyone. It spawns wherever cooking magazines do, at half their odds."
 }

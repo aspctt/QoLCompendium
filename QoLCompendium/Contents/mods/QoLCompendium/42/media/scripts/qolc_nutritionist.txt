@@ -1,0 +1,31 @@
+/*
+ * The Nutritionist, Workshop 1934095105 - Original idea
+ *
+ * A magazine that teaches the Nutritionist trait, which puts calories and the rest of
+ * the nutritional breakdown on every food tooltip. The base game offers no way at all to
+ * learn a trait after character creation, so without this the only route is spending two
+ * points at the start or picking Fitness Instructor.
+ *
+ * Shaped like build 42's own recipe magazines rather than the build 41 original: an
+ * ItemType of base:literature, the magazine tag, and the boredom and stress relief every
+ * other magazine gives for reading it. The original declared "Type = Literature", which
+ * this build no longer parses.
+ *
+ * No LearnedRecipes, because the payload is a trait rather than a recipe. That is applied
+ * in qolc_nutritionist.lua, where the read finishes.
+ */
+module Base
+{
+	item QolcNutritionistMag
+	{
+		DisplayCategory = RecipeResource,
+		ItemType = base:literature,
+		Weight = 0.5,
+		Icon = MagazineFood,
+		BoredomChange = -20,
+		StressChange = -15,
+		StaticModel = Magazine,
+		WorldStaticModel = MagazineCook1Ground,
+		Tags = base:magazine,
+	}
+}
