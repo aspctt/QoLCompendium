@@ -59,6 +59,11 @@ or slides one in between, whichever you pick, and the order can be locked. Slots
 past the eighth need a key bound before clicking them does anything, which the
 extra hotbar bindings above cover.
 
+**Reasonable Alarms** - A house whose door already stands open, or whose window
+is smashed, does not sound its alarm, and neither does a car left unlocked.
+Anyone could have walked in long before you did. How far this goes is a sandbox
+setting, because counting unlocked doors covers far more houses than open ones.
+
 
 Options
 -------
@@ -106,6 +111,7 @@ ran at all.
 | Propane From Fuel Pumps | [Pumps Have Propane](https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406) by Uncle Griz | Rewritten. Build 42 rebuilt fuel pumps as entities, so only the idea carried over. |
 | Weapon Condition | [Weapon Condition Indicator](https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426) by NoctisFalco | Idea only, see below. Built without reading its code. |
 | Clothing Material | [Show Clothes Material](https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845) | Rewritten. Uses the base game's own tooltip field, so it overrides no interface code. |
+| Reasonable Alarms | [Reasonable Crime Preventation Alarm](https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889) | Rewritten. Its vehicle half throws on build 42, which moved vehicle parts behind a new accessor, and its settings file is a sandbox page here. |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,

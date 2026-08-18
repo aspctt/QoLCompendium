@@ -21,6 +21,7 @@ Most are not ports. Build 41 code rarely survives the move intact, so where the 
     [*][b]Skill book icons.[/b] Build 42 draws ten of the twenty four families with the same tinted sprite. All twenty four have their own now.
     [*][b]Container titles.[/b] No longer run into the weight printed beside them.
     [*][b]Adrenaline.[/b] Panic sheds fatigue, paid back with interest once you calm down.
+    [*][b]Alarms on open houses.[/b] A house whose door already stands open, or whose window is smashed, no longer sounds its alarm, and neither does a car left unlocked. The original's vehicle half throws on build 42, which moved vehicle parts behind a new accessor.
 [/list]
 
 [b]Everything else:[/b]

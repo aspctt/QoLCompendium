@@ -10,7 +10,7 @@ Maintenance improves repair							- https://steamcommunity.com/sharedfiles/filed
 Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- EXPLICIT PERMISSION + I UPDATED THIS MOD TO B42. KEPT OUT FOR NOW, IT IS ALREADY MINE AND ALREADY CURRENT, SO ABSORBING IT MEANS MAINTAINING ONE FEATURE IN TWO PLACES
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990
-Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889
+Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889		- INTEGRATED. VEHICLE HALF THROWS ON B42 VIA getPartCount AND getPartByIndex. SETTINGS FILE REPLACED WITH SANDBOX OPTIONS
 Sleep On It (file from updated ver.)				- https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
@@ -19,8 +19,8 @@ Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/s
 ## TO DO MODS - NO REDISTRIBUTE
 AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
 Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING
-Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE
-Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE
+Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE / MANY UNOFFICIAL UPDATES (ONE CAN BE FOUND IN OTHER-MODS) / CREATE OWN
+Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE / CREATE OWN
 
 
 ## INTEGRATED MODS

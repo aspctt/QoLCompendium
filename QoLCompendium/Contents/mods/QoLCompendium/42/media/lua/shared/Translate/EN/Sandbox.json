@@ -13,5 +13,12 @@
     "Sandbox_QoLC_TailoringCutXpEnabled": "Tailoring From Cutting Clothes",
     "Sandbox_QoLC_TailoringCutXpEnabled_tooltip": "Cutting a garment into strips teaches tailoring, and cutting gets quicker as the skill rises. Vanilla pays nothing for either.",
     "Sandbox_QoLC_TailoringCutXp": "Tailoring Cutting Rate",
-    "Sandbox_QoLC_TailoringCutXp_tooltip": "Percentage of the experience a cut garment is worth. Denim and leather pay per strip, cotton pays nothing, uniforms pay a bonus on top."
+    "Sandbox_QoLC_TailoringCutXp_tooltip": "Percentage of the experience a cut garment is worth. Denim and leather pay per strip, cotton pays nothing, uniforms pay a bonus on top.",
+    "Sandbox_QoLC_AlarmHouseRule": "Alarms On Open Houses",
+    "Sandbox_QoLC_AlarmHouseRule_tooltip": "Stops a house alarm sounding for a house anyone could already have walked into. Unlocked doors covers many more houses than open ones, since vanilla leaves most exterior doors unlocked.",
+    "Sandbox_QoLC_AlarmHouseRule_option1": "Alarms Always Sound",
+    "Sandbox_QoLC_AlarmHouseRule_option2": "Open Doors And Broken Windows",
+    "Sandbox_QoLC_AlarmHouseRule_option3": "Also Unlocked Doors",
+    "Sandbox_QoLC_AlarmVehiclesEnabled": "Alarms On Open Vehicles",
+    "Sandbox_QoLC_AlarmVehiclesEnabled_tooltip": "Stops a car alarm sounding when a door or the trunk was left unlocked, a door or window stands open, or a window has been smashed out."
 }

@@ -500,8 +500,16 @@ end
 -- 42/media/sandbox-options.txt, so these numbers are never restated here.
 SandboxVars = { QoLC = {} }
 
+-- Vanilla's own frequency settings, which sit beside QoLC rather than inside it. One is
+-- never, so four is a world that has alarms in it for a spec to disarm.
+local VANILLA_SANDBOX = { Alarm = 4, CarAlarm = 4 }
+
 function Harness.ResetSandbox()
 	SandboxVars.QoLC = {}
+	for Name, Value in pairs(VANILLA_SANDBOX) do
+		SandboxVars[Name] = Value
+	end
+
 	if not QOLC_SANDBOX_DEFAULTS then return end
 	for Name, Value in pairs(QOLC_SANDBOX_DEFAULTS) do
 		SandboxVars.QoLC[Name] = Value
@@ -1100,7 +1108,9 @@ local CLASS_PARENTS = {
 	IsoWorldInventoryObject = "IsoObject",
 	IsoGameCharacter = "IsoMovingObject",
 	IsoMovingObject = "IsoObject",
-	IsoPlayer = "IsoGameCharacter"
+	IsoPlayer = "IsoGameCharacter",
+	IsoWindow = "IsoObject",
+	IsoDoor = "IsoObject"
 }
 
 function instanceof(Object, ClassName)
@@ -1992,6 +2002,125 @@ function Harness.NewObjectSquare(X, Y, Z, Objects)
 
 	Harness.Squares[tostring(X or 0) .. "," .. tostring(Y or 0) .. "," .. tostring(Z or 0)] = Square
 	return Square
+end
+
+--// Buildings, Doors And Windows
+-- BuildingDef, reduced to the one flag that decides whether an alarm sounds. The game
+-- reads it back in AmbientStreamManager:doAlarm, so clearing it is the whole job.
+function Harness.NewBuildingDef(Alarmed)
+	local Def = {}
+	Def.Alarmed = Alarmed and true or false
+
+	function Def:isAlarmed() return self.Alarmed end
+	function Def:setAlarmed(Value) self.Alarmed = Value and true or false end
+
+	return Def
+end
+
+-- A door or window straddles two squares. Its own square is where it was placed; the
+-- opposite square is the other side, and the building can be on either.
+local function AttachSides(Object, Square, Opposite)
+	function Object:getSquare() return Square end
+	function Object:getOppositeSquare() return Opposite end
+	return Object
+end
+
+-- Values: Open, Locked, LockedByKey, Exterior. Build 42's isExteriorDoor ignores the
+-- character it is handed and calls isExterior, which is what this models.
+function Harness.NewDoor(Values, Square, Opposite)
+	Values = Values or {}
+
+	local Door = {}
+	Door.Class = "IsoDoor"
+
+	function Door:IsOpen() return Values.Open and true or false end
+	function Door:isLocked() return Values.Locked and true or false end
+	function Door:isLockedByKey() return Values.LockedByKey and true or false end
+
+	function Door:isExterior()
+		if Values.Exterior == nil then return true end
+		return Values.Exterior and true or false
+	end
+
+	return AttachSides(Door, Square, Opposite)
+end
+
+-- Values: Open, Destroyed. A merely unlocked window is not a state the mod looks at, so
+-- there is deliberately no isLocked here: adding one would invite a spec to test it.
+function Harness.NewWindow(Values, Square, Opposite)
+	Values = Values or {}
+
+	local Window = {}
+	Window.Class = "IsoWindow"
+
+	function Window:IsOpen() return Values.Open and true or false end
+	function Window:isDestroyed() return Values.Destroyed and true or false end
+
+	return AttachSides(Window, Square, Opposite)
+end
+
+-- A square with special objects on it, which is what LoadGridsquare hands out. Def is
+-- the building this square belongs to, or nil for a square standing outside one.
+function Harness.NewAlarmSquare(Def, Objects, Vehicle)
+	local Square = {}
+	Square.Objects = Objects or {}
+
+	function Square:getBuildingDef() return Def end
+	function Square:getVehicleContainer() return Vehicle end
+
+	function Square:getSpecialObjects()
+		local List = {}
+		function List:size() return #Square.Objects end
+		function List:get(Index) return Square.Objects[Index + 1] end
+		return List
+	end
+
+	return Square
+end
+
+--// Vehicles
+-- Values: Open, Missing. Missing models a window smashed out or a door taken off, which
+-- the game shows as the part having no inventory item on it.
+function Harness.NewVehiclePart(Kind, Values)
+	Values = Values or {}
+
+	local Openable = {}
+	function Openable:isOpen() return Values.Open and true or false end
+
+	local Part = {}
+	function Part:getWindow() return Kind == "window" and Openable or nil end
+	function Part:getDoor() return Kind == "door" and Openable or nil end
+	function Part:getInventoryItem() return (not Values.Missing) and Openable or nil end
+
+	return Part
+end
+
+-- Build 42 moved parts off BaseVehicle into a VehicleParts container reached through
+-- getParts(). getPartCount and getPartByIndex no longer exist on the vehicle, so a stub
+-- carrying them would hide exactly the breakage the mod exists to work around.
+function Harness.NewAlarmVehicle(Values, Parts)
+	Values = Values or {}
+
+	local Container = {}
+	function Container:size() return #(Parts or {}) end
+	function Container:get(Index) return (Parts or {})[Index + 1] end
+
+	local Vehicle = {}
+	Vehicle.Alarmed = Values.Alarmed ~= false
+
+	function Vehicle:getParts() return Container end
+	function Vehicle:isAlarmed() return self.Alarmed end
+	function Vehicle:setAlarmed(Value) self.Alarmed = Value and true or false end
+
+	function Vehicle:areAllDoorsLocked()
+		return Values.DoorsLocked ~= false
+	end
+
+	function Vehicle:isTrunkLocked()
+		return Values.TrunkLocked ~= false
+	end
+
+	return Vehicle
 end
 
 -- Anything else on the square, so a spec can prove a right click that lands on a wall

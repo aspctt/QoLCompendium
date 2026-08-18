@@ -73,3 +73,26 @@ option QoLC.TailoringCutXp
     page = QoLC,
     translation = QoLC_TailoringCutXp,
 }
+
+/*
+ * A house whose door already stands open, or whose window is smashed, does not sound its
+ * alarm. Three settings rather than a switch, because the last step is much broader than
+ * it reads: vanilla leaves most exterior doors unlocked, so counting an unlocked door
+ * disarms far more houses than an open one does. That is the original mod's own
+ * behaviour and the default here, but a host who wants alarms to still mean something
+ * can step it back one.
+ */
+option QoLC.AlarmHouseRule
+{
+    type = enum, numValues = 3, default = 3,
+    page = QoLC,
+    translation = QoLC_AlarmHouseRule,
+    valueTranslation = QoLC_AlarmHouseRule,
+}
+
+option QoLC.AlarmVehiclesEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_AlarmVehiclesEnabled,
+}

@@ -542,8 +542,11 @@ public class TestRunner {
 			String def = valueOf(block, "default");
 			String shortId = id.contains(".") ? id.substring(id.indexOf('.') + 1) : id;
 			if (def != null) {
+				// An enum reaches lua as its index, not its text: vanilla's own scenarios
+				// assign SandboxVars.Alarm = 4. Seeding it as a string here would let a
+				// spec pass on a comparison that errors in the game.
 				if ("boolean".equals(type)) sandboxDefaults.put(shortId, Boolean.valueOf(def));
-				else if ("string".equals(type) || "enum".equals(type)) sandboxDefaults.put(shortId, def);
+				else if ("string".equals(type)) sandboxDefaults.put(shortId, def);
 				else sandboxDefaults.put(shortId, Double.valueOf(def));
 			}
 
