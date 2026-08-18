@@ -26,6 +26,7 @@ local SWITCHES = {
 	{ Key = "Material", Name = "Material" },
 	{ Key = "TakeAmount", Name = "TakeAmount" },
 	{ Key = "FlagBook", Name = "FlagBook" },
+	{ Key = "MoodleQuarters", Name = "MoodleQuarters" },
 
 	-- These three stamp item scripts as the game loads them, so a change only shows on
 	-- the next start. Their tooltips say so.

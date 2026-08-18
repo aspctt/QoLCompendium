@@ -108,6 +108,11 @@ it settles a character without ever finishing the job, and illness weakens it.
 base game freezes both instead, so a night's sleep changes neither. A full eight
 hours clears boredom outright, and the rate is a server setting.
 
+**Moodle Quarters** - One more quarter of a moodle's plate squares off for each
+level it climbs, so the stack tells you how bad each moodle is at a glance
+rather than by counting icons. Stands down on its own if you already run the
+standalone mod.
+
 
 Options
 -------
@@ -144,7 +149,7 @@ itself sits at `QoLCompendium/Contents/mods/QoLCompendium/`.
 Building on other people's work
 -------------------------------
 
-Every mod below inspired a feature here. **With two exceptions, no files or
+Every mod below inspired a feature here. **With three exceptions, no files or
 code were taken from any of them.** Each was read to understand what it did, then
 written from scratch against build 42, usually because the original no longer
 ran at all.
@@ -173,6 +178,7 @@ ran at all.
 | Reasonable Alarms | [Reasonable Crime Preventation Alarm](https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889) | Rewritten. Its vehicle half throws on build 42, which moved vehicle parts behind a new accessor, and its settings file is a sandbox page here. |
 | Reading Settles The Mind | [Reading is not boring.](https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990) | Rewritten. Build 42 removed every stat accessor it used. Skill books only, and it counts pages off the action so it works on a multiplayer client. |
 | Sleep On It | [Sleep On It](https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236) by Stultusaur | Rewritten. Already a build 42 version, so this is for shape: its client command round trip changed the server's copy without syncing it back, and it only ever covered the first player. |
+| Moodle Quarters | [Moodle Quarters](https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563) by DahakaMVl | **Bundles the original plate art.** Explicit permission. The build 42 support is this project author's own work, merged upstream, so it is carried across unchanged. See [NOTICE](NOTICE). |
 
 **A note on Weapon Condition Indicator.** Its author does not permit
 redistribution or modified versions, so none of its files or code were opened,
@@ -187,11 +193,16 @@ ideas are not what a licence covers. Everything else that mod does, build 42 now
 does natively and in more detail: 82 item categories covering every item in the
 game, where build 41 left many of them filed as a bare "Item".
 
-The exceptions are artwork. A 3D model or an icon cannot be rewritten from a
-description, so the sling's models and hotbar code are the originals by **Akyet**
+Two of the exceptions are artwork. A 3D model or an icon cannot be rewritten from
+a description, so the sling's models and hotbar code are the originals by **Akyet**
 and **Noir**, and the ammo icons are by **falcon33jp**. The sling's recipe and
-spawn tables, and all of the ammo icon code, were written for this project. Full
-detail is in [NOTICE](NOTICE).
+spawn tables, and all of the ammo icon code, were written for this project.
+
+The third is **Moodle Quarters** by **DahakaMVl**, included with explicit
+permission. Its plate art is the original, and so is the code that draws the
+stack, because that build 42 support was written for this project and merged
+upstream: the two copies are meant to stay the same file. Full detail is in
+[NOTICE](NOTICE).
 
 Mods whose authors ask that their work not be redistributed are not included
 here, and will not be.

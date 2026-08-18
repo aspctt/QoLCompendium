@@ -24,6 +24,7 @@ Most are not ports. Build 41 code rarely survives the move intact, so where the 
     [*][b]Alarms on open houses.[/b] A house whose door already stands open, or whose window is smashed, no longer sounds its alarm, and neither does a car left unlocked. The original's vehicle half throws on build 42, which moved vehicle parts behind a new accessor.
     [*][b]Reading settles the mind.[/b] A skill book slowly eases boredom, unhappiness and stress. Build 42 gives skill books no morale value at all, only comics and newspapers, and every stat accessor the original used has since been removed.
     [*][b]Sleep on it.[/b] Boredom and unhappiness wear off while you sleep. Build 42 freezes both instead, so a night changes neither.
+    [*][b]Moodle quarters.[/b] One more quarter of a moodle's plate squares off for each level, so the stack reads at a glance. Build 42 tints one background by level instead, so the level shapes ship here and the stack is drawn by hand.
 [/list]
 
 [b]Everything else:[/b]
@@ -53,6 +54,7 @@ Cosmetic settings live in Mod Options, per player. Anything affecting balance is
 　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3461263912]Clean HotBar[/url] (weapon condition and hotbar reordering stand down)
 　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3437629766]Clean UI[/url] (the container title fix stands down)
 　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=3433264162]NeatUI Framework[/url]
+　✓ [url=https://steamcommunity.com:/linkfilter/?url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] (ours stands down, theirs draws the stack)
 　✓ Any mod that adds skill books, clothing or ammo
 　✖ The individual mods this replaces, listed in the credits
 

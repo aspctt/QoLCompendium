@@ -16,6 +16,8 @@
     "UI_options_QoLC_Features_TakeAmount_tooltip": "Adds a typed amount to the grab menu, alongside vanilla's one, half and all.",
     "UI_options_QoLC_Features_FlagBook": "Flag A Book As Seen",
     "UI_options_QoLC_Features_FlagBook_tooltip": "Reads the first page of a book that is still too advanced, so a second copy is recognisable later.",
+    "UI_options_QoLC_Features_MoodleQuarters": "Moodle Quarters",
+    "UI_options_QoLC_Features_MoodleQuarters_tooltip": "Squares off one more quarter of a moodle's plate for each level it climbs, so the stack reads at a glance. Stands down on its own if the standalone Moodle Quarters mod is installed.",
     "UI_options_QoLC_Features_BookIcons": "Skill Book Icons",
     "UI_options_QoLC_Features_BookIcons_tooltip": "Gives all twenty four skill book families their own icon. Takes effect after a restart.",
     "UI_options_QoLC_Features_AmmoIcons": "Ammo And Magazine Icons",

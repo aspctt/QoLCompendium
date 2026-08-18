@@ -5,7 +5,6 @@ Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles
 Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398		- DO LAST
 Lockpicking! Just. Lockpicking. [41.56]				- https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799
-Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- EXPLICIT PERMISSION + I UPDATED THIS MOD TO B42. KEPT OUT FOR NOW, IT IS ALREADY MINE AND ALREADY CURRENT, SO ABSORBING IT MEANS MAINTAINING ONE FEATURE IN TWO PLACES
 More Description for Traits [b41] [Not b42!]		- https://steamcommunity.com/sharedfiles/filedetails/?id=2685168362
 The Nutritionist (for Build 41)						- https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED
@@ -32,6 +31,7 @@ Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2
 Immersive Overlays									- https://steamcommunity.com/sharedfiles/filedetails/?id=533622988		- INTEGRATED
 Generator Time Remaining (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918		- INTEGRATED AS ONE FEATURE WITH VISIBLE GENERATOR RANGE. FOLDER HOLDS BETTER GENERATOR INFO, STILL MAINTAINED, SO IDEA ONLY
 Visible Generator Range								- https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937		- INTEGRATED. HARDCODED RANGE IS WRONG ON B42, WHICH MADE IT SANDBOX OPTIONS
+Moodle Quarters [B42]								- https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563		- INTEGRATED. EXPLICIT PERMISSION. THE B42 SUPPORT IS MINE, MERGED UPSTREAM, SO THIS IS CARRIED ACROSS VERBATIM RATHER THAN RESTYLED. BUNDLES DahakaMVl'S PLATE ART. STANDS DOWN FOR THE STANDALONE MOD
 Pumps Have Propane									- https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406		- INTEGRATED
 Reading is not boring. (for Build 41)				- https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990		- INTEGRATED. EVERY STAT ACCESSOR GONE ON B42, NOW CharacterStat KEYED. SKILL BOOKS ONLY, PAGES OFF THE ACTION SO IT WORKS ON AN MP CLIENT, NICOTINE STRESS PROTECTED
 Reasonable Crime Preventation Alarm (for Build 41)	- https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889		- INTEGRATED. VEHICLE HALF THROWS ON B42 VIA getPartCount AND getPartByIndex. SETTINGS FILE REPLACED WITH SANDBOX OPTIONS

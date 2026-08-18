@@ -17,7 +17,7 @@ local function TurnOff(Key)
 end
 
 local SWITCHES = {
-	"Hotbar", "Capacity", "XpView", "Generator", "Material",
+	"Hotbar", "Capacity", "XpView", "Generator", "Material", "MoodleQuarters",
 	"TakeAmount", "FlagBook", "BookIcons", "AmmoIcons", "FoodCategories"
 }
 
@@ -131,4 +131,20 @@ Test("every sandbox switch label resolves", function()
 		AssertNotNil(Translations[Label], "no label for " .. Key)
 		AssertNotNil(Translations[Label .. "_tooltip"], "no tooltip for " .. Key)
 	end
+end)
+
+Test("moodle quarters hands the stack back when switched off", function()
+	Harness.NewMoodlePlayer(0)
+	local Vanilla = Harness.NewMoodlePanel(0)
+	Harness.Fire("OnTick")
+
+	AssertNotNil(MoodleQuarters.panels[0], "it should have taken the stack to begin with")
+	AssertNil(Harness.UIIndex(Vanilla), "and vanilla should have given it up")
+
+	TurnOff("MoodleQuarters")
+	Harness.Fire("OnTick")
+	Harness.Fire("OnTick")
+
+	AssertNil(MoodleQuarters.panels[0], "our panel should be gone")
+	AssertNotNil(Harness.UIIndex(Vanilla), "and vanilla should have the stack back")
 end)
