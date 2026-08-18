@@ -75,36 +75,7 @@ Where another mod already does one of these jobs, this one gets out of the way.
 
 [img]https://i.ibb.co/Z63wG3cw/Steam-Workshop-Credits-Seperator.png[/img]
 
-Every feature here began as someone else's mod. All of them are below. Go and give them a thumbs up.
-
-[list]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3073937977]Actual Realistic Rifle Sling[/url] by Akyet and Noir
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835]Adrenaline - Panic Counters Tiredness[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813]Ammo & Magazine icon MOD[/url] by falcon33jp
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2071347174]An Exhilaratingly Organized Literature Mod[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159]Better Sorting[/url] by ChobitsCrazy
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3245854570]Bigger Character Avatar[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451]Fix Capacity Overlap[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040]Fix XP View[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465]Flamingo Fix[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883397918]Generator Time Remaining[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=533622988]Immersive Overlays[/url] by Stephanus van Zyl
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799]Lockpicking. Just. Lockpicking.[/url] by FMJ, MeTaLAnGeR and Oh God Spiders No
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] by DahakaMVl
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2883755057]Propane Torch Fix[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2739570406]Pumps Have Propane[/url] by Uncle Griz
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1949441990]Reading is not boring.[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1967450889]Reasonable Crime Preventation Alarm[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2766834021]Reorder Duplicates by Condition[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2903771337]Reorder The Hotbar[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1922750845]Show Clothes Material[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236]Sleep On It[/url] by Stultusaur
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2138726101]Tailoring Fix[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2985394645]Take Any Amount[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105]The Nutritionist[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2972289937]Visible Generator Range[/url]
-[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2619072426]Weapon Condition Indicator[/url] by NoctisFalco
-[/list]
+Every feature here began as someone else's mod. Every one of them is named, with a link, in the [url=https://github.com/aspctt/QoLCompendium]GitHub repository[/url]. Go and give them a thumbs up.
 
 [b]Bundled original files, with permission or under licence:[/b] the rifle sling models and textures by Akyet with its attachment code by Noir, the ammo and magazine icons by falcon33jp, and the moodle plates by DahakaMVl. Art cannot be rewritten from a description. Everything else is written for this project.
 
