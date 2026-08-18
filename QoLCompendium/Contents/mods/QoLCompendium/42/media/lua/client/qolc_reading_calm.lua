@@ -4,12 +4,13 @@
 --// Reading a skill book settles a character a little instead of leaving them to stew.
 --// Boredom, unhappiness and stress each ease off as the pages turn.
 --//
---// The base game does close to the opposite. BodyDamage.UpdateBoredom mentions reading
---// exactly once, in the case of sitting in a stopped vehicle, and there it only slows
---// the rate boredom climbs to a fifth. Everywhere else a skill book does nothing for
---// morale at all, while a comic book fixes it outright. There is a boredomDecreaseFromReading
---// field on BodyDamage with public accessors, but it is written once in the constructor
---// and read only by its own getter, so nothing in the game acts on it.
+--// The base game only ever slows the decline. BodyDamage.UpdateBoredom checks isReading
+--// three times: sitting in a stopped vehicle it cuts the rate boredom climbs to a fifth,
+--// and it suppresses the unhappiness that a Bored or Stressed moodle would otherwise add.
+--// All three stop something getting worse. None of them make anything better, so a skill
+--// book still does nothing for morale while a comic book fixes it outright. There is also
+--// a boredomDecreaseFromReading field on BodyDamage with public accessors, but it is
+--// written once in the constructor and read only by its own getter, so nothing acts on it.
 --//
 --// Rewritten rather than ported. Build 42 removed every stat accessor the original used,
 --// replacing the named pairs with one keyed by CharacterStat:
