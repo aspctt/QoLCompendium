@@ -21,19 +21,30 @@
 -- qolc_reorder_hotbar.lua: this runs at file scope, and lua file load order between mod
 -- files is not guaranteed, so a cross file call here would be a load order landmine.
 --
--- The standalone mod does the same job by the same means, taking the vanilla panel off
+-- Every mod listed here does the same job by the same means, taking the vanilla panel off
 -- UIManager's list and putting its own there. Two mods doing that leaves one panel
--- orphaned and the other drawing, or worse both drawing, so whichever of the two is
--- installed alongside the other has to stand down before it defines anything. Standing
+-- orphaned and the other drawing, or worse both drawing, so whichever of them is
+-- installed alongside this one has to stand down before it defines anything. Standing
 -- down here rather than there is the right way round: theirs is the mod a player chose
 -- by name, this is a compendium that happens to include it.
+--
+-- moodle_quarters is the standalone version of this very feature. moodlesinlua replaces
+-- the whole moodle rendering system and already draws a border per level through its
+-- texture packs, which is the same ground this covers, so a player running it loses
+-- nothing by this standing aside. It was reported drawing two stacks at once.
+local REPLACING_MODS = { "moodle_quarters", "moodlesinlua" }
+
 local function OverrideBlocked()
 	if not getActivatedMods then return false end
 
 	local Mods = getActivatedMods()
 	if not Mods then return false end
 
-	return Mods:contains("moodle_quarters")
+	for _, Id in ipairs(REPLACING_MODS) do
+		if Mods:contains(Id) then return true end
+	end
+
+	return false
 end
 
 if OverrideBlocked() then return end

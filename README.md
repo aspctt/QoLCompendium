@@ -111,7 +111,7 @@ hours clears boredom outright, and the rate is a server setting.
 **Moodle Quarters** - One more quarter of a moodle's plate squares off for each
 level it climbs, so the stack tells you how bad each moodle is at a glance
 rather than by counting icons. Stands down on its own if you already run the
-standalone mod.
+standalone mod, or Moodles in Lua, since both replace the same panel.
 
 **The Nutritionist** - A magazine that teaches the Nutritionist trait, so food
 tooltips start showing calories and the rest of the breakdown. The base game has
