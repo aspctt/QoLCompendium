@@ -25,7 +25,6 @@ module Base
 		Weight = 0.005,
 		Icon = QolcLockPick,
 		Tooltip = Tooltip_QoLC_Lockpick,
-		Tags = base:qolclockpick,
 	}
 
 	item QolcHairpin

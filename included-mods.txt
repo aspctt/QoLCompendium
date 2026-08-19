@@ -1,10 +1,7 @@
 ## TO DO MODS
-Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155
-Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- WILL IMPLEMENT SOME OF THE FEATURES
 
 
 ## TO DO MODS - NO REDISTRIBUTE
-AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
 Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING
 Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE / MANY UNOFFICIAL UPDATES (ONE CAN BE FOUND IN OTHER-MODS) / CREATE OWN
 Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE / CREATE OWN
@@ -18,6 +15,7 @@ An Exhilaratingly Organized Literature Mod			- https://steamcommunity.com/shared
 Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfiles/filedetails/?id=2807001835		- INTEGRATED (MIT LICENSE)
 Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
 Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
+Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155		- INTEGRATED, DIFFERENT DESIGN. B41 recipe FORMAT GONE. GIVES AlcoholRippedSheets THE FIVE TAGS IT LACKS INSTEAD OF A DOWNGRADE RECIPE. MUST BE A SCRIPT PATCH: InputScript CACHES ITS TAG ITEM LIST IN OnScriptsLoaded, SO A LUA PATCH LANDS TOO LATE. NO SANDBOX SWITCH, SCRIPTS LOAD BEFORE SETTINGS EXIST
 Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451		- INTEGRATED. STANDS DOWN FOR CleanUI, WHICH REPLACES ISInventoryPage OUTRIGHT
 Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040		- INTEGRATED. ORIGINAL CRASHES B42 VIA HasTrait AND ITS NUMBERS ARE WRONG, REBUILT FROM AddXP
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- INTEGRATED (PERMISSIVE). REBUILT FROM B42 TILE DATA, THE ORIGINAL FILE IS A B41 SUBSET
@@ -49,7 +47,9 @@ Tree Chop Bug Fix									- https://steamcommunity.com/sharedfiles/filedetails/?
 
 
 ## OUT-OF-SCOPE FOR NOW
+AutoSmoke + smoking improvements					- https://steamcommunity.com/sharedfiles/filedetails/?id=2643751872		- NO REDISTRIBUTE
 Computer											- https://steamcommunity.com/sharedfiles/filedetails/?id=2635550102
 Draw On The Map - Free Hand Drawing					- https://steamcommunity.com/sharedfiles/filedetails/?id=2804531012		- MIT LICENSE
+Eggon's Worthwhile Cars 2.0							- https://steamcommunity.com/sharedfiles/filedetails/?id=2841030649		- WILL IMPLEMENT SOME OF THE FEATURES
 Immersive CD Players								- https://steamcommunity.com/sharedfiles/filedetails/?id=2268557398
 Vanilla Vehicle Enhancer (file from updated ver.)	- https://steamcommunity.com/sharedfiles/filedetails/?id=2788428718		- PERMISSION GRANTED

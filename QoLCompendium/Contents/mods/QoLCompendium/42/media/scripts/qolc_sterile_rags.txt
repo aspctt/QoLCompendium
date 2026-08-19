@@ -1,0 +1,39 @@
+/*
+ * Sterilized Rag Uses
+ * Desterilize Rags - Use Them In Other Recipes, Workshop 2036923155
+ * aspctt - 20.08.2026
+ * A sterilized rag is the same cloth as a ripped sheet, but build 42 gives it one tag
+ * where the plain rag gets six, so it is refused as binding, as fire fuel, as tinder and
+ * as weapon binding. Sterilizing a rag quietly makes it useless for everything except
+ * bandaging, and nothing in the base game turns it back.
+ *
+ * The original mod answered that with a recipe to downgrade a sterilized rag into a plain
+ * one. This gives it the tags instead, so it simply works where a ripped sheet works and
+ * there is no conversion step to remember.
+ *
+ * Written as a script patch rather than a lua one because a lua patch cannot land in time.
+ * Every recipe input resolves its tags into an itemScriptCache once, in InputScript's
+ * OnScriptsLoaded, and getPossibleInputItems only ever returns that list. Patching the
+ * item afterwards through ScriptManager, the way qolc_blowtorch.lua does, leaves every
+ * one of those caches already built without it.
+ *
+ * Reopening an item is safe: the script bucket keys load data by name, finds the existing
+ * entry and applies this body to the same object rather than building a fresh one, and a
+ * Tags value is added to the set rather than replacing it. So base:nopour survives, and
+ * so does everything that makes it a bandage.
+ *
+ * FireFuelRatio is set to the plain rag's 0.25 so it burns for the same time. It is
+ * optional, most items tagged as fuel leave it out, but leaving it out here would make
+ * the two rags burn differently for no reason.
+ *
+ * FabricType is deliberately not copied. That governs tailoring patches, which is a
+ * separate thing from what this feature is for.
+ */
+module Base
+{
+	item AlcoholRippedSheets
+	{
+		Tags = base:binding;base:fitswallet;base:isfirefuel;base:isfiretinder;base:simpleweaponbinding,
+		FireFuelRatio = 0.25,
+	}
+}

@@ -60,6 +60,7 @@ public class TestRunner {
 			+ checkSandboxOptions()
 			+ checkTexturePaths()
 			+ checkTextureFolders()
+			+ checkTagPatches()
 			+ checkItemTypes()
 			+ checkRecipeNames()
 			+ checkTileDefs();
@@ -428,6 +429,7 @@ public class TestRunner {
 	 * DisplayName is simply ignored so the item shows as its id.
 	 */
 	private static int checkItemScripts() throws IOException {
+		Set<String> vanillaItems = readItemNames(new File(gameDir, "media/scripts"));
 		File scripts = new File(modRoot, "42/media/scripts");
 		if (!scripts.isDirectory()) return 0;
 
@@ -469,7 +471,9 @@ public class TestRunner {
 						if (!inItem) continue;
 
 						if (t.startsWith("}")) {
-							if (!sawItemType) {
+							// A block reopening an item the base game already defines is
+							// widening it, not declaring it, and carries no ItemType.
+							if (!sawItemType && !vanillaItems.contains(itemName)) {
 								bad++;
 								System.out.println("  FAIL  item " + itemName + " has no ItemType"
 									+ "  (" + f.getName() + ":" + itemLine + ")");
@@ -1111,6 +1115,97 @@ public class TestRunner {
 			.compile("^\\t(\\w+)\\s*=\\s*\\{", java.util.regex.Pattern.MULTILINE)
 			.matcher(readAll(file));
 		while (m.find()) found.add(m.group(1));
+
+		return found;
+	}
+
+	/**
+	 * Tags this mod adds to an item the base game already defines. Reopening a vanilla
+	 * item to widen its tags only works while those tag names still exist, and a tag the
+	 * build does not know is accepted in silence: it becomes a tag nothing else carries,
+	 * so the item joins no recipe and nothing reports it. Every tag named here has to be
+	 * one this build actually uses somewhere.
+	 */
+	private static int checkTagPatches() throws IOException {
+		Set<String> vanillaTags = readTagNames(new File(gameDir, "media/scripts"));
+		if (vanillaTags.isEmpty()) {
+			System.out.println("  FAIL  no vanilla tags found, nothing could be checked");
+			return 1;
+		}
+		System.out.println("Item tags found in this build: " + vanillaTags.size());
+
+		Set<String> ours = readTagNames(new File(modRoot, "42/media/scripts"));
+		Set<String> weUse = readTagUses(new File(modRoot, "42/media/scripts"));
+
+		int bad = 0;
+		for (String tag : ours) {
+			if (vanillaTags.contains(tag)) continue;
+			if (weUse.contains(tag)) continue;
+			bad++;
+			System.out.println("  FAIL  tag is neither known to this build nor used by us: " + tag);
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	/** Every tag this mod's own recipes ask for, from tags[a;b] in an input line. */
+	private static Set<String> readTagUses(File scripts) throws IOException {
+		Set<String> found = new LinkedHashSet<String>();
+		if (!scripts.isDirectory()) return found;
+
+		java.util.regex.Pattern call = java.util.regex.Pattern.compile("tags\\[([^\\]]+)\\]");
+
+		java.util.ArrayDeque<File> queue = new java.util.ArrayDeque<File>();
+		queue.add(scripts);
+		while (!queue.isEmpty()) {
+			File dir = queue.poll();
+			File[] files = dir.listFiles();
+			if (files == null) continue;
+			for (File f : files) {
+				if (f.isDirectory()) { queue.add(f); continue; }
+				if (!f.getName().endsWith(".txt")) continue;
+
+				java.util.regex.Matcher m = call.matcher(readAll(f));
+				while (m.find()) {
+					for (String tag : m.group(1).split(";")) {
+						tag = tag.trim();
+						if (tag.length() > 0) found.add(tag);
+					}
+				}
+			}
+		}
+
+		return found;
+	}
+
+	/** Every name appearing in a Tags = a;b;c line under the given scripts directory. */
+	private static Set<String> readTagNames(File scripts) throws IOException {
+		Set<String> found = new LinkedHashSet<String>();
+		if (!scripts.isDirectory()) return found;
+
+		java.util.regex.Pattern line = java.util.regex.Pattern
+			.compile("^\\s*Tags\\s*=\\s*([^,]+),?\\s*$", java.util.regex.Pattern.MULTILINE);
+
+		java.util.ArrayDeque<File> queue = new java.util.ArrayDeque<File>();
+		queue.add(scripts);
+		while (!queue.isEmpty()) {
+			File dir = queue.poll();
+			File[] files = dir.listFiles();
+			if (files == null) continue;
+			for (File f : files) {
+				if (f.isDirectory()) { queue.add(f); continue; }
+				if (!f.getName().endsWith(".txt")) continue;
+
+				java.util.regex.Matcher m = line.matcher(readAll(f));
+				while (m.find()) {
+					for (String tag : m.group(1).split(";")) {
+						tag = tag.trim();
+						if (tag.length() > 0) found.add(tag);
+					}
+				}
+			}
+		}
 
 		return found;
 	}
