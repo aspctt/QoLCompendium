@@ -13,7 +13,7 @@
 --// Named to sort last in this folder so it wraps our own refresh override rather than
 --// being wrapped by it, which means the order it prints is the order the player sees.
 
-require "ISUI/ISHotbar"
+require "Hotbar/ISHotbar"
 
 --// Tuning
 local PREFIX = "QOLC HOTBAR: "
