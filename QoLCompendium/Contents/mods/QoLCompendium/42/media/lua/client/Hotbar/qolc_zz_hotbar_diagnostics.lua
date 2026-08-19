@@ -52,9 +52,13 @@ local function SavedOrder(Hotbar)
 	local Saved = ModData and ModData["hotbar"]
 	if not Saved then return "(none)" end
 
+	local Indexes = {}
+	for Index in pairs(Saved) do Indexes[#Indexes + 1] = Index end
+	table.sort(Indexes)
+
 	local Parts = {}
-	for Index, SlotType in pairs(Saved) do
-		Parts[#Parts + 1] = Safe(Index) .. ":" .. Safe(SlotType)
+	for _, Index in ipairs(Indexes) do
+		Parts[#Parts + 1] = Safe(Index) .. ":" .. Safe(Saved[Index])
 	end
 
 	if #Parts == 0 then return "(empty)" end
@@ -140,3 +144,28 @@ local function OnCreatePlayer(_Index, Player)
 end
 
 Events.OnCreatePlayer.Add(OnCreatePlayer)
+
+--// The Settled State
+-- The removal lines above print from inside vanilla's refresh, which our reorder drives,
+-- and our own savePosition runs after that. So the saved order they report is stale by
+-- construction and cannot be compared against the order on screen.
+--
+-- This is the comparison that decides it: once the reorder has finished and had its
+-- chance to persist, does the order on screen match the order a rejoin would rebuild
+-- from. If these two ever disagree here, that is the bug, and it is ours.
+local VanillaApplyOrder = QolcHotbarApplyOrder
+
+if VanillaApplyOrder then
+	function QolcHotbarApplyOrder(Hotbar, ForceSave)
+		local Result = VanillaApplyOrder(Hotbar, ForceSave)
+
+		local Order = SlotOrder(Hotbar)
+		local Saved = SavedOrder(Hotbar)
+
+		print(PREFIX .. "settled order=" .. Order .. " saved=" .. Saved
+			.. " forceSave=" .. Safe(ForceSave)
+			.. (Order == Saved and " MATCH" or " MISMATCH"))
+
+		return Result
+	end
+end
