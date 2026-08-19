@@ -1944,12 +1944,28 @@ end
 -- A hotbar item, carrying the two fields the game stores on it and serialises with it.
 -- Both travel in SyncItemFieldsPacket as well, which is why a client that updates one
 -- and not the other is a multiplayer problem rather than a local one.
+-- zombie.Lua.LuaManager$GlobalObject.syncItemFields(player, item). Sends the item's
+-- attached slot and slot type to the server, and is a no-op outside a multiplayer client.
+function syncItemFields(_Character, Item)
+	if not Item then return end
+
+	Item.ServerAttachedSlot = Item.AttachedSlot
+	Item.ServerAttachedSlotType = Item.AttachedSlotType
+	Harness.SyncedFields = (Harness.SyncedFields or 0) + 1
+end
+
 function Harness.NewHotbarItem(AttachmentType, Name)
 	local Item = Harness.NewInventoryItem(Name or "Axe")
 	Item.AttachmentType = AttachmentType or "Axe"
 	Item.AttachedSlot = -1
 	Item.AttachedSlotType = nil
 	Item.Broken = false
+
+	-- What the server holds. A client changing AttachedSlot changes only its own copy;
+	-- the value travels in SyncItemFieldsPacket and nowhere else, so anything that skips
+	-- the sync is invisible until a rejoin hands the server's version back.
+	Item.ServerAttachedSlot = -1
+	Item.ServerAttachedSlotType = nil
 
 	function Item:getAttachmentType() return self.AttachmentType end
 	function Item:getAttachedSlot() return self.AttachedSlot end
@@ -2062,7 +2078,13 @@ function Harness.RejoinHotbar(Hotbar)
 
 	-- The items come back knowing which slot they were on, and the game puts them where
 	-- that says rather than where they were on screen
+	-- From the server's copy. reloadIcons rebuilds the bar by scanning the inventory for
+	-- items whose attached slot is set, and after a rejoin those items are the server's,
+	-- so an index the client never transmitted simply is not there.
 	for _, Item in ipairs(Items) do
+		Item.AttachedSlot = Item.ServerAttachedSlot or -1
+		Item.AttachedSlotType = Item.ServerAttachedSlotType
+
 		local At = Item:getAttachedSlot()
 		if Fresh.availableSlot[At] then Fresh.attachedItems[At] = Item end
 	end

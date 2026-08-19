@@ -19,7 +19,7 @@
 --// Client only. The hotbar is a window, and the order in it is stored on the character,
 --// so savePosition's own transmit is all multiplayer needs.
 
-require "ISUI/ISHotbar"
+require "Hotbar/ISHotbar"
 
 --// Guards
 -- Deliberately a local rather than a shared helper, for the same reason as the one in
@@ -76,6 +76,26 @@ local function GetSlotKey(SlotType)
 	return SlotType .. INDEX_KEY
 end
 
+-- An item's slot index lives on the item, not in our record, and in multiplayer the
+-- authoritative copy is the server's. Vanilla's attach and detach actions both follow
+-- setAttachedSlot with syncItemFields, and not doing the same here is why a reordered
+-- hotbar came back empty on rejoin: the slot order is in character mod data, which
+-- savePosition transmits, but the item to slot binding rides on the item and travels in
+-- SyncItemFieldsPacket. Sending one and not the other left the server holding indexes
+-- that no longer matched, so reloadIcons found nothing to put back on the bar.
+--
+-- Sent only when the index really moved. This runs on every hotbar refresh, and
+-- transmitting every item every time would be traffic for nothing. syncItemFields is a
+-- no-op outside a multiplayer client, so it needs no guard of its own.
+local function SetItemSlot(Character, Item, Index)
+	if not Item or Item:getAttachedSlot() == Index then return false end
+
+	Item:setAttachedSlot(Index)
+	if syncItemFields then syncItemFields(Character, Item) end
+
+	return true
+end
+
 local function IsLocked(Character)
 	return Character:getModData()[LOCK_KEY] and true or false
 end
@@ -130,7 +150,7 @@ function QolcHotbarApplyOrder(Hotbar, ForceSave)
 
 			-- Only the index. An item's other half, its slot type, never goes stale here
 			-- because every path moves a slot with its item still on it.
-			Slot.item:setAttachedSlot(Index)
+			SetItemSlot(Hotbar.character, Slot.item, Index)
 		end
 
 		local Key = GetSlotKey(Slot.slotType)
@@ -192,7 +212,7 @@ local function MoveDepartingSlotsToBack(Hotbar)
 			if (Available[Slot.slotType] and true or false) == Keep then
 				NewSlots[Next] = Slot
 				NewItems[Next] = Hotbar.attachedItems[Index]
-				if NewItems[Next] then NewItems[Next]:setAttachedSlot(Next) end
+				SetItemSlot(Hotbar.character, NewItems[Next], Next)
 				Next = Next + 1
 			end
 		end
@@ -208,7 +228,7 @@ local function WriteSlot(Hotbar, Index, Slot)
 	Hotbar.availableSlot[Index] = Slot
 	Hotbar.attachedItems[Index] = Slot.item
 
-	if Slot.item then Slot.item:setAttachedSlot(Index) end
+	SetItemSlot(Hotbar.character, Slot.item, Index)
 end
 
 local function CaptureItems(Hotbar)

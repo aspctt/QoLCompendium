@@ -398,6 +398,10 @@ local function Attach(Hotbar, Index, AttachmentType)
 	Item:setAttachedSlot(Index)
 	Item:setAttachedSlotType(Hotbar.availableSlot[Index].slotType)
 
+	-- ISAttachItemHotbar sets both fields and then syncs them, so a spec standing in for
+	-- a real attach has to do the same or it starts from a state the game never produces.
+	syncItemFields(Hotbar.character, Item)
+
 	return Item
 end
 
