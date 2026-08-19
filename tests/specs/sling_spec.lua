@@ -234,3 +234,58 @@ Test("extra hotbar slots are added without stealing vanilla keys", function()
 		AssertEquals(Binding.key, 0, "Hotbar " .. Slot .. " should default to unbound")
 	end
 end)
+
+
+--// The Back Slot And A Bag
+-- Vanilla swaps a back slung item to a bag variant when a bag is worn, and takes off the
+-- ones that cannot hang beside it. Our override widened that test to cover the sling
+-- slots and, in widening it, narrowed it for one vanilla case.
+local function BackSlotDef()
+	return {
+		name = "Back",
+		type = "Bag",
+		attachments = { BigBlade = "Blade On Back", Guitar = "Guitar" }
+	}
+end
+
+local function AttachOnBack(Item, Slot, Replacements)
+	local Player = Harness.InstallAttachments(Harness.NewPlayer(0, true))
+	local Hotbar = Harness.NewHotbar(Player, { "Back" })
+
+	Hotbar.replacements = Replacements
+	Hotbar.attachedItems[1] = Item
+	Hotbar:attachItem(Item, Slot, 1, BackSlotDef(), false)
+
+	return Hotbar, Player
+end
+
+Test("an axe on the back swaps to its bag variant", function()
+	local Axe = Harness.NewHotbarItem("BigBlade", "Axe")
+	local Hotbar, Player = AttachOnBack(Axe, "Blade On Back",
+		{ BigBlade = "Big Blade On Back with Bag" })
+
+	AssertEquals(Harness.AttachedAt(Player, Axe), "Big Blade On Back with Bag",
+		"it should hang off the bag variant")
+	AssertEquals(Hotbar.attachedItems[1], Axe, "and stay on the bar")
+end)
+
+Test("a guitar comes off the back when a bag is worn", function()
+	-- The back slot's guitar attachment point is named "Guitar", with no " Back" in it,
+	-- so testing the model point alone skipped the replacement and left the guitar
+	-- hanging through the backpack instead of being taken off.
+	local Guitar = Harness.NewHotbarItem("Guitar", "Guitar")
+	local Hotbar, Player = AttachOnBack(Guitar, "Guitar", { Guitar = "null" })
+
+	AssertNil(Hotbar.attachedItems[1], "it should have come off the bar")
+	AssertNil(Harness.AttachedAt(Player, Guitar), "and off the model")
+end)
+
+Test("a point that is null with no bag in sight still takes the item off", function()
+	-- Vanilla tests this outside the bag branch as well. With only the inner test, the
+	-- item was handed to setAttachedItem with "null" as its model point.
+	local Guitar = Harness.NewHotbarItem("Guitar", "Guitar")
+	local Hotbar, Player = AttachOnBack(Guitar, "null", nil)
+
+	AssertNil(Hotbar.attachedItems[1], "no bag, but still nowhere to hang it")
+	AssertNil(Harness.AttachedAt(Player, Guitar), "and nothing hanging off null")
+end)

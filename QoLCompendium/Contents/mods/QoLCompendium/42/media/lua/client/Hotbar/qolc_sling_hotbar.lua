@@ -23,7 +23,7 @@ function ISHotbar:attachItem(item, slot, slotIndex, slotDef, doAnim)
 	local AttachmentType = QolcIsSling(item:getAttachmentType(), slot)
 
 	if doAnim then
-		if self.replacements and self.replacements[AttachmentType] and QolcIsBack(slot) then
+		if self.replacements and self.replacements[AttachmentType] and QolcOnBack(slotDef, slot) then
 			slot = self.replacements[AttachmentType]
 		end
 
@@ -37,12 +37,17 @@ function ISHotbar:attachItem(item, slot, slotIndex, slotDef, doAnim)
 		return
 	end
 
-	if self.replacements and self.replacements[AttachmentType] and QolcIsBack(slot) then
+	if self.replacements and self.replacements[AttachmentType] and QolcOnBack(slotDef, slot) then
 		slot = self.replacements[AttachmentType]
-		if slot == "null" then
-			self:removeItem(item, false)
-			return
-		end
+	end
+
+	-- Vanilla tests this again outside the bag branch, and dropping that was a mistake:
+	-- an attachment point can be "null" with no bag in the picture, and without this the
+	-- item is handed to setAttachedItem with "null" as its model point instead of coming
+	-- off the bar.
+	if slot == "null" then
+		self:removeItem(item, false)
+		return
 	end
 
 	self.chr:setAttachedItem(slot, item)

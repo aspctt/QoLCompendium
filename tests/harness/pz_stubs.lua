@@ -1956,10 +1956,53 @@ function Harness.NewHotbarItem(AttachmentType, Name)
 	function Item:setAttachedSlot(Index) self.AttachedSlot = Index end
 	function Item:getAttachedSlotType() return self.AttachedSlotType end
 	function Item:setAttachedSlotType(Type) self.AttachedSlotType = Type end
+	function Item:getAttachedToModel() return self.AttachedToModel end
+	function Item:setAttachedToModel(Slot) self.AttachedToModel = Slot end
 	function Item:isBroken() return self.Broken end
 
 	return Item
 end
+
+-- The model side of the hotbar. An item hangs off a named attachment point on the
+-- character, separately from sitting in a hotbar slot, and the two can disagree: a slot
+-- whose point resolves to "null" has nowhere to hang the item and it comes off the bar
+-- entirely. Nothing modelled that before, so attachItem could not be tested at all.
+function Harness.InstallAttachments(Player)
+	Player.Attached = {}
+
+	function Player:setAttachedItem(Slot, Item) self.Attached[Slot] = Item end
+	function Player:getAttachedItem(Slot) return self.Attached[Slot] end
+
+	function Player:removeAttachedItem(Item)
+		for Slot, Held in pairs(self.Attached) do
+			if Held == Item then self.Attached[Slot] = nil end
+		end
+	end
+
+	return Player
+end
+
+-- Which point an item is hanging from, or nil when it is not on the model at all.
+function Harness.AttachedAt(Player, Item)
+	for Slot, Held in pairs(Player.Attached or {}) do
+		if Held == Item then return Slot end
+	end
+
+	return nil
+end
+
+function ISHotbar:removeItem(Item, _KeepAttached)
+	for Index, Held in pairs(self.attachedItems) do
+		if Held == Item then self.attachedItems[Index] = nil end
+	end
+
+	if self.chr then self.chr:removeAttachedItem(Item) end
+	Item:setAttachedSlot(-1)
+	Item:setAttachedSlotType(nil)
+end
+
+function ISHotbar:reloadIcons() self.IconReloads = (self.IconReloads or 0) + 1 end
+function ISHotbar:setAttachAnim(_Item, _SlotDef) end
 
 -- Mirrors vanilla's canBeAttached: a slot takes an item when its definition lists that
 -- item's attachment type.
