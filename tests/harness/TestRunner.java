@@ -61,6 +61,7 @@ public class TestRunner {
 			+ checkTexturePaths()
 			+ checkTextureFolders()
 			+ checkTagPatches()
+			+ checkExposedReturns()
 			+ checkItemTypes()
 			+ checkRecipeNames()
 			+ checkTileDefs();
@@ -1223,6 +1224,136 @@ public class TestRunner {
 					}
 				}
 			}
+		}
+
+		return found;
+	}
+
+	/**
+	 * Lua can only call methods on Java classes LuaManager exposes. A method that hands
+	 * back an unexposed class returns something Lua cannot touch at all: every call on it
+	 * throws "attempted index: X of non-table", at runtime, in front of a player.
+	 *
+	 * That shipped once. BaseVehicle.getParts() returns a VehicleParts, which is not
+	 * exposed, and the harness happily answered size() and get() on a stub of it because
+	 * the stub was written to match the same wrong belief as the code. Two players hit the
+	 * crash before anyone did.
+	 *
+	 * So this reads the exposed list out of the Exposer's own constant pool, reflects
+	 * every method those classes offer, and flags any local this mod assigns from a call
+	 * returning an unexposed type and then calls a method on.
+	 */
+	private static int checkExposedReturns() throws IOException {
+		Set<String> exposed = readExposedClasses();
+		if (exposed.isEmpty()) {
+			System.out.println("  FAIL  could not read LuaManager's exposed class list");
+			return 1;
+		}
+		System.out.println("Classes exposed to lua in this build: " + exposed.size());
+
+		// Method name to the zombie types it can return, across every exposed class.
+		Map<String, Set<String>> returns = new LinkedHashMap<String, Set<String>>();
+		for (String name : exposed) {
+			Class<?> owner;
+			try {
+				owner = Class.forName(name, false, TestRunner.class.getClassLoader());
+			} catch (Throwable t) {
+				continue;
+			}
+			Method[] methods;
+			try {
+				methods = owner.getMethods();
+			} catch (Throwable t) {
+				continue;
+			}
+			for (Method m : methods) {
+				Class<?> ret = m.getReturnType();
+				if (ret.isPrimitive() || !ret.getName().startsWith("zombie.")) continue;
+
+				Set<String> types = returns.get(m.getName());
+				if (types == null) {
+					types = new LinkedHashSet<String>();
+					returns.put(m.getName(), types);
+				}
+				types.add(ret.getName());
+			}
+		}
+
+		java.util.regex.Pattern assign = java.util.regex.Pattern
+			.compile("local\\s+(\\w+)\\s*=\\s*\\w+[:.](\\w+)\\s*\\(");
+		int bad = 0;
+
+		for (String path : loadFiles) {
+			File f = new File(path);
+			if (!f.getName().endsWith(".lua")) continue;
+			if (!f.getCanonicalPath().startsWith(modRoot)) continue;
+
+			String[] lines = readAll(f).split("\\n");
+			for (int n = 0; n < lines.length; n++) {
+				String line = lines[n];
+				int comment = line.indexOf("--");
+				if (comment >= 0) line = line.substring(0, comment);
+
+				java.util.regex.Matcher m = assign.matcher(line);
+				while (m.find()) {
+					String local = m.group(1);
+					Set<String> types = returns.get(m.group(2));
+					if (types == null || types.isEmpty()) continue;
+
+					// Only when every type it can return is one lua cannot touch.
+					boolean anyExposed = false;
+					for (String t : types) if (exposed.contains(t)) anyExposed = true;
+					if (anyExposed) continue;
+
+					if (!usesLocal(lines, n + 1, local)) continue;
+
+					bad++;
+					System.out.println("  FAIL  " + m.group(2) + "() returns "
+						+ types.iterator().next() + ", which lua cannot call into"
+						+ "  (" + f.getName() + ":" + (n + 1) + ")");
+				}
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
+	}
+
+	/** Whether a local is called as an object after the line it was assigned on. */
+	private static boolean usesLocal(String[] lines, int from, String local) {
+		java.util.regex.Pattern use = java.util.regex.Pattern
+			.compile("\\b" + java.util.regex.Pattern.quote(local) + "\\s*[:]");
+
+		for (int i = from; i < lines.length; i++) {
+			if (use.matcher(lines[i]).find()) return true;
+		}
+		return false;
+	}
+
+	/** Class names appearing in LuaManager$Exposer, which is what lua may call into. */
+	private static Set<String> readExposedClasses() throws IOException {
+		Set<String> found = new LinkedHashSet<String>();
+		File jar = new File(gameDir, "projectzomboid.jar");
+		if (!jar.isFile()) return found;
+
+		java.util.zip.ZipFile zip = new java.util.zip.ZipFile(jar);
+		try {
+			java.util.zip.ZipEntry entry = zip.getEntry("zombie/Lua/LuaManager$Exposer.class");
+			if (entry == null) return found;
+
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			InputStream in = zip.getInputStream(entry);
+			byte[] buffer = new byte[8192];
+			int read;
+			while ((read = in.read(buffer)) > 0) out.write(buffer, 0, read);
+			in.close();
+
+			java.util.regex.Matcher m = java.util.regex.Pattern
+				.compile("zombie/[A-Za-z0-9_/$]+")
+				.matcher(new String(out.toByteArray(), "ISO-8859-1"));
+			while (m.find()) found.add(m.group().replace('/', '.'));
+		} finally {
+			zip.close();
 		}
 
 		return found;
