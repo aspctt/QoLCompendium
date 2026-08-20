@@ -289,3 +289,30 @@ Test("a point that is null with no bag in sight still takes the item off", funct
 	AssertNil(Hotbar.attachedItems[1], "no bag, but still nowhere to hang it")
 	AssertNil(Harness.AttachedAt(Player, Guitar), "and nothing hanging off null")
 end)
+
+--// Telling The Server
+-- The tail of ISHotbar:refresh takes every attached item off and puts it back through
+-- the non anim branch of attachItem, and vanilla syncs on neither step. On a server that
+-- leaves the item bound on the client and unbound on the server, so it comes back with
+-- both fields unset after a rejoin.
+Test("attaching without an animation still tells the server", function()
+	local Axe = Harness.NewHotbarItem("BigBlade", "Axe")
+	local Before = Harness.SyncedFields or 0
+
+	AttachOnBack(Axe, "Blade On Back", nil)
+
+	AssertTrue((Harness.SyncedFields or 0) > Before, "the server should have been told")
+	AssertEquals(Axe.ServerAttachedSlot, 1, "and told the right slot")
+	AssertEquals(Axe.ServerAttachedSlotType, "Bag", "and the right slot type")
+end)
+
+Test("an item put back by a refresh survives a rejoin", function()
+	-- The whole round trip: attached with no animation, as a refresh does it, then the
+	-- server's copy is what a rejoin restores from.
+	local Guitar = Harness.NewHotbarItem("BigBlade", "Axe")
+	AttachOnBack(Guitar, "Blade On Back", nil)
+
+	AssertEquals(Guitar.ServerAttachedSlot, Guitar:getAttachedSlot(),
+		"client and server should agree before the disconnect")
+end)
+

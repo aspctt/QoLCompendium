@@ -55,5 +55,16 @@ function ISHotbar:attachItem(item, slot, slotIndex, slotDef, doAnim)
 	item:setAttachedSlotType(slotDef.type)
 	item:setAttachedToModel(slot)
 
+	-- Tell the server, which vanilla does not do on this branch. Its attach and detach
+	-- timed actions both end with syncItemFields, and this path sets the same two fields
+	-- without one, so on a server the client ends up right and the server hears nothing.
+	--
+	-- It is reached constantly: the tail of ISHotbar:refresh takes every attached item
+	-- off and puts it back through here, which happens whenever clothing changes, so
+	-- putting a bag on is enough to leave an item bound on the client and unbound on the
+	-- server. Reported as a freshly attached screwdriver coming back unattached, with
+	-- both of its fields unset rather than stale.
+	if syncItemFields then syncItemFields(self.chr, item) end
+
 	self:reloadIcons()
 end
