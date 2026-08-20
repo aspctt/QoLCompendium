@@ -84,16 +84,33 @@ end
 -- SyncItemFieldsPacket. Sending one and not the other left the server holding indexes
 -- that no longer matched, so reloadIcons found nothing to put back on the bar.
 --
--- Sent only when the index really moved. This runs on every hotbar refresh, and
--- transmitting every item every time would be traffic for nothing. syncItemFields is a
--- no-op outside a multiplayer client, so it needs no guard of its own.
-local function SetItemSlot(Character, Item, Index)
-	if not Item or Item:getAttachedSlot() == Index then return false end
+-- Sent when the index moved, and once per item besides. Sending only on a change was
+-- half a fix: it asks what this client just did, which is not the same question as what
+-- the server already knows. An item renumbered by a build without the sync, or by any
+-- other route that skipped it, sits on the server with a stale index that no later
+-- reorder will ever touch, because from here it looks like nothing changed. Reported as
+-- the slot that was dragged surviving a rejoin while the one left alone did not.
+--
+-- Once per item per hotbar, not once per refresh, so the reconciliation costs one packet
+-- an item on the first pass and nothing after. syncItemFields is a no-op outside a
+-- multiplayer client, so it needs no guard of its own.
+local function SetItemSlot(Hotbar, Item, Index)
+	if not Item then return false end
 
-	Item:setAttachedSlot(Index)
-	if syncItemFields then syncItemFields(Character, Item) end
+	local Moved = Item:getAttachedSlot() ~= Index
+	if Moved then Item:setAttachedSlot(Index) end
 
-	return true
+	-- Keyed by id rather than by the item itself, since the key has to survive the item
+	-- being handed back as a different object.
+	local Key = Item.getID and Item:getID() or Item
+	Hotbar.QolcTold = Hotbar.QolcTold or {}
+
+	if Moved or not Hotbar.QolcTold[Key] then
+		if syncItemFields then syncItemFields(Hotbar.character, Item) end
+		Hotbar.QolcTold[Key] = true
+	end
+
+	return Moved
 end
 
 local function IsLocked(Character)
@@ -150,7 +167,7 @@ function QolcHotbarApplyOrder(Hotbar, ForceSave)
 
 			-- Only the index. An item's other half, its slot type, never goes stale here
 			-- because every path moves a slot with its item still on it.
-			SetItemSlot(Hotbar.character, Slot.item, Index)
+			SetItemSlot(Hotbar, Slot.item, Index)
 		end
 
 		local Key = GetSlotKey(Slot.slotType)
@@ -212,7 +229,7 @@ local function MoveDepartingSlotsToBack(Hotbar)
 			if (Available[Slot.slotType] and true or false) == Keep then
 				NewSlots[Next] = Slot
 				NewItems[Next] = Hotbar.attachedItems[Index]
-				SetItemSlot(Hotbar.character, NewItems[Next], Next)
+				SetItemSlot(Hotbar, NewItems[Next], Next)
 				Next = Next + 1
 			end
 		end
@@ -228,7 +245,7 @@ local function WriteSlot(Hotbar, Index, Slot)
 	Hotbar.availableSlot[Index] = Slot
 	Hotbar.attachedItems[Index] = Slot.item
 
-	SetItemSlot(Hotbar.character, Slot.item, Index)
+	SetItemSlot(Hotbar, Slot.item, Index)
 end
 
 local function CaptureItems(Hotbar)

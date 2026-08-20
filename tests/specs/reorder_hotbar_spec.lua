@@ -445,3 +445,60 @@ Test("a reordered hotbar survives a rejoin", function()
 	AssertEquals(Fresh.availableSlot[Item:getAttachedSlot()].slotType, Item:getAttachedSlotType(),
 		"the recorded type has to name the slot the index points at")
 end)
+
+--// Reconciling An Item Nobody Moved
+-- Reported after the first sync fix went out: the slot that was dragged survived a
+-- rejoin, and the one left alone did not. Sending only when the index changed asks what
+-- this client just did, not what the server already knows, so an item carrying a stale
+-- index from an earlier build was never corrected.
+Test("an item whose index never changed is still reconciled", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	local Item = Attach(Hotbar, 1, "Back")
+
+	-- What a save made by a build without the sync leaves behind: the client and the slot
+	-- agree, and the server holds something else entirely.
+	Item.ServerAttachedSlot = 7
+
+	QolcHotbarApplyOrder(Hotbar)
+
+	AssertEquals(Item.ServerAttachedSlot, 1, "the server should have been put right")
+end)
+
+Test("an untouched item survives a rejoin beside a moved one", function()
+	-- Three slots, and only the last two trade places, so the item on the first keeps the
+	-- index it already had. That is the case the report describes and the one a swap of
+	-- two slots cannot reproduce, because there every index moves.
+	local Hotbar = NewHotbar("Back", "Belt", "Holster")
+	local Untouched = Attach(Hotbar, 1, "Back")
+	local Moved = Attach(Hotbar, 2, "Belt")
+
+	Untouched.ServerAttachedSlot = 7
+
+	Hotbar.character:getModData()["BackQolcHotbarIndex"] = 1
+	Hotbar.character:getModData()["HolsterQolcHotbarIndex"] = 2
+	Hotbar.character:getModData()["BeltQolcHotbarIndex"] = 3
+	QolcHotbarApplyOrder(Hotbar)
+
+	AssertEquals(Untouched:getAttachedSlot(), 1, "the first slot really did not move")
+
+	local Fresh = Harness.RejoinHotbar(Hotbar)
+	Fresh:update()
+
+	AssertEquals(Fresh.attachedItems[Moved:getAttachedSlot()], Moved, "the dragged one")
+	AssertEquals(Fresh.attachedItems[Untouched:getAttachedSlot()], Untouched,
+		"and the one nobody touched")
+end)
+
+Test("an item is told once, not on every refresh", function()
+	local Hotbar = NewHotbar("Back", "Belt")
+	Attach(Hotbar, 1, "Back")
+
+	QolcHotbarApplyOrder(Hotbar)
+	local After = Harness.SyncedFields
+
+	QolcHotbarApplyOrder(Hotbar)
+	QolcHotbarApplyOrder(Hotbar)
+
+	AssertEquals(Harness.SyncedFields, After, "nothing moved, so nothing more to send")
+end)
+
