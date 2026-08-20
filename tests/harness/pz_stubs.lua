@@ -2504,20 +2504,30 @@ function Harness.NewVehiclePart(Kind, Values)
 	return Part
 end
 
--- Build 42 moved parts off BaseVehicle into a VehicleParts container reached through
--- getParts(). getPartCount and getPartByIndex no longer exist on the vehicle, so a stub
--- carrying them would hide exactly the breakage the mod exists to work around.
+-- getParts() hands back a VehicleParts, and that class is not on LuaManager's exposed
+-- list, so lua cannot call anything on it: every access throws "attempted index: size of
+-- non-table". This stub used to answer size() and get() on it, which is precisely why a
+-- crash shipped with the suite green, so it now throws the way the game does.
+--
+-- The working route is getPartCount and getPartByIndex. They are default methods on the
+-- VehiclePartOwner interface rather than members of BaseVehicle, which is why they do not
+-- appear against the class and why they were once taken for removed. Vanilla's own lua
+-- uses them, in ISInventoryPage.lua:1583 among others.
 function Harness.NewAlarmVehicle(Values, Parts)
 	Values = Values or {}
 
-	local Container = {}
-	function Container:size() return #(Parts or {}) end
-	function Container:get(Index) return (Parts or {})[Index + 1] end
+	local Opaque = setmetatable({}, {
+		__index = function(_, Key)
+			error("attempted index: " .. tostring(Key) .. " of non-table: VehicleParts")
+		end,
+	})
 
 	local Vehicle = {}
 	Vehicle.Alarmed = Values.Alarmed ~= false
 
-	function Vehicle:getParts() return Container end
+	function Vehicle:getParts() return Opaque end
+	function Vehicle:getPartCount() return #(Parts or {}) end
+	function Vehicle:getPartByIndex(Index) return (Parts or {})[Index + 1] end
 	function Vehicle:isAlarmed() return self.Alarmed end
 	function Vehicle:setAlarmed(Value) self.Alarmed = Value and true or false end
 

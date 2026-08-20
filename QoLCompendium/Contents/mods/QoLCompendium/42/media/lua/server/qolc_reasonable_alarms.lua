@@ -6,11 +6,16 @@
 --// means anyone could have walked in long before you did, so there is nothing left for
 --// the alarm to catch.
 --//
---// Rewritten rather than ported. The original is build 41, and its vehicle half throws
---// on build 42: BaseVehicle:getPartCount and getPartByIndex are gone, parts now sit
---// behind getParts() in a VehicleParts container. It also read a plain text settings
---// file shipped inside the mod folder, which a server cannot override, so that is a
---// sandbox page here instead.
+--// Rewritten rather than ported. The original is build 41, and it read a plain text
+--// settings file shipped inside the mod folder, which a server cannot override, so that
+--// is a sandbox page here instead.
+--//
+--// Parts are walked with getPartCount and getPartByIndex, which are default methods on
+--// the VehiclePartOwner interface rather than members of BaseVehicle. That is why they
+--// do not show up against the class, and reading it that way once led to them being
+--// taken for removed in build 42. They are not: vanilla's own lua calls them, and
+--// getParts is the one that cannot be used, since VehicleParts is not on LuaManager's
+--// exposed list and every call on it throws.
 --//
 --// Server side, and it has to be. IsoGameCharacter's alarm check returns early whenever
 --// GameClient.client is set, so a multiplayer client never sounds an alarm at all; the
@@ -111,13 +116,17 @@ local function DisarmVehicle(Vehicle)
 		return
 	end
 
-	-- Where the original throws on build 42. Parts moved off the vehicle into their own
-	-- container, so getPartCount and getPartByIndex no longer exist on BaseVehicle.
-	local Parts = Vehicle:getParts()
-	if not Parts then return end
-
-	for Index = 0, Parts:size() - 1 do
-		local Part = Parts:get(Index)
+	-- Counted and fetched from the vehicle, not from getParts(). getParts hands back a
+	-- VehicleParts, and that class is not on LuaManager's exposed list, so every call on
+	-- it throws "attempted index: size of non-table". Reported by two players as a
+	-- stutter whenever a zombie walked past a locked car.
+	--
+	-- getPartCount and getPartByIndex are default methods on the VehiclePartOwner
+	-- interface rather than members of BaseVehicle, which is why they do not show up
+	-- against the class and why they were wrongly taken for removed. They are what
+	-- vanilla's own lua uses, in ISInventoryPage.lua:1583 among others.
+	for Index = 0, Vehicle:getPartCount() - 1 do
+		local Part = Vehicle:getPartByIndex(Index)
 		local Openable = Part and (Part:getWindow() or Part:getDoor())
 
 		-- No item on the part means the window or door is not there at all, smashed out
