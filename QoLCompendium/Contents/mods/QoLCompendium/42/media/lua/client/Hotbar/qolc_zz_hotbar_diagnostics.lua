@@ -134,30 +134,22 @@ function ISHotbar:refresh()
 	return Result
 end
 
---// Connections
--- One line per join, so a log can be read from the moment the character arrives and it is
--- obvious the build really is the instrumented one.
-local function OnCreatePlayer(_Index, Player)
-	if not Player then return end
-
-	print(PREFIX .. "joined, bag=" .. WornBag(Player))
-end
-
-Events.OnCreatePlayer.Add(OnCreatePlayer)
-
 --// The Settled State
--- The removal lines above print from inside vanilla's refresh, which our reorder drives,
--- and our own savePosition runs after that. So the saved order they report is stale by
--- construction and cannot be compared against the order on screen.
---
--- This is the comparison that decides it: once the reorder has finished and had its
--- chance to persist, does the order on screen match the order a rejoin would rebuild
--- from. If these two ever disagree here, that is the bug, and it is ours.
-local VanillaApplyOrder = QolcHotbarApplyOrder
+-- Installed from OnGameBoot rather than at file scope. Doing it at load time meant this
+-- wrapper only existed if this file happened to load after qolc_reorder_hotbar.lua, and
+-- when it did not the guard below skipped in silence and no settled line was ever printed
+-- again. A whole test run was wasted on a log that could not have said anything. Mod file
+-- load order is not guaranteed; by the time any event fires, every file has loaded.
+local Wrapped = false
 
-if VanillaApplyOrder then
+local function InstallWrapper()
+	if Wrapped or not QolcHotbarApplyOrder then return end
+	Wrapped = true
+
+	local Vanilla = QolcHotbarApplyOrder
+
 	function QolcHotbarApplyOrder(Hotbar, ForceSave)
-		local Result = VanillaApplyOrder(Hotbar, ForceSave)
+		local Result = Vanilla(Hotbar, ForceSave)
 
 		local Order = SlotOrder(Hotbar)
 		local Saved = SavedOrder(Hotbar)
@@ -169,3 +161,47 @@ if VanillaApplyOrder then
 		return Result
 	end
 end
+
+--// What Came Back
+-- The question a rejoin actually turns on: does each item still carry the slot it was
+-- attached to. reloadIcons rebuilds the bar by scanning the inventory for exactly this,
+-- so an item arriving with -1 is one the server never knew about, whatever the client
+-- believed before it disconnected.
+local function ReportAttached(Player)
+	local Inventory = Player and Player:getInventory()
+	if not Inventory then return end
+
+	local Items = Inventory:getItems()
+	if not Items then return end
+
+	local Found = 0
+	for Index = 0, Items:size() - 1 do
+		local Item = Items:get(Index)
+		local Type = Item and Item.getAttachmentType and Item:getAttachmentType()
+
+		if Type then
+			Found = Found + 1
+			print(PREFIX .. "  holds " .. Name(Item)
+				.. " attachmentType=" .. Safe(Type)
+				.. " attachedSlot=" .. Safe(Item:getAttachedSlot())
+				.. " attachedSlotType=" .. Safe(Item.getAttachedSlotType and Item:getAttachedSlotType()))
+		end
+	end
+
+	if Found == 0 then print(PREFIX .. "  holds nothing that can be attached") end
+end
+
+--// Connections
+-- One line per join, so a log can be read from the moment the character arrives and it is
+-- obvious the build really is the instrumented one.
+local function OnCreatePlayer(_Index, Player)
+	if not Player then return end
+
+	InstallWrapper()
+	print(PREFIX .. "joined, bag=" .. WornBag(Player)
+		.. " wrapper=" .. tostring(Wrapped))
+	ReportAttached(Player)
+end
+
+Events.OnGameBoot.Add(InstallWrapper)
+Events.OnCreatePlayer.Add(OnCreatePlayer)
