@@ -64,8 +64,6 @@ local function Reconcile(Player)
 			if Told[Id] ~= Now then
 				syncItemFields(Player, Item)
 				Told[Id] = Now
-
-				if QolcHotbarSyncReport then QolcHotbarSyncReport(Item, Now) end
 			end
 		end
 	end
