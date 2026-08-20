@@ -502,3 +502,62 @@ Test("an item is told once, not on every refresh", function()
 	AssertEquals(Harness.SyncedFields, After, "nothing moved, so nothing more to send")
 end)
 
+--// The Reconciler
+-- Three fixes were made by finding a call site that wrote the binding without telling the
+-- server. Each was real and each was incomplete, because more places write it than can be
+-- found by reading. This watches the two fields instead and does not care who wrote them.
+local function Tick(Player)
+	Harness.Fire("OnPlayerUpdate", Player)
+end
+
+local function NewSyncPlayer()
+	Harness.Fire("OnCreatePlayer", 0, nil)
+	Harness.NowMs = 1000000
+
+	return Harness.NewPlayer(0, true)
+end
+
+Test("a binding written by nobody in particular is still sent", function()
+	local Player = NewSyncPlayer()
+	local Item = Harness.NewHotbarItem("Screwdriver")
+	Item.Container = Player.Inventory
+	table.insert(Player.Inventory.Items, Item)
+
+	-- Set behind everyone's back, the way vanilla's refresh does it.
+	Item:setAttachedSlot(1)
+	Item:setAttachedSlotType("SmallBeltLeft")
+
+	Tick(Player)
+
+	AssertEquals(Item.ServerAttachedSlot, 1, "the server should have been told")
+	AssertEquals(Item.ServerAttachedSlotType, "SmallBeltLeft", "slot type as well")
+end)
+
+Test("an unchanged binding is not sent twice", function()
+	local Player = NewSyncPlayer()
+	local Item = Harness.NewHotbarItem("Screwdriver")
+	Item.Container = Player.Inventory
+	table.insert(Player.Inventory.Items, Item)
+	Item:setAttachedSlot(1)
+	Item:setAttachedSlotType("SmallBeltLeft")
+
+	Tick(Player)
+	local After = Harness.SyncedFields
+
+	Harness.NowMs = Harness.NowMs + 60000
+	Tick(Player)
+
+	AssertEquals(Harness.SyncedFields, After, "nothing changed, nothing to send")
+end)
+
+Test("an item taken off the bar is left alone", function()
+	local Player = NewSyncPlayer()
+	local Item = Harness.NewHotbarItem("Screwdriver")
+	Item.Container = Player.Inventory
+	table.insert(Player.Inventory.Items, Item)
+
+	Tick(Player)
+
+	AssertEquals(Item.ServerAttachedSlot, -1, "never on the bar, nothing to say")
+end)
+

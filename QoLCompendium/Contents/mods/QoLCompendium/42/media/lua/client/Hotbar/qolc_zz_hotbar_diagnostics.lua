@@ -191,6 +191,13 @@ local function ReportAttached(Player)
 	if Found == 0 then print(PREFIX .. "  holds nothing that can be attached") end
 end
 
+--// The Reconciler
+-- Called by qolc_hotbar_sync.lua whenever it actually sends something, so a log shows
+-- the binding being repaired rather than leaving it to be inferred from a rejoin.
+function QolcHotbarSyncReport(Item, Binding)
+	print(PREFIX .. "reconciled " .. Name(Item) .. " -> " .. Safe(Binding))
+end
+
 --// Connections
 -- One line per join, so a log can be read from the moment the character arrives and it is
 -- obvious the build really is the instrumented one.
