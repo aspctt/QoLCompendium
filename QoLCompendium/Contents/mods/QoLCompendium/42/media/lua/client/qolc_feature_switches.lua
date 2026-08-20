@@ -20,6 +20,7 @@ local OPTIONS_ID = "QoLC"
 -- order they appear on the page, so related features sit together.
 local SWITCHES = {
 	{ Key = "Hotbar", Name = "Hotbar" },
+	{ Key = "Flashlight", Name = "Flashlight" },
 	{ Key = "Capacity", Name = "Capacity" },
 	{ Key = "XpView", Name = "XpView" },
 	{ Key = "Generator", Name = "Generator" },

@@ -191,6 +191,24 @@ public class TestRunner {
 		env.rawset("QOLC_PROCEDURAL_NAMES", procedural);
 
 		env.rawset("QOLC_GAME_DIR", gameDir);
+		// Every script this mod ships, by file name. A few things live in a script rather
+		// than in lua, and the only honest assertion about those is against what was
+		// actually written. Kahlua has no io library to read them itself.
+		KahluaTable scripts = platform.newTable();
+		for (File dir : new File[] { new File(modRoot, "42/media/scripts"),
+				new File(modRoot, "common/media/scripts") }) {
+			File[] files = dir.listFiles();
+			if (files == null) continue;
+			for (File f : files) {
+				if (!f.getName().endsWith(".txt")) continue;
+				try {
+					scripts.rawset(f.getName(), readAll(f));
+				} catch (IOException e) {
+					// A script that cannot be read fails the checks above on its own.
+				}
+			}
+		}
+		env.rawset("QOLC_MOD_SCRIPTS", scripts);
 		return env;
 	}
 

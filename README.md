@@ -119,6 +119,11 @@ no way to learn a trait after character creation at all, so otherwise it costs
 two points at the start or means taking Fitness Instructor. It spawns wherever
 cooking magazines do, at half their odds.
 
+**Flashlight On The Belt** - The base game hangs a screwdriver, a wrench, a walkie
+talkie and a meat cleaver off a belt, but not a torch, so the thing you reach for
+most in the dark is the one thing that has to live in a bag. All three torches
+now hang from either belt slot. Attaching one does not switch it on.
+
 **Sterilized Rag Uses** - A sterilized rag is the same cloth as a ripped sheet, but
 the base game gives it one tag where the plain rag gets six, so it is refused as
 binding, as fire fuel, as tinder and as weapon binding. It now carries those
@@ -199,6 +204,7 @@ ran at all.
 | Sleep On It | [Sleep On It](https://steamcommunity.com/sharedfiles/filedetails/?id=2673713236) by Stultusaur | Rewritten. Already a build 42 version, so this is for shape: its client command round trip changed the server's copy without syncing it back, and it only ever covered the first player. |
 | Moodle Quarters | [Moodle Quarters](https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563) by DahakaMVl | **Bundles the original plate art.** Explicit permission. The build 42 support is this project author's own work, merged upstream, so it is carried across unchanged. See [NOTICE](NOTICE). |
 | The Nutritionist | [The Nutritionist](https://steamcommunity.com/sharedfiles/filedetails/?id=1934095105) | Rewritten. Build 42 replaced the trait API, so every call it made is gone. Its metatable swap of ReadLiterature is dropped as unnecessary. |
+| Flashlight On The Belt | [Common Sense](https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298) by BitBraven | Idea only, built without reading its code, the same as Weapon Condition Indicator. Its author forbids redistribution and cannot be reached for permission. The torches, the belt slots and the rig positions are all the base game's. |
 | Sterilized Rag Uses | [Desterilize Rags - Use Them In Other Recipes](https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155) by Oh God Spiders No | Rewritten, and to a different design. The original added a recipe to downgrade a sterilized rag back to a plain one. This gives the rag the tags it was missing instead, so no conversion step is needed. |
 | Lockpicking | [Lockpicking. Just. Lockpicking.](https://steamcommunity.com/sharedfiles/filedetails/?id=2056238799) by FMJ, MeTaLAnGeR and Oh God Spiders No | **Bundles its icons and two sounds.** Included with permission. Rebuilt: build 42 removed TraitFactory, ProfessionFactory and the old recipe format outright. See [NOTICE](NOTICE). |
 

@@ -1266,10 +1266,57 @@ function ZombRand(Low, High)
 	return Value
 end
 
+-- A script this mod ships, by file name. For the handful of things that live in a script
+-- rather than in lua, where the only honest assertion is about what was actually written.
+-- Handed over by the runner, since Kahlua has no io library of its own.
+function Harness.ReadModScript(Name)
+	return (QOLC_MOD_SCRIPTS or {})[Name] or ""
+end
+
 --// Hotbar
 ISHotbar = ISHotbar or {}
 ISHotbarAttachDefinition = ISHotbarAttachDefinition or {}
 ISHotbarAttachDefinition.replacements = { { replacement = {} } }
+
+-- The two belt slots as build 42 declares them, verbatim from ISHotbarAttachDefinition
+-- down to the rig positions each type hangs from. Anything adding a slot of its own
+-- inserts into this same list, and anything widening one of these edits its attachments
+-- table in place, so a stub that invented its own shape would prove nothing.
+table.insert(ISHotbarAttachDefinition, {
+	type = "SmallBeltLeft",
+	name = "Belt Left",
+	animset = "belt left",
+	attachments = {
+		Knife = "Belt Left Upside",
+		NotKnife = "Belt Left Upside",
+		Hammer = "Belt Left",
+		HammerRotated = "Belt Rotated Left",
+		Nightstick = "Nightstick Left",
+		Screwdriver = "Belt Left Screwdriver",
+		Wrench = "Wrench Left",
+		MeatCleaver = "MeatCleaver Belt Left",
+		Walkie = "Walkie Belt Left",
+		Sword = "Belt Left Upside",
+	},
+})
+
+table.insert(ISHotbarAttachDefinition, {
+	type = "SmallBeltRight",
+	name = "Belt Right",
+	animset = "belt right",
+	attachments = {
+		Knife = "Belt Right Upside",
+		NotKnife = "Belt Right Upside",
+		Hammer = "Belt Right",
+		HammerRotated = "Belt Rotated Right",
+		Nightstick = "Nightstick Right",
+		Screwdriver = "Belt Right Screwdriver",
+		Wrench = "Wrench Right",
+		MeatCleaver = "MeatCleaver Belt Right",
+		Walkie = "Walkie Belt Right",
+		Sword = "Belt Right Upside",
+	},
+})
 ISAttachItemHotbar = ISAttachItemHotbar or {}
 keyBinding = keyBinding or {}
 

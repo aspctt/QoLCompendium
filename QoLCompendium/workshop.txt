@@ -50,6 +50,7 @@ description=[*]A bigger welding torch, and more out of a tank
 description=[*]A magazine that teaches the Nutritionist trait
 description=[*]Lockpicking, with picks, manuals and a crowbar
 description=[*]Sterilized rags usable wherever ripped sheets are
+description=[*]A torch hangs off your belt, like a screwdriver
 description=[/list]
 description=
 description=Every feature can be turned off on its own, bar one. Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone. The exception is sterilized rag uses, which has to be applied while the game loads its scripts, before any setting exists.

@@ -45,6 +45,7 @@ Most are not ports. Build 41 code rarely survives the move, so where the origina
 [*]A magazine that teaches the Nutritionist trait
 [*]Lockpicking, with picks, manuals and a crowbar
 [*]Sterilized rags usable wherever ripped sheets are
+[*]A torch hangs off your belt, like a screwdriver
 [/list]
 
 Every feature can be turned off on its own, bar one. Cosmetic settings live in Mod Options, per player. Anything affecting balance is a sandbox option, so a server sets it for everyone. The exception is sterilized rag uses, which has to be applied while the game loads its scripts, before any setting exists.

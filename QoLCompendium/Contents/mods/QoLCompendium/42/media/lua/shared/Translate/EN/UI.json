@@ -4,6 +4,8 @@
     "UI_options_QoLC_Features_Desc": "Turn individual features on or off. Features with settings of their own have their switch in their own section below.",
     "UI_options_QoLC_Features_Hotbar": "Reorder The Hotbar",
     "UI_options_QoLC_Features_Hotbar_tooltip": "Drag hotbar slots into the order you want, and click a slot to use it. Off restores the vanilla hotbar.",
+    "UI_options_QoLC_Features_Flashlight": "Flashlight On The Belt",
+    "UI_options_QoLC_Features_Flashlight_tooltip": "Hang a torch off either belt slot, the way a screwdriver or a walkie talkie already can. Attaching one does not switch it on. Takes effect on the next start.",
     "UI_options_QoLC_Features_Capacity": "Fix Container Titles",
     "UI_options_QoLC_Features_Capacity_tooltip": "Stops a container's name running into the weight printed beside it.",
     "UI_options_QoLC_Features_XpView": "Fix XP Boost Multipliers",

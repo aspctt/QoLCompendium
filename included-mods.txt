@@ -2,7 +2,6 @@
 
 
 ## TO DO MODS - NO REDISTRIBUTE
-Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING
 Ladders!											- https://steamcommunity.com/sharedfiles/filedetails/?id=2737665235		- NO REDISTRIBUTE / MANY UNOFFICIAL UPDATES (ONE CAN BE FOUND IN OTHER-MODS) / CREATE OWN
 Rain Wash											- https://steamcommunity.com/sharedfiles/filedetails/?id=2657661246		- NO REDISTRIBUTE / CREATE OWN
 
@@ -16,6 +15,7 @@ Adrenaline - Panic Counters Tiredness				- https://steamcommunity.com/sharedfile
 Ammo & Magazine icon MOD for build 41				- https://steamcommunity.com/sharedfiles/filedetails/?id=1904952813		- INTEGRATED (icons only)
 Better Sorting										- https://steamcommunity.com/sharedfiles/filedetails/?id=2313387159		- GPL-3.0, CANNOT USE. B42 CATEGORISES NATIVELY. FOOD SPLIT REBUILT FROM SCRATCH
 Desterilize Rags - Use Them In Other Recipes		- https://steamcommunity.com/sharedfiles/filedetails/?id=2036923155		- INTEGRATED, DIFFERENT DESIGN. B41 recipe FORMAT GONE. GIVES AlcoholRippedSheets THE FIVE TAGS IT LACKS INSTEAD OF A DOWNGRADE RECIPE. MUST BE A SCRIPT PATCH: InputScript CACHES ITS TAG ITEM LIST IN OnScriptsLoaded, SO A LUA PATCH LANDS TOO LATE. NO SANDBOX SWITCH, SCRIPTS LOAD BEFORE SETTINGS EXIST
+Common Sense										- https://steamcommunity.com/sharedfiles/filedetails/?id=2875848298		- NO REDISTRIBUTE / OWNER MISSING. IDEA ONLY, BUILT WITHOUT READING ITS CODE. ONLY THE BELT FLASHLIGHT REMAINS: B42 ALREADY DOES ITS BANDAGE SANITISING, WEAPON REPAIR, GROUND PICKUP, SHEET CRAFTING AND FIRE HANDLING, AND ITS CROWBAR PRYING IS OUR LOCKPICKING. AMMO COUNTER AND VEHICLE PRYING NOT TAKEN
 Fix Capacity Overlap								- https://steamcommunity.com/sharedfiles/filedetails/?id=2957932451		- INTEGRATED. STANDS DOWN FOR CleanUI, WHICH REPLACES ISInventoryPage OUTRIGHT
 Fix XP View											- https://steamcommunity.com/sharedfiles/filedetails/?id=2341974040		- INTEGRATED. ORIGINAL CRASHES B42 VIA HasTrait AND ITS NUMBERS ARE WRONG, REBUILT FROM AddXP
 Flamingo Fix										- https://steamcommunity.com/sharedfiles/filedetails/?id=2913993465		- INTEGRATED (PERMISSIVE). REBUILT FROM B42 TILE DATA, THE ORIGINAL FILE IS A B41 SUBSET

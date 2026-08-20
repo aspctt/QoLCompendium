@@ -43,7 +43,10 @@ end
 
 --// Wiring
 Test("registers handlers for boot, resolution change and render", function()
-	AssertEquals(Harness.HandlerCount("OnGameBoot"), 1, "OnGameBoot handler count")
+	-- Presence, not an exact count. OnGameBoot is a shared event and other features
+	-- register on it too, so counting it asserts something about the whole mod rather
+	-- than about this one.
+	AssertTrue(Harness.HandlerCount("OnGameBoot") >= 1, "OnGameBoot handler")
 	AssertEquals(Harness.HandlerCount("OnPreUIDraw"), 1, "OnPreUIDraw handler count")
 	AssertEquals(Harness.HandlerCount("OnResolutionChange"), 1, "OnResolutionChange handler count")
 end)

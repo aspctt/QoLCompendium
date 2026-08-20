@@ -1,0 +1,33 @@
+/*
+ * Flashlight On The Belt
+ * Common Sense, Workshop 2875848298, by BitBraven. Idea only, no files or code taken.
+ * aspctt - 20.08.2026
+ * Build 42 lets you hang a screwdriver, a wrench, a walkie talkie and a meat cleaver off
+ * a belt, but not a torch, so the one thing you reach for constantly in the dark is the
+ * one thing that has to live in a bag. All three torches are the same shape as the tools
+ * that already hang there.
+ *
+ * Only the attachment type is set here. Which slot will take it, and whether the feature
+ * is on at all, is decided in qolc_flashlight_belt.lua, so turning the tick box off
+ * leaves an item whose type no slot accepts and nothing can be hung.
+ *
+ * Reopening a vanilla item applies this body to the same object rather than replacing it,
+ * so everything that makes these torches work is untouched. See qolc_sterile_rags.txt.
+ */
+module Base
+{
+	item Torch
+	{
+		AttachmentType = Flashlight,
+	}
+
+	item HandTorch
+	{
+		AttachmentType = Flashlight,
+	}
+
+	item Flashlight_Crafted
+	{
+		AttachmentType = Flashlight,
+	}
+}
