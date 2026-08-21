@@ -566,6 +566,38 @@ function Harness.NewPlayer(Number, IsLocal)
 		self.Levels[Type] = Level
 	end
 
+	-- The model side of the hotbar. An item hangs off a named attachment point on the
+	-- character, separately from sitting in a hotbar slot, and the two can disagree: a
+	-- slot whose point resolves to "null" has nowhere to hang the item and it comes off
+	-- the bar entirely.
+	--
+	-- On every player rather than on request, because ISHotbar:refresh takes every
+	-- carried item off and puts it back on its own, so any spec that changes clothing
+	-- reaches this whether it asked to or not.
+	Player.Attached = {}
+
+	-- IsoGameCharacter.setAttachedItem hands the location to AttachedItems.setItem,
+	-- which runs it through AttachedLocationGroup.checkValid before anything else.
+	-- Verified in the jar: nil throws NullPointerException, an empty string throws
+	-- IllegalArgumentException, and a name the rig does not have throws RuntimeException.
+	-- So attaching with no model point is a hard error in game rather than a quiet
+	-- no-op, and it has to be one here. The unknown name case is left out, since the rig
+	-- point list is not something a spec should have to carry.
+	function Player:setAttachedItem(Slot, Item)
+		if Slot == nil then error("locationId is null") end
+		if Slot == "" then error("locationId is empty") end
+
+		self.Attached[Slot] = Item
+	end
+
+	function Player:getAttachedItem(Slot) return self.Attached[Slot] end
+
+	function Player:removeAttachedItem(Item)
+		for Slot, Held in pairs(self.Attached) do
+			if Held == Item then self.Attached[Slot] = nil end
+		end
+	end
+
 	Player.Inventory = Harness.NewContainer("inventory")
 	Player.WornItems = {}
 	Harness.Players[Player.Number] = Player
@@ -1876,34 +1908,101 @@ function getSoundManager()
 end
 
 --// Hotbar
--- Models the parts of ISHotbar that slot ordering depends on, from
--- media\lua\client\Hotbar\ISHotbar.lua. Two behaviours matter and are reproduced
--- exactly: refresh rebuilds availableSlot in its own canonical order with Back forced
--- to the front, which is what any ordering mod has to undo afterwards, and
--- getSlotIndexAt clamps a click past the last slot onto the last slot rather than
--- reporting a miss.
+-- Models the parts of ISHotbar that slot ordering depends on, transcribed from
+-- media\lua\client\Hotbar\ISHotbar.lua rather than summarised from it. The shape of
+-- availableSlot is the whole point, and the version of this stub that came before got it
+-- wrong: it is a sparse map, not an array, and all sixteen places vanilla touches it walk
+-- it with pairs. loadPosition writes an index only when getSlotDef resolves, so a saved
+-- slot type belonging to a mod that is no longer loaded leaves a gap. refresh calls
+-- savePosition partway through its own prune, while the gaps that prune just made are
+-- still open, so a hole in the saved order is an ordinary state rather than a corrupt
+-- one. And refresh puts the Back slot in its local survival list and never back into
+-- availableSlot, so loadPosition is the only code in the game that ever restores it.
+--
+-- Rebuilding the bar dense from a canonical list on every refresh, which is what this
+-- used to do, made every one of those unreachable, and let thirty eight passing tests sit
+-- on top of a hotbar the game takes apart.
 ISHotbar = {}
 ISHotbar.__index = ISHotbar
 
 Harness.HotkeyPresses = {}
 
--- What each slot will take. Vanilla maps an attachment type to the model to hang there;
--- only which types are accepted matters here. A slot takes its own name by default, so a
--- spec that does not care can ignore this entirely.
+-- What each slot will take. Vanilla maps an attachment type to the model point it hangs
+-- from, and both halves matter: an attach with no point reaches the game with a null
+-- location, which throws rather than quietly doing nothing.
 Harness.SlotAttachments = {}
+
+-- Which slot types have a definition at all. Vanilla answers out of
+-- ISHotbarAttachDefinition and returns nil for anything not in it, which is how a slot
+-- belonging to a mod that has gone away stops resolving. Seeded from that same list, and
+-- added to by whatever a spec names.
+Harness.SlotDefs = { Back = true }
+
+for _, Def in ipairs(ISHotbarAttachDefinition) do
+	Harness.SlotDefs[Def.type] = true
+end
+
+-- Kept rather than rebuilt per call, because vanilla hands back the entry itself and
+-- anything registering a new attachment type edits that table in place.
+local FabricatedDefs = {}
+
+function Harness.DeclareSlotType(Name)
+	if Name then Harness.SlotDefs[Name] = true end
+end
+
+-- Models the mod that declared a slot type going away, which is what leaves a hole in a
+-- saved order where that slot used to sit.
+function Harness.RetireSlotType(Name)
+	Harness.SlotDefs[Name] = nil
+	FabricatedDefs[Name] = nil
+end
 
 function ISHotbar:getSlotDef(Name)
 	if not Name then return nil end
+	if not Harness.SlotDefs[Name] then return nil end
 
-	local Accepts = Harness.SlotAttachments[Name] or { Name }
-	local Attachments = {}
-	for _, Type in ipairs(Accepts) do Attachments[Type] = Name end
+	for _, Def in ipairs(ISHotbarAttachDefinition) do
+		if Def.type == Name then return Def end
+	end
 
-	return { type = Name, name = Name, attachments = Attachments }
+	if not FabricatedDefs[Name] then
+		local Accepts = Harness.SlotAttachments[Name] or { Name }
+		local Attachments = {}
+		for _, Type in ipairs(Accepts) do Attachments[Type] = Name end
+
+		FabricatedDefs[Name] = { type = Name, name = Name, animset = Name, attachments = Attachments }
+	end
+
+	return FabricatedDefs[Name]
+end
+
+function ISHotbar:getSlotDefReplacement(Name)
+	for _, Def in ipairs(ISHotbarAttachDefinition.replacements or {}) do
+		if Def.type == Name then return Def end
+	end
+
+	return nil
 end
 
 function ISHotbar:compareWornItems()
 	return self.WornChanged and true or false
+end
+
+-- pairs, like vanilla. Both are asked about a table with gaps in it constantly.
+function ISHotbar:haveThisSlot(SlotType, List)
+	for _, Slot in pairs(List or self.availableSlot) do
+		if Slot.slotType == SlotType then return true end
+	end
+
+	return false
+end
+
+function ISHotbar:getThisSlotIndex(SlotType, List)
+	for Index, Slot in pairs(List or self.availableSlot) do
+		if Slot.slotType == SlotType then return Index end
+	end
+
+	return nil
 end
 
 function ISHotbar:getKeyForIndex(Index)
@@ -1927,11 +2026,13 @@ function ISHotbar:getSlotIndexAt(X, Y)
 	return -1
 end
 
+-- pairs, not ipairs. The order is written exactly as availableSlot stands, gaps included,
+-- and refresh calls this while its own gaps are still open.
 function ISHotbar:savePosition()
 	local ModData = self.chr:getModData()
 	ModData.hotbar = {}
 
-	for Index, Slot in ipairs(self.availableSlot) do
+	for Index, Slot in pairs(self.availableSlot) do
 		ModData.hotbar[Index] = Slot.slotType
 	end
 
@@ -1939,25 +2040,31 @@ function ISHotbar:savePosition()
 	if isClient() then self.chr:transmitModData() end
 end
 
+-- Adds to availableSlot rather than replacing it, skips any saved type it can no longer
+-- resolve, and seeds the Back slot only when there is no saved order at all.
 function ISHotbar:loadPosition()
 	local ModData = self.chr:getModData()
-	if not ModData.hotbar then return end
 
-	self.availableSlot = {}
-	for Index, SlotType in ipairs(ModData.hotbar) do
-		self.availableSlot[Index] = { slotType = SlotType, name = SlotType, def = self:getSlotDef(SlotType) }
+	if ModData.hotbar then
+		for Index, SlotType in pairs(ModData.hotbar) do
+			local Def = self:getSlotDef(SlotType)
+			if Def then
+				self.availableSlot[Index] = { slotType = Def.type, name = Def.name, def = Def }
+			end
+		end
+	else
+		local Def = self:getSlotDef("Back")
+		self.availableSlot[1] = { slotType = Def.type, name = Def.name, def = Def }
 	end
 end
 
--- Rebuilds in the game's own order: Back first, then whatever the worn clothing
--- provides, in the order it provides it. Items follow their slot type across the
--- rebuild, exactly as vanilla reattaches them.
+-- Vanilla's refresh in its own order, including the three things nothing modelled before:
+-- the Back slot goes into the local survival list and never into availableSlot, the slots
+-- a garment provides are appended at #availableSlot + 1, and savePosition is called
+-- partway through the prune while the table still has holes in it.
 function ISHotbar:refresh()
 	self.needsRefresh = false
 
-	-- Vanilla returns here unless worn items actually changed, because
-	-- OnClothingUpdated also fires for blood, holes and wetness. Everything below,
-	-- including savePosition and its transmitModData, is skipped on those.
 	local Changed = false
 	if not self.wornItems then
 		self.wornItems = {}
@@ -1968,24 +2075,92 @@ function ISHotbar:refresh()
 
 	if not Changed then return end
 
-	local Carried = {}
-	for Index, Slot in ipairs(self.availableSlot) do
-		Carried[Slot.slotType] = self.attachedItems[Index]
+	local NewSlots = {}
+	local NewIndex = 2
+	local SlotIndex = #self.availableSlot + 1
+
+	local BackDef = self:getSlotDef("Back")
+	NewSlots[1] = { slotType = BackDef.type, name = BackDef.name, def = BackDef }
+
+	self.replacements = {}
+	self.wornItems = {}
+
+	local Worn = self.chr:getWornItems()
+	for Index = 0, Worn:size() - 1 do
+		local Item = Worn:getItemByIndex(Index)
+		table.insert(self.wornItems, Item)
+
+		if Item and self.chr:isHandItem(Item) then Item = nil end
+
+		local Provided = Item and Item:getAttachmentsProvided()
+		if Provided then
+			for Position = 0, Provided:size() - 1 do
+				local Def = self:getSlotDef(Provided:get(Position))
+
+				if Def then
+					NewSlots[NewIndex] = { slotType = Def.type, name = Def.name, def = Def }
+					NewIndex = NewIndex + 1
+
+					if not self:haveThisSlot(Def.type) then
+						self.availableSlot[SlotIndex] = { slotType = Def.type, name = Def.name, def = Def }
+						SlotIndex = SlotIndex + 1
+						self:savePosition()
+					end
+				end
+			end
+		end
+
+		local Replaces = Item and Item.getAttachmentReplacement and Item:getAttachmentReplacement()
+		if Replaces then
+			local Replacement = self:getSlotDefReplacement(Replaces)
+			if Replacement then
+				for Type, Model in pairs(Replacement.replacement) do
+					self.replacements[Type] = Model
+				end
+			end
+		end
 	end
 
-	self.availableSlot = {}
-	self.attachedItems = {}
+	local Attached = {}
+	for Index, Slot in pairs(self.availableSlot) do
+		local Item = self.attachedItems[Index]
 
-	for Index, SlotType in ipairs(self.SlotTypes) do
-		self.availableSlot[Index] = { slotType = SlotType, name = SlotType, def = self:getSlotDef(SlotType) }
-		if Carried[SlotType] then
-			self.attachedItems[Index] = Carried[SlotType]
-			Carried[SlotType]:setAttachedSlot(Index)
+		if not self:haveThisSlot(Slot.slotType, NewSlots) then
+			self.availableSlot[Index] = nil
+			if Item then self:removeItem(Item, false) end
+		elseif Item then
+			Attached[Slot.slotType] = Item
+		end
+	end
+
+	self:savePosition()
+
+	-- Compacted afterwards, which heals the gaps in memory and leaves the ones already
+	-- written to the save behind.
+	local Compacted = {}
+	local Next = 1
+	for _, Slot in pairs(self.availableSlot) do
+		Compacted[Next] = Slot
+		Next = Next + 1
+	end
+	self.availableSlot = Compacted
+
+	for SlotType, Item in pairs(Attached) do
+		local Index = self:getThisSlotIndex(SlotType)
+		local Slot = Index and self.availableSlot[Index]
+
+		if Slot then
+			local Def = Slot.def
+			self:removeItem(Item, false)
+
+			if self.chr:getInventory():contains(Item) and not Item:isBroken() then
+				self:attachItem(Item, Def.attachments[Item:getAttachmentType()], Index, Def, false)
+			end
 		end
 	end
 
 	self.RefreshCount = (self.RefreshCount or 0) + 1
-	self:savePosition()
+	self:reloadIcons()
 end
 
 -- A hotbar item, carrying the two fields the game stores on it and serialises with it.
@@ -2026,23 +2201,37 @@ function Harness.NewHotbarItem(AttachmentType, Name)
 	return Item
 end
 
--- The model side of the hotbar. An item hangs off a named attachment point on the
--- character, separately from sitting in a hotbar slot, and the two can disagree: a slot
--- whose point resolves to "null" has nowhere to hang the item and it comes off the bar
--- entirely. Nothing modelled that before, so attachItem could not be tested at all.
+-- Every player carries the model side of the hotbar from the moment it is made, see
+-- Harness.NewPlayer. This clears it, for a spec that wants to start from an empty rig.
 function Harness.InstallAttachments(Player)
 	Player.Attached = {}
 
-	function Player:setAttachedItem(Slot, Item) self.Attached[Slot] = Item end
-	function Player:getAttachedItem(Slot) return self.Attached[Slot] end
-
-	function Player:removeAttachedItem(Item)
-		for Slot, Held in pairs(self.Attached) do
-			if Held == Item then self.Attached[Slot] = nil end
-		end
-	end
-
 	return Player
+end
+
+-- Puts an item in the character's inventory. Anything meant to be on the hotbar has to
+-- go through here, because reloadIcons builds the bar by scanning the inventory for
+-- items whose attached slot is set. An item that is not carried cannot be on the bar,
+-- and dropping one into attachedItems by hand only ever held until the next reload.
+function Harness.CarryItem(Player, Item)
+	Item.Container = Player.Inventory
+	table.insert(Player.Inventory.Items, Item)
+
+	return Item
+end
+
+-- Carried, then bound to a slot the way an attach leaves it. The pair is what a rejoin
+-- rebuilds from.
+function Harness.PutOnHotbar(Hotbar, Index, Item)
+	Harness.CarryItem(Hotbar.chr, Item)
+
+	Item:setAttachedSlot(Index)
+	Item:setAttachedSlotType(Hotbar.availableSlot[Index] and Hotbar.availableSlot[Index].slotType)
+	Hotbar.attachedItems[Index] = Item
+
+	if Hotbar.availableSlot[Index] then Hotbar.availableSlot[Index].item = Item end
+
+	return Item
 end
 
 -- Which point an item is hanging from, or nil when it is not on the model at all.
@@ -2055,17 +2244,71 @@ function Harness.AttachedAt(Player, Item)
 end
 
 function ISHotbar:removeItem(Item, _KeepAttached)
-	for Index, Held in pairs(self.attachedItems) do
-		if Held == Item then self.attachedItems[Index] = nil end
-	end
-
 	if self.chr then self.chr:removeAttachedItem(Item) end
+
 	Item:setAttachedSlot(-1)
 	Item:setAttachedSlotType(nil)
+	Item:setAttachedToModel(nil)
+
+	self:reloadIcons()
 end
 
-function ISHotbar:reloadIcons() self.IconReloads = (self.IconReloads or 0) + 1 end
+-- Rebuilt from the inventory, the way vanilla does it, rather than counted. An item is on
+-- the bar because its own attached slot says so, which is why the binding on the item and
+-- the order in mod data are two separate things that can disagree.
+function ISHotbar:reloadIcons()
+	self.IconReloads = (self.IconReloads or 0) + 1
+	self.attachedItems = {}
+
+	local Items = self.chr and self.chr:getInventory() and self.chr:getInventory():getItems()
+	if not Items then return end
+
+	for Index = 0, Items:size() - 1 do
+		local Item = Items:get(Index)
+
+		if Item and Item.getAttachedSlot and Item:getAttachedSlot() > -1 then
+			self.attachedItems[Item:getAttachedSlot()] = Item
+		end
+	end
+end
+
 function ISHotbar:setAttachAnim(_Item, _SlotDef) end
+
+-- Vanilla's attachItem. The sling feature replaces this outright rather than wrapping it,
+-- so it has to be here both as what that replaces and as what runs in the passes where
+-- the sling stands down. The branch refresh drives is the second one.
+function ISHotbar:attachItem(Item, Slot, SlotIndex, SlotDef, DoAnim)
+	if DoAnim then
+		if SlotDef.name == "Back" and self.replacements and self.replacements[Item:getAttachmentType()] then
+			Slot = self.replacements[Item:getAttachmentType()]
+		end
+
+		self:setAttachAnim(Item, SlotDef)
+		self.AnimAttaches = (self.AnimAttaches or 0) + 1
+		return
+	end
+
+	if SlotDef.name == "Back" and self.replacements and self.replacements[Item:getAttachmentType()] then
+		Slot = self.replacements[Item:getAttachmentType()]
+
+		if Slot == "null" then
+			self:removeItem(Item, false)
+			return
+		end
+	end
+
+	if Slot == "null" then
+		self:removeItem(Item, false)
+		return
+	end
+
+	self.chr:setAttachedItem(Slot, Item)
+	Item:setAttachedSlot(SlotIndex)
+	Item:setAttachedSlotType(SlotDef.type)
+	Item:setAttachedToModel(Slot)
+
+	self:reloadIcons()
+end
 
 -- Mirrors vanilla's canBeAttached: a slot takes an item when its definition lists that
 -- item's attachment type.
@@ -2201,10 +2444,17 @@ function Harness.NewHotbar(Player, SlotTypes)
 
 	Harness.SetHotbarSlots(Hotbar, Hotbar.SlotTypes)
 
+	-- ISHotbar:new loads the saved order before its first refresh, and that call is the
+	-- only place in the whole game that ever puts the Back slot into availableSlot.
+	Hotbar:loadPosition()
+
 	-- Two refreshes, because the first is the one the mod deliberately sits out while
-	-- the game is still building the bar
+	-- the game is still building the bar. The second needs clothing to have changed, the
+	-- same as any other refresh that does work.
 	Hotbar:refresh()
+	Hotbar.WornChanged = true
 	Hotbar:refresh()
+	Hotbar.WornChanged = false
 	Hotbar:setSizeAndPosition()
 
 	return Hotbar
@@ -2217,6 +2467,9 @@ function Harness.SetHotbarSlots(Hotbar, SlotTypes)
 
 	local Provided = {}
 	for _, SlotType in ipairs(SlotTypes) do
+		-- Naming a slot is what gives it a definition, the same as a mod inserting one
+		-- into ISHotbarAttachDefinition. Without this getSlotDef would refuse it.
+		Harness.DeclareSlotType(SlotType)
 		if SlotType ~= "Back" then table.insert(Provided, SlotType) end
 	end
 

@@ -22,6 +22,24 @@ if OverrideBlocked() then return end
 function ISHotbar:attachItem(item, slot, slotIndex, slotDef, doAnim)
 	local AttachmentType = QolcIsSling(item:getAttachmentType(), slot)
 
+	-- No model point at all means the same thing vanilla's "null" means: there is nowhere
+	-- to hang this, so it comes off the bar. Vanilla handles the "null" spelling and not
+	-- this one, and the difference is not cosmetic. The tail of ISHotbar:refresh takes
+	-- every carried item off and puts it back through here with
+	-- slotDef.attachments[item:getAttachmentType()] as the point, which is nil whenever a
+	-- slot has stopped listing a type it used to accept. That happens the moment any
+	-- feature registering an attachment type is switched off with an item still hung, our
+	-- own flashlight included, and the item script that stamps the type is not switchable.
+	--
+	-- Left unguarded it reaches IsoGameCharacter.setAttachedItem with a null location,
+	-- and AttachedItems.setItem runs it through AttachedLocationGroup.checkValid, which
+	-- throws NullPointerException on nil. The refresh then dies partway through, every
+	-- frame, and the bar never finishes rebuilding.
+	if slot == nil then
+		self:removeItem(item, false)
+		return
+	end
+
 	if doAnim then
 		if self.replacements and self.replacements[AttachmentType] and QolcOnBack(slotDef, slot) then
 			slot = self.replacements[AttachmentType]

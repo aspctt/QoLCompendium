@@ -253,7 +253,7 @@ local function AttachOnBack(Item, Slot, Replacements)
 	local Hotbar = Harness.NewHotbar(Player, { "Back" })
 
 	Hotbar.replacements = Replacements
-	Hotbar.attachedItems[1] = Item
+	Harness.PutOnHotbar(Hotbar, 1, Item)
 	Hotbar:attachItem(Item, Slot, 1, BackSlotDef(), false)
 
 	return Hotbar, Player

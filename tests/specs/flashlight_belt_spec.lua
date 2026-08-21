@@ -81,6 +81,38 @@ Test("turning the feature off leaves nowhere to hang it", function()
 	AssertNil(SlotByType("SmallBeltRight").attachments[ATTACHMENT], "on either side")
 end)
 
+-- The item script is not switchable, only this half is, so turning the box off leaves a
+-- torch already hanging on a belt whose slot no longer lists its type. Vanilla's refresh
+-- takes every carried item off and puts it back through
+-- attachItem(item, slotDef.attachments[type], ...), which is nil here, and that reaches
+-- IsoGameCharacter.setAttachedItem with a null location. AttachedLocationGroup.checkValid
+-- throws on it, so the refresh dies partway rather than the torch quietly coming off.
+Test("a torch already hung survives the feature being turned off", function()
+	Boot()
+
+	local Player = Harness.NewPlayer(0, true)
+	local Hotbar = Harness.NewHotbar(Player, { "Back", "SmallBeltLeft" })
+	Harness.Fire("OnLoad")
+
+	local Torch = Harness.PutOnHotbar(Hotbar, 2, Harness.NewHotbarItem("Flashlight", "Torch"))
+	Hotbar:attachItem(Torch, "Belt Left Screwdriver", 2, Hotbar.availableSlot[2].def, false)
+
+	local Category = PZAPI.ModOptions:getOptions("QoLC")
+	for _, Entry in ipairs(Category.data) do
+		if Entry.id == "FlashlightEnabled" then Entry:setValue(false) end
+	end
+
+	SlotByType("SmallBeltLeft").attachments[ATTACHMENT] = nil
+
+	Hotbar.WornChanged = true
+	local Ok, Err = pcall(function() Hotbar:refresh() end)
+	Hotbar.WornChanged = false
+
+	AssertTrue(Ok, "a refresh must not throw over it, got " .. tostring(Err))
+	AssertEquals(Torch:getAttachedSlot(), -1, "the torch should have come off the bar")
+	AssertNil(Harness.AttachedAt(Player, Torch), "and off the model")
+end)
+
 --// The Item Script
 Test("all three torches are given the type", function()
 	-- Torch is the ordinary flashlight, not a burning brand: its model is FlashLight.

@@ -5,10 +5,16 @@
 --// reaching for its hotkey. Two small buttons sit at the right hand end: one locks the
 --// order, the other chooses whether dragging swaps two slots or inserts between them.
 --//
---// Vanilla rebuilds availableSlot from scratch whenever clothing changes, and always
---// forces the Back slot to position one, so an order cannot simply be left in place. A
---// preferred index per slot type is kept on the character and reapplied after each
---// refresh, which is the only arrangement that survives.
+--// Vanilla rebuilds the bar whenever clothing changes and puts the Back slot first each
+--// time, so an order cannot simply be left in place. A preferred index per slot type is
+--// kept on the character and reapplied after each refresh, which is the only arrangement
+--// that survives.
+--//
+--// It rebuilds by mutating availableSlot rather than replacing it, and the distinction
+--// is the whole of what went wrong here once. That table is a map with gaps in it as an
+--// ordinary state, and the Back slot goes into a local survival list rather than back
+--// into it, so the bar keeps that slot only because loadPosition put it there when the
+--// hotbar was built. See the note above SlotCount.
 --//
 --// Two things the original needed are now in the base game and are used instead of
 --// being carried here: ISHotbar:getKeyForIndex replaces a thirty branch lookup from
@@ -121,9 +127,89 @@ local function IsInsertMode(Character)
 	return Character:getModData()[SWAP_KEY] and true or false
 end
 
--- The right hand edge of the last slot, which is where our buttons begin.
+--// Slots
+-- availableSlot is a map, not an array, and vanilla treats it as one: all sixteen places
+-- it touches the table walk it with pairs, and not one uses ipairs. Two ordinary things
+-- put gaps in it. loadPosition writes an index only when the saved slot type still
+-- resolves, so a slot belonging to a mod that has gone away leaves one. And refresh nils
+-- the slots a departing garment provided, calls savePosition, and only compacts
+-- afterwards, so between those two the table has a gap for every slot just dropped and
+-- the order written to the character has the same gaps.
+--
+-- ipairs stops at the first one. Where the result was written back over the table, as it
+-- was in MoveDepartingSlotsToBack, every slot past the gap was silently thrown away, and
+-- since refresh never puts the Back slot into availableSlot, losing that one is not
+-- something the game can undo: loadPosition is the only code that ever restores it, out
+-- of a saved order our own savePosition had by then overwritten. Reported as a hotbar
+-- that stopped working entirely, showing an empty frame and offering nothing to attach.
+local function SlotCount(Hotbar)
+	local Count = 0
+	for _ in pairs(Hotbar.availableSlot) do Count = Count + 1 end
+
+	return Count
+end
+
+-- Closes the gaps, keeping the slots in the order their indexes put them and carrying
+-- each one's item with it. Vanilla compacts the same way at the end of its own refresh,
+-- so this is the shape the bar is meant to be in rather than one of our own devising.
+--
+-- Renumbering a slot renumbers the item on it, which is why the items go through
+-- SetItemSlot rather than being moved on their own: the binding lives on the item and in
+-- multiplayer the server holds the copy that matters.
+local function Compact(Hotbar)
+	local Indexes = {}
+	local Highest = 0
+
+	for Index in pairs(Hotbar.availableSlot) do
+		table.insert(Indexes, Index)
+		if Index > Highest then Highest = Index end
+	end
+
+	-- Dense already, which is the ordinary case, so nothing is touched and no item is
+	-- told anything it already knows.
+	if Highest == #Indexes then return end
+	table.sort(Indexes)
+
+	local Slots = {}
+	local Items = {}
+
+	for Position, Index in ipairs(Indexes) do
+		Slots[Position] = Hotbar.availableSlot[Index]
+		Items[Position] = Hotbar.attachedItems[Index]
+		SetItemSlot(Hotbar, Items[Position], Position)
+	end
+
+	Hotbar.availableSlot = Slots
+	Hotbar.attachedItems = Items
+end
+
+-- Vanilla promises the bar always has a back attachment and then keeps only half of it.
+-- Its refresh puts the Back slot into the local list it prunes against and never into
+-- availableSlot, so the bar has that slot only because loadPosition put it there when the
+-- hotbar was built, out of the saved order. Lose it once and nothing in the game brings
+-- it back: the order it would be read from next time is the one savePosition has since
+-- overwritten without it.
+--
+-- Vanilla can never lose it, because it forces Back to index one and its prune only ever
+-- drops a slot some garment provided. Letting that slot be moved is this whole feature,
+-- so holding on to it is this feature's job as well.
+--
+-- Added at the end rather than the front. Where it belongs is whatever position the
+-- player chose, and QolcHotbarApplyOrder puts it there on the same pass.
+local function RestoreBackSlot(Hotbar)
+	if Hotbar:haveThisSlot("Back") then return end
+
+	local Def = Hotbar:getSlotDef("Back")
+	if not Def then return end
+
+	Compact(Hotbar)
+	Hotbar.availableSlot[SlotCount(Hotbar) + 1] = { slotType = Def.type, name = Def.name, def = Def }
+end
+
+-- The right hand edge of the last slot, which is where our buttons begin. Counted rather
+-- than measured with #, so a gap cannot put the buttons on top of a slot.
 local function GetButtonsX(Hotbar)
-	return Hotbar.margins + (Hotbar.slotWidth + Hotbar.slotPad) * #Hotbar.availableSlot
+	return Hotbar.margins + (Hotbar.slotWidth + Hotbar.slotPad) * SlotCount(Hotbar)
 end
 
 --// Ordering
@@ -142,6 +228,10 @@ end
 
 function QolcHotbarApplyOrder(Hotbar, ForceSave)
 	if not QolcFeatureEnabled("Hotbar") then return end
+
+	-- Before the sort, not after. table.sort works off # and the comparator reads a
+	-- preferred index per slot, so a gap would leave it comparing two nils.
+	Compact(Hotbar)
 
 	local Preferred = GetPreferredIndexes(Hotbar.character, Hotbar.availableSlot)
 
@@ -197,6 +287,9 @@ end
 -- Vanilla's refresh drops slots whose clothing has been taken off, and matches items to
 -- slots by position while it does. Moving the doomed slots to the back first keeps every
 -- surviving slot's item lined up with it.
+--
+-- Walks by position and writes what it collected back over the table, so it has to be
+-- handed a bar with no gaps in it. Its one caller compacts first.
 local function MoveDepartingSlotsToBack(Hotbar)
 	if not Hotbar.wornItems then return end
 	if not Hotbar:compareWornItems() then return end
@@ -308,12 +401,33 @@ end
 -- game while it is still setting the hotbar up.
 local VanillaRefresh = ISHotbar.refresh
 function ISHotbar:refresh()
+	-- The switch is read here rather than deeper in, and that matters. Everything below
+	-- is one piece: vanilla's own savePosition is held back for the length of its refresh
+	-- and the call that replaces it comes afterwards, in QolcHotbarApplyOrder. That is
+	-- where the switch used to be read, so turning the tick box off left the first half
+	-- running and took the second half away. Vanilla's refresh then ran with saving
+	-- switched off and nothing put it back, and the order quietly stopped being written
+	-- for the rest of the session.
+	--
+	-- The back slot repair still runs, because putting back a slot an earlier session
+	-- dropped is not a feature anyone would want to switch off.
+	if not QolcFeatureEnabled("Hotbar") then
+		VanillaRefresh(self)
+		RestoreBackSlot(self)
+		return
+	end
+
 	if not self.QolcReady then
 		VanillaRefresh(self)
+		RestoreBackSlot(self)
 		self.needsRefresh = true
 		self.QolcReady = true
 		return
 	end
+
+	-- Whatever the last pass left behind, the bar starts this one whole. A refresh that
+	-- failed partway leaves the gaps its prune opened, and nothing else closes them.
+	Compact(self)
 
 	-- Vanilla's refresh does nothing at all unless worn items actually changed, because
 	-- OnClothingUpdated also fires for blood, holes and wetness. Its own comment calls
@@ -323,6 +437,7 @@ function ISHotbar:refresh()
 	local Changed = (not self.wornItems) or self:compareWornItems()
 	if not Changed then
 		VanillaRefresh(self)
+		RestoreBackSlot(self)
 		return
 	end
 
@@ -336,9 +451,17 @@ function ISHotbar:refresh()
 	local Pending = false
 	self.savePosition = function() Pending = true end
 
-	VanillaRefresh(self)
+	-- Through pcall, because leaving that stub behind is worse than whatever put it
+	-- there. It sits on the instance, so it wins over the real one for the rest of the
+	-- session: the order would quietly stop being saved and, in multiplayer, stop being
+	-- transmitted, and nothing would say so. The error is raised again once the real
+	-- savePosition is back, so it still reaches the log rather than being swallowed.
+	local Ok, Failure = pcall(VanillaRefresh, self)
 
 	self.savePosition = Own
+	if not Ok then error(Failure) end
+
+	RestoreBackSlot(self)
 	QolcHotbarApplyOrder(self, Pending)
 end
 
@@ -352,6 +475,8 @@ end
 local VanillaSetSizeAndPosition = ISHotbar.setSizeAndPosition
 function ISHotbar:setSizeAndPosition()
 	VanillaSetSizeAndPosition(self)
+	if not QolcFeatureEnabled("Hotbar") then return end
+
 	self:setWidth(self:getWidth() + BUTTON_SIZE)
 end
 
@@ -369,7 +494,7 @@ local VanillaDoMenu = ISHotbar.doMenu
 function ISHotbar:doMenu(SlotIndex)
 	if self.QolcRightClicking then
 		local Index = self:getSlotIndexAt(self:getMouseX(), self:getMouseY())
-		if Index > 0 and Index <= #self.availableSlot then SlotIndex = Index end
+		if Index > 0 and Index <= SlotCount(self) then SlotIndex = Index end
 	end
 	VanillaDoMenu(self, SlotIndex)
 end
@@ -408,7 +533,13 @@ local VanillaMouseUp = ISHotbar.onMouseUp
 
 -- Handles the three things a release can mean: finishing a drag, clicking a slot, or
 -- clicking one of the two buttons past the end of the bar.
+--
+-- The other end of this, onMouseDown, already stands aside when the tick box is off. This
+-- did not, and with the buttons neither drawn nor made room for, a release past the last
+-- slot still landed in the strip they would have occupied and toggled one of them.
 function ISHotbar:onMouseUp(X, Y)
+	if not QolcFeatureEnabled("Hotbar") then return VanillaMouseUp(self, X, Y) end
+
 	local Index = self:getSlotIndexAt(X, Y)
 
 	-- Vanilla would clamp a click past the last slot onto it, so only let it run when

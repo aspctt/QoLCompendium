@@ -170,9 +170,7 @@ end)
 Test("an attached item travels with its slot", function()
 	local Hotbar = NewHotbar("Back", "Belt", "Holster")
 
-	local Item = Harness.NewHotbarItem("Holster")
-	Hotbar.attachedItems[3] = Item
-	Hotbar.availableSlot[3].item = Item
+	local Item = Harness.PutOnHotbar(Hotbar, 3, Harness.NewHotbarItem("Holster"))
 
 	DragSlot(Hotbar, 3, 1)
 
