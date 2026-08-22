@@ -2310,12 +2310,14 @@ function ISHotbar:attachItem(Item, Slot, SlotIndex, SlotDef, DoAnim)
 	self:reloadIcons()
 end
 
--- Mirrors vanilla's canBeAttached: a slot takes an item when its definition lists that
--- item's attachment type.
+-- Vanilla's canBeAttached, which reads slot.def on its first line and checks nothing. It
+-- can afford to: everything that calls it in the base game has already established there
+-- is a slot there. Guarding it here, which is what this used to do, hid the fact that
+-- calling it without one is a hard error rather than a false.
 function ISHotbar:canBeAttached(Slot, Item)
-	if not Slot or not Slot.def then return false end
+	local Def = Slot.def
 
-	for Type in pairs(Slot.def.attachments or {}) do
+	for Type in pairs(Def.attachments) do
 		if Item:getAttachmentType() == Type then return true end
 	end
 
@@ -2382,9 +2384,57 @@ function Harness.RejoinHotbar(Hotbar)
 	return Fresh
 end
 
+-- What the inventory is carrying under the cursor mid drag. Set while a stack is being
+-- moved from one container to another, and read by anything that wants to know whether a
+-- release is a drop rather than a click.
+ISMouseDrag = ISMouseDrag or {}
+
+function ISHotbar:isAllowedToActivateSlot() return true end
+function ISHotbar:activateSlot(Index) self.ActivatedSlot = Index end
+
+-- Vanilla's onMouseUp, transcribed. Two things about it matter, and neither survived
+-- being summarised as a counter. The drag branch reads availableSlot at whatever index
+-- getSlotIndexAt returned and hands it to canBeAttached without checking. And
+-- getSlotIndexAt answers -1 for a point that is not on the bar, and 0 for one that is
+-- when the bar has no slots on it.
+--
+-- Vanilla meets neither, because the game only dispatches this for a release that landed
+-- on the element, and vanilla's bar always has the back slot. Both are reachable from a
+-- mod, and the first one was reported: "attempted index: def of non-table: null".
 function ISHotbar:onMouseUp(X, Y)
 	self.VanillaMouseUps = (self.VanillaMouseUps or 0) + 1
+
+	if ISMouseDrag.dragging then
+		local Index = self:getSlotIndexAt(X, Y)
+		local Slot = self.availableSlot[Index]
+
+		for _, Item in ipairs(ISInventoryPane.getActualItems(ISMouseDrag.dragging)) do
+			if Item ~= self.attachedItems[Index] and self:canBeAttached(Slot, Item) then
+				self:attachItem(Item, Slot.def.attachments[Item:getAttachmentType()], Index, Slot.def, true)
+				break
+			end
+		end
+
+		return
+	end
+
+	local Index = self:getSlotIndexAt(X, Y)
+	if Index > -1 and self:isAllowedToActivateSlot() then self:activateSlot(Index) end
 end
+
+-- ISPanelJoypad's, which ISHotbar inherits and never overrides. It lets go of a window
+-- being dragged about by its frame, and it is what anything overriding this has to leave
+-- working.
+function ISHotbar:onMouseUpOutside(_X, _Y)
+	self.moving = false
+	self.OutsideUps = (self.OutsideUps or 0) + 1
+end
+
+-- Kept by name so a spec can tell the difference between the original still being in
+-- place and something of ours having taken it over, and so one can be put back to stand
+-- in for another mod owning it.
+Harness.VanillaHotbarMouseUp = ISHotbar.onMouseUp
+Harness.PanelMouseUpOutside = ISHotbar.onMouseUpOutside
 
 function ISHotbar:doMenu(SlotIndex)
 	self.LastMenuIndex = SlotIndex

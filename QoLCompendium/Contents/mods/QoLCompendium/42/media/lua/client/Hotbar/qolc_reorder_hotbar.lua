@@ -538,25 +538,27 @@ local VanillaMouseUp = ISHotbar.onMouseUp
 -- did not, and with the buttons neither drawn nor made room for, a release past the last
 -- slot still landed in the strip they would have occupied and toggled one of them.
 function ISHotbar:onMouseUp(X, Y)
-	if not QolcFeatureEnabled("Hotbar") then return VanillaMouseUp(self, X, Y) end
-
 	local Index = self:getSlotIndexAt(X, Y)
 
-	-- Vanilla would clamp a click past the last slot onto it, so only let it run when
-	-- the release actually landed on a slot
-	if Index ~= -1 then
-		VanillaMouseUp(self, X, Y)
-	end
+	-- Only when the release really did land on a slot. Vanilla clamps a point past the
+	-- last one onto it, so ours answers minus one for the strip the buttons sit in.
+	--
+	-- Greater than zero rather than not minus one, because zero is reachable too:
+	-- vanilla's own getSlotIndexAt clamps to the number of slots, so a bar with none
+	-- answers zero for a point on it. Its drag branch then reads availableSlot at that
+	-- index and hands the nil to canBeAttached, which indexes it without checking.
+	if Index > 0 then VanillaMouseUp(self, X, Y) end
+	if not QolcFeatureEnabled("Hotbar") then return end
 
 	if self.QolcDragging then
-		if Index ~= -1 and Index ~= self.QolcDragIndex then
+		if Index > 0 and Index ~= self.QolcDragIndex then
 			if IsInsertMode(self.character) then
 				InsertSlot(self, self.QolcDragIndex, Index)
 			else
 				SwapSlots(self, self.QolcDragIndex, Index)
 			end
 		end
-	elseif Index > -1 and (getTimestampMs() - (self.QolcPressedAt or 0)) < CLICK_MS then
+	elseif Index > 0 and (getTimestampMs() - (self.QolcPressedAt or 0)) < CLICK_MS then
 		-- Clicking a slot stands in for its hotkey, which is why a slot past the
 		-- vanilla five does nothing unless that key has been bound
 		local Key = self:getKeyForIndex(Index)
@@ -585,8 +587,31 @@ function ISHotbar:onMouseUp(X, Y)
 	self.QolcDragStartY = nil
 end
 
+-- Only ever called for a release that landed somewhere other than this element, which is
+-- exactly why it must not be handed to onMouseUp. Vanilla's is written for a release on
+-- the bar: its drag branch reads self.availableSlot[self:getSlotIndexAt(x, y)] and passes
+-- the result to canBeAttached, which indexes it without checking. Out here getSlotIndexAt
+-- answers minus one and there is nothing at that index.
+--
+-- Reported from dragging a stack of branches out of a bag onto the floor, as "attempted
+-- index: def of non-table: null" at ISHotbar.lua:291, with this file named as the caller.
+-- Ours guards the index and so never reached it, but the trace names vanilla's, so by
+-- then something else owned onMouseUp. Whose it is was never ours to decide. Whether an
+-- outside release is handed to it is.
+--
+-- Nothing needs finishing either way. A drag that ends off the bar has no slot under it,
+-- so it is simply let go of. The panel's own handler still runs, since that is what drops
+-- a window being dragged around by its frame.
+local VanillaMouseUpOutside = ISHotbar.onMouseUpOutside
+
 function ISHotbar:onMouseUpOutside(X, Y)
-	self:onMouseUp(X, Y)
+	if VanillaMouseUpOutside then VanillaMouseUpOutside(self, X, Y) end
+
+	self.QolcDragging = false
+	self.QolcDragIndex = nil
+	self.QolcDragStartX = nil
+	self.QolcDragStartY = nil
+	self.QolcPressedAt = nil
 end
 
 --// Rendering

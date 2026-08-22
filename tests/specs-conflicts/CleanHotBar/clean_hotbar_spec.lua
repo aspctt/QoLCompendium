@@ -22,7 +22,11 @@ Test("no hotbar reordering is installed", function()
 	-- reordering and nothing else
 	AssertNil(ISHotbar.onMouseDown, "our drag start must not be installed")
 	AssertNil(ISHotbar.onMouseMove, "our drag tracking must not be installed")
-	AssertNil(ISHotbar.onMouseUpOutside, "our drag cancel must not be installed")
+
+	-- Not nil, unlike the two above. ISHotbar inherits this one from ISPanelJoypad, so
+	-- the question is whether ours has taken it over rather than whether it exists.
+	AssertEquals(ISHotbar.onMouseUpOutside, Harness.PanelMouseUpOutside,
+		"our drag cancel must not be installed over the panel's own")
 end)
 
 Test("the hotbar render is left entirely alone", function()

@@ -200,6 +200,85 @@ Test("turning the feature off leaves no room for buttons that are not drawn", fu
 	AssertTrue(Hotbar:getWidth() < Width, "the bar should have given the button strip back")
 end)
 
+--// Letting Go Away From The Bar
+-- Reported on the workshop with a stack trace, from dragging tree branches out of a bag
+-- onto the floor:
+--
+--   java.lang.RuntimeException: attempted index: def of non-table: null
+--   Lua(Vanilla).canBeAttached(ISHotbar.lua:291)
+--   Lua(Vanilla).onMouseUp(ISHotbar.lua:637)
+--   Lua((MOD:QoL Compendium)).onMouseUpOutside(qolc_reorder_hotbar.lua)
+--
+-- onMouseUpOutside is only ever called for a release that landed somewhere other than
+-- this element, and vanilla's onMouseUp is written for one that landed on it. Handing the
+-- first to the second gives getSlotIndexAt a point off the bar, it answers -1, and the
+-- drag branch reads availableSlot[-1] and hands the nil to canBeAttached.
+Test("a drag let go away from the bar does not reach vanilla's mouse up", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Hotbar = NewBar(Player, "Back", "Belt")
+
+	-- The trace names vanilla's onMouseUp rather than ours, so by the time that release
+	-- arrived ours was not the one installed. The reporter runs a second hotbar mod
+	-- alongside this one, which is the likely reason, and there is nothing to be done
+	-- about who owns onMouseUp. Handing it an outside release is the part that is ours,
+	-- so the original is put back here and the question asked that way.
+	ISHotbar.onMouseUp = Harness.VanillaHotbarMouseUp
+
+	ISMouseDrag.dragging = { Harness.NewHotbarItem("Belt") }
+	local Ups = Hotbar.VanillaMouseUps or 0
+
+	local Ok, Failure = pcall(function() Hotbar:onMouseUpOutside(-40, -40) end)
+	ISMouseDrag.dragging = nil
+
+	AssertTrue(Ok, "letting go off the bar must not throw, got " .. tostring(Failure))
+	AssertEquals(Hotbar.VanillaMouseUps or 0, Ups, "and must not run the mouse up at all")
+end)
+
+Test("letting go away from the bar still lets go of the window", function()
+	-- ISPanelJoypad handles this to drop a window being dragged by its frame. Replacing
+	-- it outright rather than adding to it left that undone.
+	local Player = Harness.NewPlayer(0, true)
+	local Hotbar = NewBar(Player, "Back", "Belt")
+
+	local Outside = Hotbar.OutsideUps or 0
+	Hotbar:onMouseUpOutside(-40, -40)
+
+	AssertTrue((Hotbar.OutsideUps or 0) > Outside, "the panel's own handler should still run")
+end)
+
+Test("letting go away from the bar ends the drag", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Hotbar = NewBar(Player, "Back", "Belt")
+
+	Hotbar.MouseX, Hotbar.MouseY = SlotX(Hotbar, 1), 30
+	Hotbar:onMouseDown(SlotX(Hotbar, 1), 30)
+	Hotbar.MouseX = SlotX(Hotbar, 2)
+	Hotbar:onMouseMove(0, 0)
+
+	AssertTrue(Hotbar.QolcDragging, "the drag should be under way")
+	Hotbar:onMouseUpOutside(-40, -40)
+
+	AssertTrue(not Hotbar.QolcDragging, "and should have been let go of")
+	AssertNil(Hotbar.QolcDragIndex, "with nothing still held")
+end)
+
+Test("a drag let go on a bar with no slots does not throw", function()
+	-- getSlotIndexAt clamps to #availableSlot, which is zero here, so the index is zero
+	-- and availableSlot[0] is nil. The same crash from a release that really did land on
+	-- the bar. Reachable while the bar is empty, which is the state the report before
+	-- this one described.
+	local Player = Harness.NewPlayer(0, true)
+	local Hotbar = NewBar(Player, "Back")
+	Hotbar.availableSlot = {}
+	TurnHotbarOff()
+
+	ISMouseDrag.dragging = { Harness.NewHotbarItem("Back") }
+	local Ok, Failure = pcall(function() Hotbar:onMouseUp(20, 30) end)
+	ISMouseDrag.dragging = nil
+
+	AssertTrue(Ok, "a drop on an empty bar must not throw, got " .. tostring(Failure))
+end)
+
 --// A Refresh That Throws
 Test("a refresh that fails leaves the order still saveable", function()
 	local Player = Harness.NewPlayer(0, true)
