@@ -38,5 +38,7 @@
     "Sandbox_QoLC_NutritionistMagEnabled": "The Nutritionist Magazine",
     "Sandbox_QoLC_NutritionistMagEnabled_tooltip": "Adds a magazine that teaches the Nutritionist trait, putting nutrition on the food the base game keeps quiet about: fresh produce, meat, foraged food and anything you cook. Tinned and boxed food already shows its label to anyone. It spawns wherever cooking magazines do, at half their odds.",
     "Sandbox_QoLC_LockpickingEnabled": "Lockpicking",
-    "Sandbox_QoLC_LockpickingEnabled_tooltip": "Adds lockpicks, hairpins to make them from, and two manuals to learn from. Pick a locked door with a screwdriver and a pick, or force a door or window with a crowbar. The base game has no lockpicking at all."
+    "Sandbox_QoLC_LockpickingEnabled_tooltip": "Adds lockpicks, hairpins to make them from, and two manuals to learn from. Pick a locked door with a screwdriver and a pick, or force a door or window with a crowbar. The base game has no lockpicking at all.",
+    "Sandbox_QoLC_CutClothingEnabled": "Cut Up Any Clothing",
+    "Sandbox_QoLC_CutClothingEnabled_tooltip": "Lets you cut up the clothing the base game forgot: underwear, socks, bandanas, scarves, gloves, hide trousers, shoes and empty wallets. The garment yields whatever it is made of, so leather boots give leather strips. Off leaves every one of them uncuttable, exactly as the base game has it."
 }

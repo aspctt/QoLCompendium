@@ -18,6 +18,7 @@ Most are not ports. Build 41 code rarely survives the move, so where the origina
 [*]Generator range follows the sandbox setting
 [*]Flamingos stay visible behind furniture and under snow
 [*]Tailoring experience for cutting clothes into strips
+[*]Shoes, underwear, socks and empty wallets can be cut into strips at last
 [*]All twenty four skill book families get their own icon
 [*]Container titles no longer run into the weight beside them
 [*]Panic holds tiredness at bay, and pays it back after

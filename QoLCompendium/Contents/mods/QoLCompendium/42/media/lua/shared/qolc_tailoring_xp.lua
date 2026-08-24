@@ -15,11 +15,15 @@
 --// counted InventoryItemFactory.CreateItem calls, and build 42 has neither: the legacy
 --// recipe system is gone, ripping is a craftRecipe, and its OnCreate lives in java.
 --//
---// Adding xpAward to the two recipes in a script file would have been shorter, but a
---// script cannot patch one field of an existing definition, only replace the whole
---// block. That would freeze a copy of vanilla's fabric mapper into this mod and quietly
---// send new leather jackets to the denim table on the next patch, so the award is done
---// from lua instead and the recipes are left alone.
+--// Done from lua rather than by adding xpAward to the two recipes in a script file, which
+--// would have been shorter. Not for the reason once written here: a script reopening a
+--// recipe merges into it rather than replacing it, so vanilla's fabric mapper would have
+--// been safe. qolc_cut_clothing.txt relies on exactly that, verified in the jar, where
+--// LoadOutputMapper calls getOrCreateOutputMapper and PreReloadScripts runs as one pass
+--// before any file is parsed.
+--//
+--// It stays in lua because the award is not a constant. It scales with the strip count,
+--// the wear on the garment and a sandbox percentage, and xpAward is a flat number.
 --//
 --// Shared, because the recipe is performed by whichever side is in charge: the client in
 --// singleplayer, the server in multiplayer. addXp already knows the difference, sending

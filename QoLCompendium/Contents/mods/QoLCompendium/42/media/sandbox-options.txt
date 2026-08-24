@@ -191,3 +191,18 @@ option QoLC.BlowtorchEnabled
     page = QoLC,
     translation = QoLC_BlowtorchEnabled,
 }
+
+/*
+ * Cutting up the garments build 42 never tagged as cuttable: underwear, socks, bandanas,
+ * scarves, gloves, hide trousers and shoes. Off returns all ninety two to being uncuttable
+ * and leaves everything vanilla already allowed exactly as it was.
+ *
+ * Balance rather than presentation, because it changes how much cloth and leather a world
+ * holds. Shoes are the reason: they are everywhere, and most of them are leather.
+ */
+option QoLC.CutClothingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_CutClothingEnabled,
+}
