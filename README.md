@@ -25,13 +25,16 @@ or turn it off.
 propane tank refills it 30 times instead of 7. Topping up a half full torch only
 costs half a tank's worth, rather than a full charge.
 
-**Cut Up Any Clothing** - Underwear, socks, bandanas, scarves, gloves, hide
-trousers and, above all, shoes can be cut into strips. The base game decides that
-from a tag that has nothing to do with what a garment is made of, so ninety two
-items it already knows the fabric of were simply refused. Each yields whatever it
-is made of, so leather boots give leather strips. An empty wallet cuts down for
-leather too, through a recipe of its own, since a wallet is a container rather
-than clothing. Rubber footwear still yields nothing.
+**Cut Up Any Clothing** - Underwear, socks, bras, corsets, tights, swimwear,
+shoes, gloves, holsters, ties, hunting vests, shellsuits, rain ponchos and every
+cloth hat in the game can be cut into strips. The base game decides that from a
+tag that has nothing to do with what a garment is made of, so three hundred and
+forty two items it already knows the fabric of, or could have, were simply
+refused. Each yields whatever it is made of, so leather boots give leather
+strips. An empty wallet cuts down for leather too, through a recipe of its own,
+since a wallet is a container rather than clothing. Rubber, tarpaulin, straw and
+armour still yield nothing, and firefighter gear is harvested for aramid thread
+rather than cut.
 
 **Ammo Icons** - Every ammo box and magazine gets its own inventory icon. The
 base game draws all five handgun ammo boxes identically, which makes sorting

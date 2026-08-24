@@ -7,7 +7,8 @@
  * is separate from the FabricType saying what the garment is made of. The two disagree
  * constantly: underwear, socks, bandanas, scarves and gloves all declare a fabric and
  * were never tagged, so the game knows they are cotton and still will not let you cut
- * them up. Shoes have it worse and carry no fabric at all.
+ * them up. Shoes, bras, tights, ties, vests and every hat in the game have it worse
+ * and carry no fabric at all.
  *
  * Reopening an item merges rather than replaces, and a Tags value is added to the set
  * rather than overwriting it, so everything that makes these garments work is untouched.
@@ -16,7 +17,19 @@
  * recipes have already cached their inputs. The sandbox switch is the recipes' OnTest
  * instead, reading the same list this pass writes to qolc_cut_clothing_items.lua.
  *
- * Rubber footwear is deliberately absent: Shoes_FlipFlop, Shoes_Wellies, Shoes_TireSandals.
+ * Left uncuttable on purpose, and checked against the installed game as this is
+ * written so nothing new can slip between the two lists:
+ *   36 a hard shell rather than a garment
+ *   3 already made of what cutting it would hand back
+ *   11 armour, which the game gives no way back from
+ *   2 duct tape and rope rather than cloth
+ *   3 harvested for aramid thread instead
+ *   5 jewellery
+ *   10 novelty and mascot pieces built on a frame
+ *   5 paper, card and foil
+ *   10 rubber or plastic, which yields a tailor nothing
+ *   25 tarpaulin or bin liner, which the game crafts them from
+ *   3 woven straw
  */
 module Base
 {
@@ -351,7 +364,199 @@ module Base
 		Tags = base:ripclothingcotton,
 	}
 
-	/* Vanilla gives these no fabric at all, so one is chosen. 29 garments. */
+	/* Vanilla gives these no fabric at all, so one is chosen. 275 garments. */
+	item Bandeau_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bikini_Pattern01
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bikini_TINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_AnimalPrint
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_FrillyBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_FrillyPink
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_FrillyRed
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_Hide
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Bra_Strapless_RedSpots
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Strapless_White
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_AnimalPrint
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_FrillyBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_FrillyPink
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_FrillyRed
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Bra_Straps_Hide
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Bra_Straps_White
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Briefs_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item BunnySuitBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item BunnySuitPink
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Corset
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Corset_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Corset_Medical
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Corset_Red
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Dress_Knees_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Dress_Long_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Garter
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Ghillie_Top
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Ghillie_Trousers
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Gloves_BoxingBlue
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Gloves_BoxingRed
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
 	item Gloves_FingerlessGloves
 	{
 		FabricType = Cotton,
@@ -374,6 +579,1014 @@ module Base
 	{
 		FabricType = Leather,
 		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Army
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ArmyDesert
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ArmyDesertNew
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ArmyWWII
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BalaclavaFace
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BalaclavaFull
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapArmy
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapArmy_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapBlue
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapBlue_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapGreen
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapGreen_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapKY
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapKY_Red
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapKY_Red_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapKY_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapRed
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapRed_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapTINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCapTINT_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_3N
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_3N_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmericanEats
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmericanEats_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmericanTire
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmericanTire_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmeriglobeCom
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_AmeriglobeCom_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_BodyChisel
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_BodyChisel_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_BoxpopBrewery
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_BoxpopBrewery_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_FireDept
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_FireDept_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Fossoil
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Fossoil02
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Fossoil02_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Fossoil_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Gas2Go
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Gas2Go_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_HuntingCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_HuntingCamo_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_JaysChicken
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_JaysChicken_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_KYTransit
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_KYTransit_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_KnoxDistillery
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_KnoxDistillery_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LBMW
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LBMW_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LSU
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LSU_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LouisvilleBruiser
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_LouisvilleBruiser_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_MassGenfac
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_MassGenfac_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_PizzaWhirled
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_PizzaWhirled_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Police
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Police_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_SWAT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_SWAT_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_ScarletOakDistillery
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_ScarletOakDistillery_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Sheriff
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Sheriff_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Spiffos
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_SpiffosLogo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_SpiffosLogo_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_Spiffos_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_USL
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_USL_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_WestMapleCountryClub
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BaseballCap_WestMapleCountryClub_Reverse
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Beany
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Beret
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BeretArmy
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_CamoGreen
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_DesertCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_DesertCamoNew
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_MiliusCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_OliveDrab
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BonnieHat_TigerStripeCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BoxingBlue
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_BoxingRed
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_BucketHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_BucketHatFishing
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ChefHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Cowboy
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_Angus
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_Black
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_CowHide
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_Holstein
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_Simmental
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Cowboy_White
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_EarMuffs
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_FastFood
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_FastFood_IceCream
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_FastFood_Spiffo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Fedora
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Fedora_Delmonte
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_FishermanRainHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_GolfHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_GolfHatTINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_HeadSack_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_HeadSack_Cotton
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_HideHat
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_PeakedCapArmy
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_PeakedCapYacht
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Pilgrim
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Pirate
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Police
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Police_Grey
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Raccoon
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Ranger
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_SWAT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_SantaHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_SantaHatGreen
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFace
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFace_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFace_Cotton
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFace_Green
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFull
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFull_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFull_Cotton
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_ShemaghFull_Green
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Sheriff
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Stovepipe
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Stovepipe_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Stovepipe_UncleSam
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_SurgicalCap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_SurgicalMask
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Sweatband
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_VisorBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_VisorRed
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Visor_WhiteTINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_WeddingVeil
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_WinterHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_WinterHat_SheepSkin
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Hat_Witch
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_Wizard
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Hat_WoolyHat
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item HolsterAnkle
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item HolsterDouble
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item HolsterSimple
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item HolsterSimple_Black
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item HolsterSimple_Brown
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item HolsterSimple_Green
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Holster_Hide
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
+	item Jacket_Padded
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_PaddedDOWN
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Padded_HuntingCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Padded_HuntingCamoDOWN
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_Blue
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_Green
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_Pink
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_TINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Jacket_Shellsuit_Teal
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item LongJohns_Bottoms_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item PonchoGreen
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item PonchoGreenDOWN
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item PonchoYellow
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item PonchoYellowDOWN
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shirt_NoSleeves_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
 	}
 
 	item Shoes_ArmyBoots
@@ -478,6 +1691,12 @@ module Base
 		Tags = base:ripclothingleather,
 	}
 
+	item Shoes_Random
+	{
+		FabricType = Leather,
+		Tags = base:ripclothingleather,
+	}
+
 	item Shoes_RedTrainers
 	{
 		FabricType = Cotton,
@@ -526,6 +1745,276 @@ module Base
 		Tags = base:ripclothingleather,
 	}
 
+	item Shorts_BoxingBlue
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shorts_BoxingRed
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shorts_FootballPants
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shorts_FootballPants_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shorts_FootballPants_Gold
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Shorts_FootballPants_White
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Skirt_Knees_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Skirt_Long_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item SpiffoSuit
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item StockingsBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item StockingsBlackSemiTrans
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item StockingsBlackTrans
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item StockingsWhite
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item SwimTrunks_Blue
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item SwimTrunks_Green
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item SwimTrunks_Red
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item SwimTrunks_Yellow
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Swimsuit_TINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_BowTieFull
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_BowTieWorn
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_Full
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_Full_Spiffo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_Worn
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Tie_Worn_Spiffo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item TightsBlack
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item TightsBlackSemiTrans
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item TightsBlackTrans
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item TightsFishnets
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Crafted_Burlap
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Padded
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Padded_HuntingCamo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_Black
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_Blue
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_Green
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_Pink
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_TINT
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Trousers_Shellsuit_Teal
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Foreman
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_HighViz
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Hunting_Camo
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Hunting_CamoGreen
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Hunting_Grey
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Hunting_Khaki
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Hunting_Orange
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
+	item Vest_Trucker
+	{
+		FabricType = Cotton,
+		Tags = base:ripclothingcotton,
+	}
+
 	/* Vanilla spells this one base:ripclothingcoton, so it matches nothing. */
 	item Tshirt_EMD
 	{
@@ -567,7 +2056,11 @@ module Base
 		itemMapper fabricType
 		{
 			Base.LeatherStrips = Base.Belt2,
+			Base.LeatherStrips = Base.Bra_Strapless_Hide,
+			Base.LeatherStrips = Base.Bra_Straps_Hide,
 			Base.LeatherStrips = Base.Briefs_Hide,
+			Base.LeatherStrips = Base.Gloves_BoxingBlue,
+			Base.LeatherStrips = Base.Gloves_BoxingRed,
 			Base.LeatherStrips = Base.Gloves_FingerlessLeatherGloves,
 			Base.LeatherStrips = Base.Gloves_FingerlessLeatherGloves_Black,
 			Base.LeatherStrips = Base.Gloves_FingerlessLeatherGloves_Brown,
@@ -575,6 +2068,25 @@ module Base
 			Base.LeatherStrips = Base.Gloves_LeatherGlovesBlack,
 			Base.LeatherStrips = Base.Gloves_LeatherGlovesBrown,
 			Base.LeatherStrips = Base.Gloves_LeatherWrap,
+			Base.LeatherStrips = Base.Hat_BoxingBlue,
+			Base.LeatherStrips = Base.Hat_BoxingRed,
+			Base.LeatherStrips = Base.Hat_Cowboy,
+			Base.LeatherStrips = Base.Hat_Cowboy_Angus,
+			Base.LeatherStrips = Base.Hat_Cowboy_Black,
+			Base.LeatherStrips = Base.Hat_Cowboy_CowHide,
+			Base.LeatherStrips = Base.Hat_Cowboy_Holstein,
+			Base.LeatherStrips = Base.Hat_Cowboy_Simmental,
+			Base.LeatherStrips = Base.Hat_Cowboy_White,
+			Base.LeatherStrips = Base.Hat_HideHat,
+			Base.LeatherStrips = Base.Hat_Raccoon,
+			Base.LeatherStrips = Base.Hat_WinterHat_SheepSkin,
+			Base.LeatherStrips = Base.HolsterAnkle,
+			Base.LeatherStrips = Base.HolsterDouble,
+			Base.LeatherStrips = Base.HolsterSimple,
+			Base.LeatherStrips = Base.HolsterSimple_Black,
+			Base.LeatherStrips = Base.HolsterSimple_Brown,
+			Base.LeatherStrips = Base.HolsterSimple_Green,
+			Base.LeatherStrips = Base.Holster_Hide,
 			Base.LeatherStrips = Base.Shoes_ArmyBoots,
 			Base.LeatherStrips = Base.Shoes_ArmyBootsDesert,
 			Base.LeatherStrips = Base.Shoes_Black,
@@ -591,6 +2103,7 @@ module Base
 			Base.LeatherStrips = Base.Shoes_HideBoots,
 			Base.LeatherStrips = Base.Shoes_HikingBoots,
 			Base.LeatherStrips = Base.Shoes_LeatherWrap,
+			Base.LeatherStrips = Base.Shoes_Random,
 			Base.LeatherStrips = Base.Shoes_RidingBoots,
 			Base.LeatherStrips = Base.Shoes_Sandals,
 			Base.LeatherStrips = Base.Shoes_Strapped,

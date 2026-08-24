@@ -63,6 +63,76 @@ Test("rubber footwear is left uncuttable", function()
 	end
 end)
 
+Test("the garments the first pass missed are cuttable", function()
+	-- Reported in game after 1.5.0 shipped: shoes, tights, bras, berets and ponchos all still
+	-- refused. The first pass only went looking at footwear, so everything else the game had
+	-- left unclassified stayed unclassified, and nothing balanced the list against the game
+	-- to say so. The generator now refuses to write a file that leaves a garment out.
+	--
+	-- Shoes_Random is the sharpest of them: the plain shoe a fresh character starts in and
+	-- the one foraging turns up, held back as a spawner while every boot beside it went in.
+	local Expected = {
+		["Base.Bra_Straps_Black"] = "Cotton",
+		["Base.Corset"] = "Cotton",
+		["Base.Garter"] = "Cotton",
+		["Base.Hat_BaseballCap"] = "Cotton",
+		["Base.Hat_Beret"] = "Cotton",
+		["Base.HolsterSimple"] = "Leather",
+		["Base.Jacket_Shellsuit_Black"] = "Cotton",
+		["Base.PonchoGreen"] = "Cotton",
+		["Base.Shoes_Random"] = "Leather",
+		["Base.StockingsWhite"] = "Cotton",
+		["Base.SwimTrunks_Blue"] = "Cotton",
+		["Base.TightsBlack"] = "Cotton",
+		["Base.Tie_Full"] = "Cotton",
+		["Base.Trousers_Crafted_Burlap"] = "Cotton",
+		["Base.Vest_Hunting_Orange"] = "Cotton"
+	}
+
+	for FullType, Fabric in pairs(Expected) do
+		AssertEquals(QolcCutClothingAdded[FullType], Fabric, FullType .. " should be cuttable")
+	end
+end)
+
+Test("hide and cowhide pieces give leather rather than cloth", function()
+	-- These sit in families that are otherwise cotton, so a pass that labelled by family
+	-- rather than by item would hand back ripped sheets from a cowhide hat.
+	for _, Name in ipairs({
+		"Base.Bra_Straps_Hide", "Base.Hat_Cowboy_CowHide", "Base.Hat_HideHat",
+		"Base.Hat_WinterHat_SheepSkin", "Base.Holster_Hide"
+	}) do
+		AssertEquals(QolcCutClothingAdded[Name], "Leather", Name .. " is hide")
+	end
+end)
+
+Test("what is not cloth or leather is left uncuttable", function()
+	-- Each of these stands for a family the generator names and gives a reason for. They are
+	-- checked here so widening the list again cannot quietly sweep one in.
+	local Refused = {
+		-- Crafted from a Tarp or two bin liners and duct tape. Cutting one up would convert
+		-- tarpaulin into cloth strips rather than recover cloth.
+		"Base.PonchoTarp", "Base.PonchoGarbageBag", "Base.Vest_Tarp", "Base.Hat_TarpHat",
+		-- Already made of what cutting it would hand back.
+		"Base.Briefs_Rag", "Base.Hat_LeatherStripTied",
+		-- A hard shell, and armour the game gives no way back from.
+		"Base.Hat_CrashHelmet", "Base.Hat_FootballHelmet", "Base.Gorget_Metal",
+		"Base.Gloves_MetalArmour",
+		-- The only source of aramid thread in the game, harvested rather than cut.
+		"Base.Jacket_Fireman", "Base.Trousers_Fireman",
+		-- Straw, paper, novelty and plastic.
+		"Base.Hat_StrawHat", "Base.Hat_NewspaperHat", "Base.Hat_Spiffo",
+		"Base.Hat_Cowboy_Plastic", "Base.AthleticCup",
+		-- Rope and duct tape.
+		"Base.RopeBelt", "Base.Holster_DuctTape",
+		-- Jewellery.
+		"Base.Necklace_Choker"
+	}
+
+	for _, Name in ipairs(Refused) do
+		AssertNil(QolcCutClothingAdded[Name], Name .. " is not cloth or leather")
+	end
+end)
+
 --// The Tags
 Test("each garment is tagged for the fabric it is made of", function()
 	local Text = Script()

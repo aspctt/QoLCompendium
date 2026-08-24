@@ -1,14 +1,21 @@
 --// Cut Up Any Clothing
 --// aspctt - 23.08.2026
---// Lets you cut up the garments build 42 forgot: every pair of underwear, socks, bandanas,
---// scarves, gloves, hide trousers and, above all, shoes.
+--// Lets you cut up the garments build 42 forgot: underwear, socks, bandanas, scarves,
+--// gloves, shoes, bras, corsets, tights, stockings, swimwear, shellsuits, hunting vests,
+--// ties, holsters, rain ponchos and every cloth hat in the game.
 --//
 --// The game decides this from a tag, base:ripclothingcotton for what tears by hand and
 --// base:ripclothingdenim or base:ripclothingleather for what needs scissors. That tag is a
 --// separate thing from FabricType, which is what the garment is actually made of, and the
 --// two disagree constantly. Sixty six garments declare a fabric and were never tagged, so
---// the game knows perfectly well they are cotton and still refuses. Shoes are worse and
---// carry no fabric at all, which is why a leather boot reads as nothing in particular.
+--// the game knows perfectly well they are cotton and still refuses. The rest carry no
+--// fabric at all, which is why a leather boot reads as nothing in particular.
+--//
+--// What is left uncuttable is on the record too, with the reason beside it, and the
+--// generator balances the two lists against the installed game as it writes: a garment
+--// named by neither stops the pass. The first version had no such check and shipped with
+--// the plain shoes, tights, bras, berets and ponchos still refused, which is exactly the
+--// hole a list nobody balances against anything develops.
 --//
 --// The tags themselves are in qolc_cut_clothing.txt and are always applied. They have to
 --// be: every recipe input resolves its tags into an itemScriptCache once, in InputScript's
