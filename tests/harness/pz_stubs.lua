@@ -285,7 +285,22 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 	Container.Allowed = true
 
 	function Container:isItemAllowed(_Item) return self.Allowed end
-	function Container:isInCharacterInventory(_Character) return self.Type == "inventory" end
+
+	-- Vanilla walks up the tree rather than asking what sort of container this is: either
+	-- it is the character's own inventory, or the item holding it is somewhere inside
+	-- that inventory, checked all the way up. So a worn backpack answers true, which is
+	-- the whole reason anything asks. Answering on the container's own type, which is
+	-- what this used to do, made every bag look as though it belonged to nobody.
+	function Container:isInCharacterInventory(Character)
+		if not Character then return false end
+		if Character:getInventory() == self then return true end
+		if not ContainingItem then return false end
+
+		local Holder = ContainingItem.getContainer and ContainingItem:getContainer()
+		if not Holder then return false end
+
+		return Holder:isInCharacterInventory(Character)
+	end
 
 	function Container:contains(Item)
 		for _, Held in ipairs(self.Items) do
@@ -318,7 +333,51 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return List
 	end
 
+	-- Down into the bags as well, which is the whole difference between these and
+	-- getItems. A worn bag is its own container, so a heavy thing a player is carrying is
+	-- very often not in the one getItems walks. Vanilla reaches for these rather than
+	-- looping by hand: ISVehiclePartMenu finds a petrol can with containsEvalRecurse and
+	-- getAllEvalRecurse and never touches getItems.
+	local function Walk(From, Predicate, Found)
+		for _, Item in ipairs(From.Items) do
+			if Predicate(Item) then table.insert(Found, Item) end
+
+			local Inner = Item.getInventory and Item:getInventory()
+			if Inner and Inner.Items then Walk(Inner, Predicate, Found) end
+		end
+
+		return Found
+	end
+
+	function Container:getAllEval(Predicate)
+		local Found = {}
+		for _, Item in ipairs(self.Items) do
+			if Predicate(Item) then table.insert(Found, Item) end
+		end
+
+		return NewJavaList(Found)
+	end
+
+	function Container:getAllEvalRecurse(Predicate)
+		return NewJavaList(Walk(self, Predicate, {}))
+	end
+
+	function Container:containsEvalRecurse(Predicate)
+		return Walk(self, Predicate, {})[1] ~= nil
+	end
+
 	return Container
+end
+
+-- A bag carried or worn, with a container of its own. Anything inside it is out of reach
+-- of the owner's getItems and reachable only by recursing.
+function Harness.NewBag(Name)
+	local Bag = Harness.NewInventoryItem(Name or "Backpack")
+	Bag.Inventory = Harness.NewContainer("bag", Bag)
+
+	function Bag:getInventory() return self.Inventory end
+
+	return Bag
 end
 
 -- A propane tank, which is a drainable measured in uses rather than a fluid container
@@ -351,6 +410,13 @@ function Harness.NewInventoryItem(Name, WorldItem)
 	function Item:getName() return self.Name end
 	function Item:getID() return self.Id end
 	function Item:getWorldItem() return WorldItem end
+
+	-- Every InventoryItem answers this, so anything sorting a mixed bag of them can ask
+	-- without checking first. Leaving it off meant a stub item behaved as though the call
+	-- did not exist, which nothing in the game does.
+	Item.FullType = "Base." .. (Name or "Bag")
+	function Item:getFullType() return self.FullType end
+	function Item:getType() return self.FullType:match("[^.]+$") end
 
 	-- Favourites are skipped by every vanilla transfer, so anything moving items has to
 	-- be able to ask
@@ -977,6 +1043,11 @@ function Harness.NewDrainable(MaxUses, Fraction)
 	function Item:setCurrentUses(Count)
 		self.Fraction = Count / self.MaxUses
 	end
+
+	-- Which container is holding it. Every InventoryItem answers this, and a drainable is
+	-- one, so leaving it off made a stub drainable behave as though the call did not
+	-- exist. It is the question anything moving an item out of a bag has to ask first.
+	function Item:getContainer() return self.Container end
 
 	return Item
 end
@@ -2868,6 +2939,50 @@ ISTimedActionQueue = {}
 function ISTimedActionQueue.add(Action)
 	table.insert(Harness.ActionQueue, Action)
 	return Action
+end
+
+-- Moving an item between containers, which is a queued action rather than something that
+-- happens on the spot. Anything using an item out of a bag has to put it in the player's
+-- own inventory first, because that is where the game expects a held item to be.
+ISInventoryTransferUtil = ISInventoryTransferUtil or {}
+
+function ISInventoryTransferUtil.newInventoryTransferAction(_Character, Item, From, To)
+	local Action = {}
+	Action.Class = "ISInventoryTransferAction"
+	Action.item = Item
+	Action.srcContainer = From
+	Action.destContainer = To
+
+	function Action:isValid() return self.item ~= nil end
+
+	function Action:perform()
+		for Index, Held in ipairs(self.srcContainer.Items) do
+			if Held == self.item then table.remove(self.srcContainer.Items, Index) break end
+		end
+
+		table.insert(self.destContainer.Items, self.item)
+		self.item.Container = self.destContainer
+	end
+
+	return Action
+end
+
+-- luautils.haveToBeTransfered: true when the item is not already in the character's own
+-- inventory, so it has to be fetched out of whatever bag is holding it.
+luautils = luautils or {}
+
+function luautils.haveToBeTransfered(Character, Item)
+	local Container = Item.getContainer and Item:getContainer()
+	return Container ~= nil and Container ~= Character:getInventory()
+end
+
+ISWorldObjectContextMenu = ISWorldObjectContextMenu or {}
+
+function ISWorldObjectContextMenu.transferIfNeeded(Character, Item)
+	if not luautils.haveToBeTransfered(Character, Item) then return end
+
+	ISTimedActionQueue.add(ISInventoryTransferUtil.newInventoryTransferAction(
+		Character, Item, Item:getContainer(), Character:getInventory()))
 end
 
 ISBaseTimedAction = {}

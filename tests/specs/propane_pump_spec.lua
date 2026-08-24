@@ -71,6 +71,60 @@ Test("nothing is offered without a tank to fill", function()
 	AssertNil(Menu:Find(TAKE_PROPANE), "no tank means no option")
 end)
 
+-- A propane tank weighs ten, which is most of a character's spare capacity, so almost
+-- nobody carries one loose. A worn bag is a container of its own and getItems does not
+-- descend into it, so the option was missing for anyone who packed the tank rather than
+-- holding it. Vanilla goes looking for a petrol can with containsEvalRecurse and
+-- getAllEvalRecurse for exactly this reason.
+local function NewPlayerWithPackedTank(Fraction)
+	local Player = Harness.NewPlayer(NextPlayerNumber, true)
+	NextPlayerNumber = NextPlayerNumber + 1
+
+	local Bag = Harness.NewBag("Backpack")
+	Bag.Container = Player.Inventory
+	table.insert(Player.Inventory.Items, Bag)
+
+	local Tank = Harness.NewPropaneTank(Fraction)
+	Tank.Container = Bag.Inventory
+	table.insert(Bag.Inventory.Items, Tank)
+
+	return Player, Tank, Bag
+end
+
+Test("a tank inside a bag is offered too", function()
+	local Player = NewPlayerWithPackedTank(0)
+	local Menu = RightClick(Player, { Harness.NewFuelPump(22000) })
+
+	AssertNotNil(Menu:Find(TAKE_PROPANE), "a packed tank should still be offered")
+end)
+
+Test("a packed tank is fetched out of the bag and put back", function()
+	-- The tank is held in hand for the animation, and the game expects a held item to be
+	-- in the character's own inventory. Vanilla transfers the petrol can out first for
+	-- the same reason, then puts it back where it came from afterwards.
+	local Player, Tank, Bag = NewPlayerWithPackedTank(0)
+	local Menu = RightClick(Player, { Harness.NewFuelPump(22000) })
+
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+
+	local Queue = Harness.ActionQueue
+	AssertEquals(#Queue, 3, "fetch, fill, put back")
+	AssertEquals(Queue[1].destContainer, Player.Inventory, "fetched into the player's own hands")
+	AssertEquals(Queue[3].destContainer, Bag.Inventory, "and returned to the bag it came from")
+
+	RunQueue()
+	AssertTrue(Tank:getCurrentUsesFloat() > 0, "the fill should still have happened")
+	AssertEquals(Tank:getContainer(), Bag.Inventory, "and it ends up back in the bag")
+end)
+
+Test("a tank already in hand is not shuffled about", function()
+	local Player = NewPlayerWithTanks(0)
+	local Menu = RightClick(Player, { Harness.NewFuelPump(22000) })
+
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+	AssertEquals(#Harness.ActionQueue, 1, "nothing to fetch means nothing but the fill")
+end)
+
 Test("a full tank is not offered", function()
 	local Player = NewPlayerWithTanks(1)
 	local Menu = RightClick(Player, { Harness.NewFuelPump(22000) })

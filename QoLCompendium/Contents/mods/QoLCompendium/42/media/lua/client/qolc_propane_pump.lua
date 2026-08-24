@@ -97,25 +97,54 @@ local function IsFillableTank(Item)
 	return Item:getCurrentUsesFloat() < 1
 end
 
+-- Recursed, not a walk over getItems. A worn bag is a container of its own and getItems
+-- does not descend into it, so a tank that had been packed rather than carried loose was
+-- invisible and no option appeared at all. A propane tank weighs ten, which is most of a
+-- character's spare capacity, so packing it is the normal thing to do and the bug was in
+-- everybody's way. Reported as the refill not working on an existing save.
+--
+-- getAllEvalRecurse is what vanilla reaches for here. ISVehiclePartMenu finds the petrol
+-- can to refuel a car with containsEvalRecurse and getAllEvalRecurse and never touches
+-- getItems, for exactly this reason.
 local function FindTanks(Player)
 	local Found = {}
 
 	local Inventory = Player:getInventory()
-	if not Inventory then return Found end
+	if not Inventory or not Inventory.getAllEvalRecurse then return Found end
 
-	local All = Inventory:getItems()
+	local All = Inventory:getAllEvalRecurse(IsFillableTank)
 	for Index = 0, All:size() - 1 do
-		local Item = All:get(Index)
-		if IsFillableTank(Item) then table.insert(Found, Item) end
+		table.insert(Found, All:get(Index))
 	end
 
 	return Found
 end
 
+-- Fetched out of whatever bag is holding it, filled, then put back where it was found.
+-- The tank is held in hand for the animation and the game expects a held item to be in
+-- the character's own inventory, so a tank still sitting in a backpack cannot simply be
+-- worked on where it lies.
+--
+-- The same three steps vanilla queues to fill a petrol can, in the same order, from
+-- ISWorldObjectContextMenu.onTakeFuelNew. Returning it is the courtesy half: without it
+-- a full tank is left loose in the main inventory, which for something weighing ten is
+-- the difference between walking home and not.
 local function Fill(Player, Pump, Tanks)
+	local Inventory = Player:getInventory()
+
 	for _, Tank in ipairs(Tanks) do
 		local Missing = 1 - Tank:getCurrentUsesFloat()
+
+		local From = Tank:getContainer()
+		local Packed = From and From ~= Inventory and From:isInCharacterInventory(Player)
+
+		ISWorldObjectContextMenu.transferIfNeeded(Player, Tank)
 		ISTimedActionQueue.add(QolcFillPropaneAction:new(Player, Pump, Tank, FILL_TIME_FULL * Missing))
+
+		if Packed then
+			ISTimedActionQueue.add(ISInventoryTransferUtil.newInventoryTransferAction(
+				Player, Tank, Inventory, From))
+		end
 	end
 end
 
