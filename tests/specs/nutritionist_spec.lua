@@ -155,12 +155,22 @@ Test("a tiny weight is floored", function()
 end)
 
 --// The Switch
-Test("turning it off stops it spawning", function()
+Test("the table is seeded whatever the switch says", function()
+	-- Deliberate, and the reverse of what this asserted before. The merge events fire
+	-- before SandboxOptions.load, the only thing that ever fills SandboxVars from the save,
+	-- so a switch read here is our own declared default rather than the player's answer.
+	-- The switch is applied at fill time instead. See qolc_loot_switch.lua.
 	SandboxVars.QoLC.NutritionistMagEnabled = false
 	local Room = CookingRoom(2)
 	Merge()
 
-	AssertNil(WeightOf(Room, "QolcNutritionistMag"), "off means off")
+	AssertEquals(WeightOf(Room, "QolcNutritionistMag"), 1, "seeded regardless")
+end)
+
+Test("turning it off stops it spawning", function()
+	SandboxVars.QoLC.NutritionistMagEnabled = false
+
+	AssertTrue(QolcLootSwitch.IsWithheld("Base.QolcNutritionistMag"), "held out of the world")
 end)
 
 Test("turning it off stops it teaching", function()

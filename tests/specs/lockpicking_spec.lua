@@ -549,10 +549,17 @@ Test("the volumes still land where they did", function()
 	AssertEquals(Harness.LootWeight(Books, "Base.QolcLockpickBook2"), 2, "volume two")
 end)
 
-Test("the sandbox switch holds the hairpin back too", function()
+Test("the tables are seeded whatever the switch says", function()
+	-- Deliberate, and the opposite of what this file used to assert. The merge events all
+	-- fire before SandboxOptions.load, which is the only thing that ever fills SandboxVars
+	-- from the save, so a switch tested here reads our own declared default and not the
+	-- player's answer. Testing it here was worse than not testing it: it looked like a
+	-- working switch and was not one. See qolc_loot_switch.lua.
 	SandboxVars.QoLC.LockpickingEnabled = false
 	Register()
 
-	AssertNil(Weight("BathroomCabinet"), "off means off")
+	AssertEquals(Weight("BathroomCabinet"), 6, "seeded regardless")
+	AssertNotNil(Harness.LootWeight(ProceduralDistributions.list["BookstoreBooks"],
+		"Base.QolcLockpickBook1"), "and so are the volumes")
 end)
 

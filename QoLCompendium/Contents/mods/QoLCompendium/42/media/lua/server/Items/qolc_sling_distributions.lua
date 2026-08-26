@@ -8,6 +8,13 @@
 --// Server side, so the tables are built once and authoritatively. Switched from the
 --// sandbox page rather than mod options, because loot balance has to match across a
 --// multiplayer session.
+--//
+--// The seeding itself is unconditional, and the switch is handed to qolc_loot_switch.
+--// It has to be: the sandbox options are not read from the save until after all three
+--// merge events have fired, so a test here reads our own declared default rather than
+--// the player's answer. That file has the whole story.
+
+require "qolc_loot_switch"
 
 --// Tuning
 -- Weights use the same scale as vanilla ProceduralDistributions.
@@ -69,19 +76,9 @@ end
 
 --// Registration
 --// Switch
--- Server controlled, because this is balance rather than presentation. A per client
--- setting would let one player on a server play to different numbers than the rest.
-local function QolcEnabled()
-	local Vars = SandboxVars and SandboxVars.QoLC
-	local Value = Vars and Vars.SlingEnabled
-
-	if Value ~= nil then return Value and true or false end
-	return true
-end
+QolcLootSwitch.Withhold("SlingEnabled", { ITEM })
 
 local function OnPreDistributionMerge()
-	if not QolcEnabled() then return end
-
 	local Missing = {}
 
 	local Procedural = ProceduralDistributions and ProceduralDistributions.list

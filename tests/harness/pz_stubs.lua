@@ -333,6 +333,17 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return List
 	end
 
+	-- What vanilla itself reaches for to take back an item it has just rolled: ItemPicker
+	-- Java calls this on a NEVER_EMPTY container that came up empty.
+	function Container:Remove(Item)
+		for Index, Held in ipairs(self.Items) do
+			if Held == Item then
+				table.remove(self.Items, Index)
+				return
+			end
+		end
+	end
+
 	-- Down into the bags as well, which is the whole difference between these and
 	-- getItems. A worn bag is its own container, so a heavy thing a player is carrying is
 	-- very often not in the one getItems walks. Vanilla reaches for these rather than

@@ -14,8 +14,14 @@
 --// Server side, so the tables are built once and authoritatively. Switched from the
 --// sandbox page rather than mod options, because loot balance has to match across a
 --// multiplayer session.
+--//
+--// The seeding itself is unconditional, and the switch is handed to qolc_loot_switch.
+--// It has to be: the sandbox options are not read from the save until after all three
+--// merge events have fired, so a test here reads our own declared default rather than
+--// the player's answer. That file has the whole story.
 
 require "Items/ProceduralDistributions"
+require "qolc_loot_switch"
 
 --// Tuning
 local BOOKS = { "Base.QolcLockpickBook1", "Base.QolcLockpickBook2" }
@@ -70,14 +76,11 @@ local SETS = {
 }
 
 --// Switch
--- Server controlled, because this is balance rather than presentation.
-local function QolcEnabled()
-	local Vars = SandboxVars and SandboxVars.QoLC
-	local Value = Vars and Vars.LockpickingEnabled
-
-	if Value ~= nil then return Value and true or false end
-	return true
-end
+QolcLootSwitch.Withhold("LockpickingEnabled", {
+	"Base.QolcLockpickBook1",
+	"Base.QolcLockpickBook2",
+	"Base.QolcHairpin",
+})
 
 --// Functions
 local function Holds(Items, Name)
@@ -103,7 +106,6 @@ end
 
 --// Connections
 local function OnPreDistributionMerge()
-	if not QolcEnabled() then return end
 	if not ProceduralDistributions or not ProceduralDistributions.list then return end
 
 	for _, Set in ipairs(SETS) do
