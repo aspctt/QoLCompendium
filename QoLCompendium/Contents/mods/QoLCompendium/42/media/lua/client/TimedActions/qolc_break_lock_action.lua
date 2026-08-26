@@ -7,10 +7,12 @@
 --//
 --// One file for both, where the original had two that differed in about ten lines: the
 --// chance, the noise and the wear are identical, and only what happens on success is
---// not. A door is opened silently once its lock gives; a window is unlocked, opened, and
---// then perma locked so it cannot be shut and relocked behind you.
+--// not. A door has its lock broken off and is then opened by vanilla's own route; a
+--// window is unlocked, opened, and then perma locked so it cannot be shut and relocked
+--// behind you.
 --//
---// Client only, same as the picking action.
+--// Client only, same as the picking action. The door half hands off to ToggleDoor, which
+--// syncs the change itself, so a forced door reaches everyone on a server.
 
 require "TimedActions/ISBaseTimedAction"
 
@@ -129,7 +131,26 @@ function QolcBreakLockAction:perform()
 			-- The catch is levered off, so it can never be locked again
 			Object:setPermaLocked(true)
 		else
-			Object:ToggleDoorSilent()
+			-- The lock is off first, then the door is opened by vanilla's own route.
+			--
+			-- This used to be ToggleDoorSilent, which is a trap. Read in the jar, that
+			-- method flips open on the one object it is called on, swaps that object's
+			-- sprite, and stops. Everything else is in ToggleDoorActual: the garage door
+			-- and double door runs, the obstruction check, and the sync. So a three tile
+			-- storage shutter had one panel opened on its own, drawn with the shutter up
+			-- frame meant to be seen as part of a whole open run. Reported as the door
+			-- glitching out and opening like an ordinary door.
+			--
+			-- Worse on the way back. toggleGarageDoorObject flips each segment from its
+			-- own open state rather than the run's, so closing it normally shut the panel
+			-- we opened and opened the other two, and the run stayed out of step for good.
+			--
+			-- Unlocking first matters: ToggleDoorActual refuses a door that is still
+			-- locked and still shut, and rattles at you instead. Both fields, because
+			-- locked and lockedByKey are separate and the menu tests either.
+			Object:setLocked(false)
+			Object:setLockedByKey(false)
+			Object:ToggleDoor(Player)
 		end
 	end
 

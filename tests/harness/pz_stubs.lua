@@ -3813,6 +3813,8 @@ local function NewLockable(Class, Values)
 	Object.Locked = Values.Locked ~= false
 	Object.Opened = Values.Open and true or false
 	Object.Toggles = 0
+	Object.Refused = 0
+	Object.Syncs = 0
 	Object.Hits = 0
 
 	-- Inside and Outside say whether each side of the door is in a building. A front door
@@ -3835,6 +3837,7 @@ local function NewLockable(Class, Values)
 	function Object:IsOpen() return self.Opened end
 	function Object:isLocked() return self.Locked end
 	function Object:setIsLocked(Value) self.Locked = Value and true or false end
+	function Object:setLocked(Value) self.Locked = Value and true or false end
 	function Object:isBarricaded() return Values.Barricaded and true or false end
 	function Object:getKeyId() return self.KeyId end
 	function Object:setKeyId(Value) self.KeyId = Value end
@@ -3848,7 +3851,49 @@ local function NewLockable(Class, Values)
 			if Values.Exterior == nil then return false end
 			return Values.Exterior and true or false
 		end
-		function Object:ToggleDoorSilent() self.Opened = true self.Toggles = self.Toggles + 1 end
+
+		-- Transcribed from the jar rather than summarised, because the difference between
+		-- these two is the whole of a bug that shipped.
+		--
+		-- ToggleDoorSilent bails on a barricade, flips open on this one object, swaps this
+		-- one object's sprite, and stops. It does not clear the lock, it does not sync,
+		-- and it has never heard of a door that spans more than one tile.
+		function Object:ToggleDoorSilent()
+			if Values.Barricaded then return end
+
+			self.Opened = not self.Opened
+			self.Toggles = self.Toggles + 1
+		end
+
+		-- ToggleDoor is one line forwarding to ToggleDoorActual, which is where everything
+		-- else lives. Modelled here down to the part that produces the symptom: for a
+		-- garage door it reaches toggleGarageDoor, which walks the run with
+		-- getGarageDoorPrev and getGarageDoorNext and hands each segment to
+		-- toggleGarageDoorObject. That flips each segment from its OWN open state rather
+		-- than from the run's, and clears each one's lock, and then the run syncs once.
+		--
+		-- So a run left out of step stays out of step and flip flops, which is exactly
+		-- what a player sees when something opened one segment on its own.
+		function Object:ToggleDoor(Character)
+			if Character == nil then return end
+			if Values.Barricaded then return end
+
+			-- The locked branch of ToggleDoorActual: still locked, still shut, no key, so
+			-- it rattles and returns without moving.
+			if self.Locked and not self.Opened then
+				self.Refused = self.Refused + 1
+				return
+			end
+
+			for _, Segment in ipairs(self.Run or { self }) do
+				Segment.Opened = not Segment.Opened
+				Segment.Toggles = Segment.Toggles + 1
+				Segment:setIsLocked(false)
+				Segment:setLockedByKey(false)
+			end
+
+			self.Syncs = self.Syncs + 1
+		end
 	else
 		function Object:isSmashed() return Values.Smashed and true or false end
 		function Object:isDestroyed() return Values.Destroyed and true or false end
@@ -3863,6 +3908,21 @@ end
 
 function Harness.NewDoorLock(Values) return NewLockable("IsoDoor", Values) end
 function Harness.NewWindowLock(Values) return NewLockable("IsoWindow", Values) end
+
+-- A garage door that spans several tiles, the way a storage unit shutter does. Every
+-- segment is its own IsoDoor and they share one run, which is what getGarageDoorPrev and
+-- getGarageDoorNext walk. Returns the segments in order; any one of them is what a player
+-- would have clicked.
+function Harness.NewGarageDoor(Width, Values)
+	local Run = {}
+
+	for Index = 1, Width or 3 do
+		Run[Index] = NewLockable("IsoDoor", Values)
+		Run[Index].Run = Run
+	end
+
+	return Run
+end
 
 -- A tool, with the condition and door damage a crowbar needs.
 function Harness.NewTool(Type, Condition)

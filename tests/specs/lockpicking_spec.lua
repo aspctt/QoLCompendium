@@ -192,6 +192,71 @@ Test("forcing a door opens it", function()
 	AssertTrue(Door:IsOpen(), "the door should be open")
 end)
 
+Test("forcing a door breaks the lock rather than leaving it set", function()
+	-- It used to open the door and leave both fields set, so you walked through, pulled it
+	-- shut behind you, and it was locked again. Picking has always cleared the lock; this
+	-- is the same door, opened with more noise.
+	local Player = Burglar()
+	local Door = Harness.NewDoorLock()
+	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakLockAction:new(Player, Door, 10, nil, nil, false):perform()
+
+	AssertFalse(Door:isLocked(), "the lock is off")
+	AssertFalse(Door:isLockedByKey(), "and its key no longer holds it")
+	AssertEquals(Door.Refused, 0, "so vanilla never rattles at us instead of opening it")
+end)
+
+Test("forcing a door hands the opening to vanilla, so it syncs", function()
+	-- ToggleDoorSilent does not sync. ToggleDoorActual does, which is what carries a
+	-- forced door to everyone else on a server rather than only the one who forced it.
+	local Player = Burglar()
+	local Door = Harness.NewDoorLock()
+	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakLockAction:new(Player, Door, 10, nil, nil, false):perform()
+
+	AssertEquals(Door.Syncs, 1, "the change went out once")
+end)
+
+Test("forcing one panel of a wide garage door opens the whole run", function()
+	-- Reported with screenshots against 1.5.0: a three wide storage shutter forced with a
+	-- crowbar had one panel open like an ordinary doorway while the two beside it stayed
+	-- shut. That is what a lone segment drawn with its open sprite looks like.
+	local Player = Burglar()
+	local Run = Harness.NewGarageDoor(3)
+	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakLockAction:new(Player, Run[2], 10, nil, nil, false):perform()
+
+	for Index, Segment in ipairs(Run) do
+		AssertTrue(Segment:IsOpen(), "panel " .. Index .. " should be open")
+	end
+end)
+
+Test("a forced garage door closes again in one piece", function()
+	-- The half that made it permanent. toggleGarageDoorObject flips each segment from its
+	-- own state, not the run's, so a run left out of step never comes back: closing it
+	-- shut the one panel that was open and opened the other two. Reported as closing it
+	-- opening the other two sides.
+	local Player = Burglar()
+	local Run = Harness.NewGarageDoor(3)
+	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakLockAction:new(Player, Run[2], 10, nil, nil, false):perform()
+
+	-- Now shut it the way a player would, by hand, on any panel of the run.
+	Run[1]:ToggleDoor(Player)
+
+	for Index, Segment in ipairs(Run) do
+		AssertFalse(Segment:IsOpen(), "panel " .. Index .. " should be shut again")
+	end
+end)
+
 Test("forcing a window opens it and kills the catch", function()
 	local Player = Burglar()
 	local Window = Harness.NewWindowLock()
