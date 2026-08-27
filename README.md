@@ -280,6 +280,17 @@ python tools/generate_overlays.py
 python tools/generate_ui_icons.py
 ```
 
+The icons ship as one atlas rather than as loose files. Source art lives in
+`tools/textures`, and this lays it out and writes
+`common/media/texturepacks/QoLCompendium.pack`:
+
+```
+python tools/pack_textures.py
+```
+
+The full screen overlays, the sling's model texture and the moodle plates stay
+loose on purpose. The reasons are at the top of the script.
+
 
 Licence
 -------

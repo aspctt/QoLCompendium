@@ -165,7 +165,15 @@ public class TestRunner {
 		// naming a texture that does not exist draws nothing and reports nothing, which
 		// is how the original literature mod ended up shipping five book icons that were
 		// never there.
+		// Packed first, because that is where these live now: 143 icons ship as one atlas
+		// in QoLCompendium.pack rather than as loose files. A check that only looked on
+		// disk would report every one of them missing.
 		KahluaTable textures = platform.newTable();
+		for (String sprite : packedSprites()) {
+			if (!sprite.startsWith("Item_")) continue;
+			textures.rawset(sprite.substring(5), Boolean.TRUE);
+		}
+
 		File[] iconDirs = {
 			new File(modRoot, "common/media/textures"),
 			new File(modRoot, "42/media/textures")
@@ -180,6 +188,47 @@ public class TestRunner {
 			}
 		}
 		env.rawset("QOLC_ITEM_ICONS", textures);
+
+		// The three sides of the texture story, so a spec can hold them against each
+		// other: what the pack holds, what source art it was built from, and what is
+		// still loose inside the mod. A sprite that is both packed and loose is two
+		// copies of one texture, and the pack is looked at first, so the loose one is
+		// dead weight that still has to be kept right.
+		KahluaTable packed = platform.newTable();
+		for (String sprite : packedSprites()) packed.rawset(sprite, Boolean.TRUE);
+		env.rawset("QOLC_PACKED_SPRITES", packed);
+
+		// modRoot is <repo>/QoLCompendium/Contents/mods/QoLCompendium, so the source art
+		// beside the tools that write it is four levels up.
+		KahluaTable source = platform.newTable();
+		File[] art = new File(modRoot, "../../../../tools/textures").listFiles();
+		if (art != null) {
+			for (File f : art) {
+				String n = f.getName();
+				if (n.endsWith(".png")) source.rawset(n.substring(0, n.length() - 4), Boolean.TRUE);
+			}
+		}
+		env.rawset("QOLC_SOURCE_ART", source);
+
+		KahluaTable loose = platform.newTable();
+		for (String root : new String[] { "common/media", "42/media" }) {
+			collectTextures(new File(modRoot, root), new File(modRoot, root), loose);
+		}
+		env.rawset("QOLC_LOOSE_TEXTURES", loose);
+
+		// mod.info verbatim. A few things are declared there and nowhere else, the pack
+		// and the tiledef among them, and a missing line is silent: the game simply never
+		// loads the file and everything in it draws nothing.
+		File info = new File(modRoot, "42/mod.info");
+		String infoText = null;
+		if (info.isFile()) {
+			try {
+				infoText = new String(readBytes(info), "UTF-8");
+			} catch (IOException e) {
+				// Left null, and the spec that reads it says so rather than passing.
+			}
+		}
+		env.rawset("QOLC_MOD_INFO", infoText);
 
 		// Every loot table vanilla defines, so the stub builds its own from the real
 		// names. A distribution naming a table that does not exist writes into nothing,
@@ -1052,7 +1101,124 @@ public class TestRunner {
 		for (File root : roots) {
 			if (new File(root, relative).isFile()) return true;
 		}
-		return false;
+
+		return packedSprites().contains(spriteNameFor(texture));
+	}
+
+	/**
+	 * The name a texture path collapses to once the engine is done with it.
+	 *
+	 * Texture.getSharedTextureInternal normalises the separators, strips the extension at
+	 * the last dot, strips everything up to the last slash, and asks the pack for what is
+	 * left, before it ever looks at the file system. Two paths never reach a pack at all:
+	 * one ending in .txt, and one containing "/mods/". Both return null here so the caller
+	 * falls back to looking for a file, which is what the game does with them.
+	 */
+	private static String spriteNameFor(String texture) {
+		String name = texture.replace("\\", "/");
+		if (name.endsWith(".txt") || name.contains("/mods/")) return null;
+
+		int dot = name.lastIndexOf('.');
+		if (name.endsWith(".png") && dot >= 0) name = name.substring(0, dot);
+
+		return name.substring(name.lastIndexOf('/') + 1);
+	}
+
+	private static Set<String> packedSprites;
+
+	/**
+	 * Every sprite name in the mod's own texture packs, read straight out of the binary.
+	 *
+	 * A packed icon has no file of its own, so a check that only looks on disk reports
+	 * every one of them missing. Only the names are needed, so the atlas is never decoded.
+	 *
+	 * Little-endian throughout: an optional "PZPK" and version, the page count, then per
+	 * page a name, a sprite count, an alpha flag, and one record per sprite of a length
+	 * prefixed name followed by eight ints.
+	 */
+	private static Set<String> packedSprites() {
+		if (packedSprites != null) return packedSprites;
+		packedSprites = new LinkedHashSet<String>();
+
+		for (String dir : new String[] { "common/media/texturepacks", "42/media/texturepacks" }) {
+			File[] files = new File(modRoot, dir).listFiles();
+			if (files == null) continue;
+
+			for (File f : files) {
+				if (!f.getName().endsWith(".pack")) continue;
+				try {
+					readPackNames(f, packedSprites);
+				} catch (Throwable t) {
+					System.out.println("  WARN  could not read " + f.getName() + ": " + t);
+				}
+			}
+		}
+
+		return packedSprites;
+	}
+
+	private static void readPackNames(File file, Set<String> into) throws IOException {
+		byte[] d = readBytes(file);
+		int[] i = { 0 };
+
+		if (d.length >= 4 && d[0] == 'P' && d[1] == 'Z' && d[2] == 'P' && d[3] == 'K') {
+			i[0] = 4;
+			readInt(d, i);
+		}
+
+		int pages = readInt(d, i);
+		for (int p = 0; p < pages; p++) {
+			int nameLen = readInt(d, i);
+			i[0] += nameLen;
+
+			int sprites = readInt(d, i);
+			readInt(d, i);
+
+			for (int s = 0; s < sprites; s++) {
+				int len = readInt(d, i);
+				into.add(new String(d, i[0], len, "UTF-8"));
+				i[0] += len + 32;
+			}
+
+			// Only the first page's names are needed for any pack this mod ships, and
+			// walking past the image would mean handling both terminator styles.
+			return;
+		}
+	}
+
+	/** Every loose .png under a media root, keyed by its path relative to that root. */
+	private static void collectTextures(File root, File dir, KahluaTable into) {
+		File[] files = dir.listFiles();
+		if (files == null) return;
+
+		for (File f : files) {
+			if (f.isDirectory()) {
+				collectTextures(root, f, into);
+			} else if (f.getName().endsWith(".png")) {
+				String path = f.getPath().substring(root.getPath().length() + 1);
+				into.rawset(path.replace('\\', '/'), Boolean.TRUE);
+			}
+		}
+	}
+
+	private static int readInt(byte[] d, int[] at) {
+		int i = at[0];
+		at[0] += 4;
+		return (d[i] & 0xff) | ((d[i + 1] & 0xff) << 8)
+			| ((d[i + 2] & 0xff) << 16) | ((d[i + 3] & 0xff) << 24);
+	}
+
+	private static byte[] readBytes(File f) throws IOException {
+		InputStream in = new FileInputStream(f);
+		try {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			byte[] buffer = new byte[8192];
+			int read;
+			while ((read = in.read(buffer)) > 0) out.write(buffer, 0, read);
+			return out.toByteArray();
+		} finally {
+			in.close();
+		}
 	}
 
 	private static String valueOf(String block, String key) {

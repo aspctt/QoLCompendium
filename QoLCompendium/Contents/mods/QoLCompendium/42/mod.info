@@ -1,8 +1,9 @@
 id=QoLCompendium
 name=QoL Compendium
-modversion=1.5.3
+modversion=1.5.4
 description=Quality of life mods that have not been updated for build 42, rebuilt and merged into one.
 icon=icon.png
 poster=poster.png
+pack=QoLCompendium
 versionMin=42.20
 tiledef=qolc_flamingo 3781

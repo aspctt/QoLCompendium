@@ -202,6 +202,8 @@ These are produced procedurally and share no pixels or bytes with any other mod:
                                    base game's own sprites
   tools/generate_flamingo_tiles.py the flamingo tile definition, rebuilt from
                                    build 42's own tile data
+  tools/pack_textures.py           lays the icons above onto one atlas and writes
+                                   QoLCompendium.pack, which is what ships
 
 
 REMOVAL REQUESTS

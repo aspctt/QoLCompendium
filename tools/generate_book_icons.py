@@ -32,8 +32,10 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'other-mods', 'An Exhilaratingly Organized Literature Mod',
                    'mods', 'ListSortOGSN_rice', 'media', 'textures')
-DEST = os.path.join(ROOT, 'QoLCompendium', 'Contents', 'mods', 'QoLCompendium',
-                    'common', 'media', 'textures')
+# Source art, not shipped art. tools/pack_textures.py lays everything here onto one
+# atlas and writes QoLCompendium.pack, which is what the mod actually carries. A loose
+# copy inside the mod would be a second version of the same icon that nothing draws.
+DEST = os.path.join(ROOT, 'tools', 'textures')
 
 PREFIX = 'QolcBook'
 VOLUMES = (1, 2, 3, 4, 5)

@@ -1387,6 +1387,12 @@ function Harness.ReadModScript(Name)
 	return (QOLC_MOD_SCRIPTS or {})[Name] or ""
 end
 
+-- The mod.info this build ships, verbatim. Some things are declared there and nowhere
+-- else, and a missing line draws nothing rather than failing.
+function Harness.ReadModInfo()
+	return QOLC_MOD_INFO
+end
+
 --// Hotbar
 ISHotbar = ISHotbar or {}
 ISHotbarAttachDefinition = ISHotbarAttachDefinition or {}

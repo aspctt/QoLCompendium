@@ -6,8 +6,10 @@ options button, so that one is used directly rather than reproduced here.
 The glyphs are drawn rather than bundled, which keeps the project's rule that no artwork
 comes from another mod unless it genuinely cannot be reproduced. A padlock plainly can.
 
-Output goes into the mod's own texture folder, which sits inside the Workshop layout at
-QoLCompendium/Contents/mods/QoLCompendium/common/media/textures/GUI/.
+Output goes into tools/textures, which is source art rather than shipped art:
+tools/pack_textures.py lays it onto one atlas and writes QoLCompendium.pack, and that is
+what the mod carries. The lua still asks for these by their old loose path, because the
+texture lookup throws the directory away before it reaches the pack.
 
 Run:    python tools/generate_ui_icons.py
 """
@@ -34,13 +36,8 @@ DISC_SIZE = 128
 COLOUR_CLOSED = (222, 222, 222, 255)
 COLOUR_OPEN = (150, 150, 150, 255)
 
-# The repository is laid out the way Steam expects a Workshop item, so the mod itself
-# sits several levels down: <item>/Contents/mods/<modid>/.
-OUTPUT = (
-    Path(__file__).resolve().parent.parent
-    / "QoLCompendium" / "Contents" / "mods" / "QoLCompendium"
-    / "common" / "media" / "textures" / "GUI"
-)
+# Source art. See the note at the top: what ships is the pack, not these files.
+OUTPUT = Path(__file__).resolve().parent / "textures"
 
 
 def draw_padlock(open_shackle: bool, colour: tuple) -> Image.Image:
