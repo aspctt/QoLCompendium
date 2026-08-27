@@ -27,9 +27,15 @@ What stays loose, and why:
   base game ships its world item textures loose for the same reason.
 
   media/ui/MoodleQuarters. Forty eight files, but only eight names: good_1 through
-  good_4 and bad_1 through bad_4, repeated once per size folder. A pack namespace is
-  flat, so packing them would leave one size and lose five. They are picked by
-  building the path from the size, which is the one lookup shape a pack cannot serve.
+  good_4 and bad_1 through bad_4, repeated once per size folder. Since the lookup
+  throws the directory away, all six sizes collapse to the same eight sprites, so
+  packing them as they are named now would keep one size and lose five.
+
+  That is a naming problem rather than a wall. Flatten the sprites to qolc_mq_64_good_1
+  and ask for them by that name instead of by path and they pack like anything else.
+  Left alone on balance: the path they use now is the same shape vanilla's own moodle
+  art uses one function below in qolc_moodle_quarters.lua, and a flat name would put
+  them outside what checkTextureFolders in the runner can see.
 
 The format, little-endian throughout. Build 42 writes the newer of the two:
 

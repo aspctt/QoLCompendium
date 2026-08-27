@@ -119,8 +119,13 @@ Test("the sling's model texture is left loose", function()
 end)
 
 Test("the moodle quarters plates are left loose", function()
-	-- Forty eight files but only eight names, one set per size folder. A pack namespace is
-	-- flat, so packing them would keep one size and lose five.
+	-- Forty eight files but only eight names, one set per size folder. The lookup throws
+	-- the directory away, so all six sizes collapse to the same eight sprites and packing
+	-- them under these names would keep one size and lose five.
+	--
+	-- A naming problem rather than a wall: flat sprite names and a flat lookup would pack
+	-- fine. Left alone deliberately, for the reasons in tools/pack_textures.py, so this
+	-- asserts a decision rather than an impossibility.
 	for _, Size in ipairs({ 32, 48, 64, 80, 96, 128 }) do
 		for Level = 1, 4 do
 			for _, Kind in ipairs({ "good", "bad" }) do
