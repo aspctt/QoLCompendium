@@ -61,7 +61,7 @@ game already tracks whether something is cotton, denim or leather, and uses it
 for patching and for what the garment rips into, but never tells you.
 
 **Food Categories** - Splits the inventory's single Food heading into food that
-spoils and food that keeps. The base game files all 707 food items together,
+spoils and food that does not. The base game files all 707 food items together,
 which buries the only question that matters when you open a fridge.
 
 **Reorder The Hotbar** - Drag hotbar slots into the order you want, and click a

@@ -92,7 +92,15 @@ Test("both new categories have a label", function()
 	AssertNotNil(Translations["IGUI_ItemCat_" .. KEEPS], "missing label for " .. KEEPS)
 end)
 
-Test("the labels read as food", function()
-	AssertContains(Translations["IGUI_ItemCat_" .. PERISHABLE], "Food", "perishable label")
-	AssertContains(Translations["IGUI_ItemCat_" .. KEEPS], "Food", "keeps label")
+Test("the labels read as one distinction cut two ways", function()
+	-- Both halves say Food, and both say Perishable, so a sorted column reads as one split
+	-- rather than as two unrelated headings. The non-perishable one said "Food (Keeps)" for
+	-- a while, which was a verb sitting beside an adjective and did not match its own key.
+	local Spoils = Translations["IGUI_ItemCat_" .. PERISHABLE]
+	local Keeps = Translations["IGUI_ItemCat_" .. KEEPS]
+
+	AssertContains(Spoils, "Food", "perishable label")
+	AssertContains(Keeps, "Food", "non-perishable label")
+	AssertContains(Spoils, "Perishable", "the word the split turns on")
+	AssertContains(Keeps, "Non-Perishable", "and its opposite, spelled the same way")
 end)
