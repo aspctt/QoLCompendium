@@ -76,6 +76,22 @@ Test("curing is the only thing that takes the poison out", function()
 end)
 
 --// Curing
+Test("cured meat arrives fresh rather than already stale", function()
+	-- Reported in game. Food.updateRotting builds the replacement and then calls setAge
+	-- with the old item's age, so the cured item is born aged however long curing took.
+	-- isFresh is age < offAge, so its fresh window has to start beyond that or it arrives
+	-- at the end of its own life.
+	local Cures = Number(Item("QolcCuringCorpseFlesh"), "DaysTotallyRotten")
+	local Fresh = Number(Item("QolcCuredCorpseFlesh"), "DaysFresh")
+	local Rots = Number(Item("QolcCuredCorpseFlesh"), "DaysTotallyRotten")
+
+	AssertNotNil(Cures, "the curing stage needs a clock")
+	AssertTrue(Fresh > Cures,
+		"cured meat is born aged " .. tostring(Cures) .. " and stops being fresh at "
+			.. tostring(Fresh))
+	AssertTrue(Rots > Fresh, "and it should have somewhere to rot to after that")
+end)
+
 Test("the curing stage turns into the cured one when it rots", function()
 	-- The game has no timer running over days except rotting, so ReplaceOnRotten is the
 	-- clock. Vanilla melts ice cream this way and turns a sugar beet pot into sugar.
@@ -137,13 +153,12 @@ Test("the world action exists and takes the body apart", function()
 	QolcButcherCorpseAction:new(Player, Body, Knife, 10):perform()
 
 	AssertTrue(Body.Removed, "the body should be gone")
-	AssertEquals(#Square.Dropped, 3, "and three pieces left where it lay")
-	AssertEquals(Square.Dropped[1], "Base.QolcCorpseFlesh", "of flesh")
 end)
 
-Test("the flesh is dropped rather than handed over", function()
-	-- Three pieces of a body is more than most characters have room for, and silently
-	-- failing to give them would be worse than leaving them at your feet.
+Test("the flesh is handed over rather than left in the grass", function()
+	-- Butchering an animal puts the meat in your hands and this should not behave
+	-- differently. Three pieces beside a body you have just removed is easy to walk away
+	-- from without noticing.
 	local Player = Harness.NewPlayer(0, true)
 	local Knife = Harness.NewTool("HuntingKnife")
 	Player:getInventory():AddItem(Knife)
@@ -151,7 +166,15 @@ Test("the flesh is dropped rather than handed over", function()
 	local Square = Harness.NewObjectSquare(0, 0, 0, {})
 	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Square), Knife, 10):perform()
 
-	AssertEquals(#Player:getInventory().Items, 1, "only the knife is still carried")
+	local Held = {}
+	for _, Item in ipairs(Player:getInventory().Items) do
+		if Item.getFullType and Item:getFullType() == "Base.QolcCorpseFlesh" then
+			table.insert(Held, Item)
+		end
+	end
+
+	AssertEquals(#Held, 3, "three pieces, carried")
+	AssertEquals(#Square.Dropped, 0, "and nothing left on the ground")
 end)
 
 Test("a body with no square is refused rather than throwing", function()

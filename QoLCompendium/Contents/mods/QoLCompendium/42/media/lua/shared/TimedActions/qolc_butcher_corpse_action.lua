@@ -63,14 +63,22 @@ function QolcButcherCorpseAction:stop()
 end
 
 function QolcButcherCorpseAction:perform()
+	local Inventory = self.character:getInventory()
 	local Square = self.body:getSquare()
 
-	-- Dropped on the square rather than handed over, because three pieces of a body is
-	-- more than most characters have room for and silently failing to give them would be
-	-- worse than leaving them at your feet.
-	if Square then
-		for _ = 1, YIELD do
-			Square:AddWorldInventoryItem(instanceItem(FLESH), 0, 0, 0)
+	-- Handed over rather than dropped. Butchering an animal puts the meat in your hands and
+	-- this should not behave differently, and three pieces left in the grass beside a body
+	-- you have just removed is easy to walk away from without noticing.
+	--
+	-- The square is the fallback for a character with no inventory at all, which should not
+	-- happen but is cheaper to allow for than to have the flesh vanish if it does.
+	for _ = 1, YIELD do
+		local Flesh = instanceItem(FLESH)
+
+		if Inventory then
+			Inventory:AddItem(Flesh)
+		elseif Square then
+			Square:AddWorldInventoryItem(Flesh, 0, 0, 0)
 		end
 	end
 

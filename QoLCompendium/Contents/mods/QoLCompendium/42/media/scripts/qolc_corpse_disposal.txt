@@ -132,6 +132,15 @@ module Base
 	 * Raw meat, in the sense a steak is raw meat: eating it uncooked makes you ill, and
 	 * cooking it does not. The EvolvedRecipe line is what puts it in a stew, and the
 	 * numbers beside each are how much of the pot it fills, copied from Steak's own.
+	 *
+	 * Six and nine rather than three and six, because the three days spent curing come with
+	 * it. Food.updateRotting creates the replacement and then calls setAge with the old
+	 * item's age, so this is born aged three, and at DaysFresh = 3 it arrived exactly at the
+	 * end of its own freshness. Reported as cured meat coming out stale.
+	 *
+	 * isFresh is age < offAge and isRotten is age >= offAgeMax, both against this item's own
+	 * fields, so the window simply has to start beyond what the curing stage spends. Three
+	 * fresh days and six in total, counted from the moment it finishes curing.
 	 */
 	item QolcCuredCorpseFlesh
 	{
@@ -153,8 +162,8 @@ module Base
 		Carbohydrates = 0.0,
 		Lipids = 9.35,
 		Proteins = 31.62,
-		DaysFresh = 3,
-		DaysTotallyRotten = 6,
+		DaysFresh = 6,
+		DaysTotallyRotten = 9,
 		EvolvedRecipe = Pizza:20;Stew:20;Stir fry:20;Sandwich:5|Cooked;Salad:10|Cooked;Pasta:20;Rice:20;Taco:5|Cooked;Burrito:10|Cooked,
 		FishingLure = true,
 		Tags = base:iscompostable,
