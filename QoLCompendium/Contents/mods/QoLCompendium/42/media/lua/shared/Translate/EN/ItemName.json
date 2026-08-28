@@ -9,5 +9,9 @@
     "Base.QolcWorkbookCarpentry": "Awesome DIY - Carpentry",
     "Base.QolcWorkbookElectrical": "Awesome DIY - Electrical",
     "Base.QolcWorkbookWelding": "Awesome DIY - Welding",
-    "Base.QolcWorkbookTailoring": "Awesome DIY - Tailoring"
+    "Base.QolcWorkbookTailoring": "Awesome DIY - Tailoring",
+    "Base.QolcCorpseFlesh": "Corpse Flesh",
+    "Base.QolcPreparedCorpseFlesh": "Prepared Corpse Flesh",
+    "Base.QolcCuringCorpseFlesh": "Curing Corpse Flesh",
+    "Base.QolcCuredCorpseFlesh": "Cured Corpse Flesh"
 }

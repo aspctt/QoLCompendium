@@ -48,6 +48,7 @@ Most are not ports. Build 41 code rarely survives the move, so where the origina
 [*]Sterilized rags usable wherever ripped sheets are
 [*]Towels and dish cloths tear into rags, and rags sew back into a sheet
 [*]Four DIY manuals that trade materials for skill experience
+[*]Butcher a corpse for compost, or cure the flesh into meat (off by default)
 [*]A torch hangs off your belt, like a screwdriver
 [/list]
 

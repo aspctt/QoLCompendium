@@ -237,3 +237,18 @@ option QoLC.WorkbooksEnabled
     page = QoLC,
     translation = QoLC_WorkbooksEnabled,
 }
+
+/*
+ * Butchering a body for flesh, which composts, and at Cooking 7 can be prepared and cured
+ * in salt into meat a pot will accept.
+ *
+ * The one option here that ships off. Everything else in this mod repairs something the
+ * base game got wrong; this adds cannibalism to a game that has none of it, and turning
+ * that on for someone who only wanted their hotbar sorted would be overstepping.
+ */
+option QoLC.CorpseDisposalEnabled
+{
+    type = boolean, default = false,
+    page = QoLC,
+    translation = QoLC_CorpseDisposalEnabled,
+}

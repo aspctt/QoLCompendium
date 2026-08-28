@@ -1,0 +1,236 @@
+/*
+ * Corpse Disposal
+ * Def's Long Term Survival, Workshop 1962914415 - Original idea, by DefbeatCZ
+ * aspctt - 28.08.2026
+ * Butcher a body for flesh, and, if you are prepared to work at it, make that flesh into
+ * something a pot will accept.
+ *
+ * Build 42 already disposes of corpses: burn, bury, throw over a fence, put on a campfire.
+ * What it has never offered is getting anything back, and that is the whole of this.
+ *
+ * A corpse is still an inventory item in this build, CorpseMale and CorpseFemale, weight
+ * twenty and both hands, which is why this is an ordinary recipe rather than the ground
+ * context menu the original's notes expected. Grab Corpse puts one in your hands and the
+ * crafting screen sees it from there.
+ *
+ * The chain, and why it has four items rather than two:
+ *
+ *   Corpse Flesh          butchered off the body. Poisonous, and compostable.
+ *   Prepared Corpse Flesh trimmed properly at Cooking 7. Less poisonous, still a mistake.
+ *   Curing Corpse Flesh   packed in salt. Does nothing but sit there and become the next.
+ *   Cured Corpse Flesh    raw meat, in the sense a steak is raw meat.
+ *
+ * The curing one exists because the game has no timer that runs over days except rotting.
+ * ReplaceOnRotten turns an item into another when it reaches totally rotten, which vanilla
+ * uses for ice cream melting and, closer to this, for a sugar beet pot becoming sugar. So
+ * curing is three days of rot that ends in something better rather than worse. It stops in
+ * a fridge, as rot does, which is the right answer anyway: you cannot cure meat cold.
+ *
+ * Poison is the original's mechanic and its number. Verified in the jar rather than
+ * assumed: BodyDamage.JustAteFood adds PoisonPower times the fraction eaten straight to
+ * the POISON stat, which CharacterStat registers with a maximum of 100, and adds a sixth
+ * of it again as pain. Iron Gut halves it, Weak Stomach doubles it. So the original's 50
+ * is half the poison bar from one whole portion, which is severe and survivable, and the
+ * prepared stage at 30 is the same statement made more quietly.
+ *
+ * Cured flesh is modelled on Steak: DangerousUncooked rather than CantEat, because that is
+ * how the game says raw meat. Eating it raw makes you ill, cooking it does not, and the
+ * EvolvedRecipe list is what lets a stew take it.
+ *
+ * Two icons are the original author's, bundled under MIT and credited in NOTICE. The other
+ * two are vanilla's own.
+ *
+ * OnTest is the sandbox switch. See 42/media/lua/shared/qolc_corpse_disposal.lua.
+ */
+module Base
+{
+	/*
+	 * Off a body, and nothing has been done to it. Compostable, which is the point of
+	 * butchering rather than burning: the bin takes anything tagged base:iscompostable,
+	 * ages it over SandboxOptions.getCompostHours, and hands back compost.
+	 */
+	item QolcCorpseFlesh
+	{
+		DisplayCategory = Food,
+		ItemType = base:food,
+		Weight = 1.0,
+		Icon = QolcCorpseFlesh,
+		FoodType = Meat,
+		HungerChange = -25,
+		UnhappyChange = 60,
+		BoredomChange = 20,
+		Calories = 180.0,
+		Carbohydrates = 0.0,
+		Lipids = 8.0,
+		Proteins = 26.0,
+		DangerousUncooked = true,
+		Poison = true,
+		PoisonDetectionLevel = 7,
+		PoisonPower = 50,
+		DaysFresh = 1,
+		DaysTotallyRotten = 2,
+		Tags = base:iscompostable,
+		Tooltip = Tooltip_QoLC_CorpseFlesh,
+		StaticModel = MeatPatty,
+		WorldStaticModel = MeatPatty,
+	}
+
+	/* Trimmed, bled and boned by someone who knows how. Still not food. */
+	item QolcPreparedCorpseFlesh
+	{
+		DisplayCategory = Food,
+		ItemType = base:food,
+		Weight = 0.8,
+		Icon = MeatPatty,
+		FoodType = Meat,
+		HungerChange = -25,
+		UnhappyChange = 40,
+		Calories = 200.0,
+		Carbohydrates = 0.0,
+		Lipids = 9.0,
+		Proteins = 30.0,
+		DangerousUncooked = true,
+		Poison = true,
+		PoisonDetectionLevel = 5,
+		PoisonPower = 30,
+		DaysFresh = 2,
+		DaysTotallyRotten = 3,
+		Tags = base:iscompostable,
+		Tooltip = Tooltip_QoLC_PreparedCorpseFlesh,
+		StaticModel = MeatPatty,
+		WorldStaticModel = MeatPatty,
+	}
+
+	/*
+	 * Doing nothing, on purpose. DaysTotallyRotten is the clock and ReplaceOnRotten is
+	 * what it strikes: three days packed in salt and this becomes the cured item.
+	 *
+	 * CantEat because a fistful of salted raw flesh part way through curing is not a meal
+	 * and should not be offered as one. It is still compostable, so a batch left too long
+	 * somewhere cold is not simply wasted.
+	 */
+	item QolcCuringCorpseFlesh
+	{
+		DisplayCategory = Food,
+		ItemType = base:food,
+		Weight = 0.8,
+		Icon = QolcCuringCorpseFlesh,
+		FoodType = Meat,
+		CantEat = true,
+		DaysFresh = 2,
+		DaysTotallyRotten = 3,
+		ReplaceOnRotten = Base.QolcCuredCorpseFlesh,
+		Tags = base:iscompostable,
+		Tooltip = Tooltip_QoLC_CuringCorpseFlesh,
+		StaticModel = MeatPatty,
+		WorldStaticModel = MeatPatty,
+	}
+
+	/*
+	 * Raw meat, in the sense a steak is raw meat: eating it uncooked makes you ill, and
+	 * cooking it does not. The EvolvedRecipe line is what puts it in a stew, and the
+	 * numbers beside each are how much of the pot it fills, copied from Steak's own.
+	 */
+	item QolcCuredCorpseFlesh
+	{
+		DisplayCategory = Food,
+		ItemType = base:food,
+		Weight = 0.3,
+		Icon = Steak,
+		FoodType = Meat,
+		BadCold = true,
+		BadInMicrowave = true,
+		GoodHot = true,
+		DangerousUncooked = true,
+		IsCookable = true,
+		MinutesToCook = 50,
+		MinutesToBurn = 70,
+		HungerChange = -30.0,
+		UnhappyChange = 20,
+		Calories = 220.0,
+		Carbohydrates = 0.0,
+		Lipids = 9.35,
+		Proteins = 31.62,
+		DaysFresh = 3,
+		DaysTotallyRotten = 6,
+		EvolvedRecipe = Pizza:20;Stew:20;Stir fry:20;Sandwich:5|Cooked;Salad:10|Cooked;Pasta:20;Rice:20;Taco:5|Cooked;Burrito:10|Cooked,
+		FishingLure = true,
+		Tags = base:iscompostable,
+		Tooltip = Tooltip_QoLC_CuredCorpseFlesh,
+		StaticModel = Steak,
+		WorldStaticModel = Steak,
+	}
+
+	/*
+	 * The corpse is destroyed, which is the disposal half. Three pieces of flesh is the
+	 * original's figure.
+	 */
+	craftRecipe QolcButcherCorpse
+	{
+		timedAction = SliceMeat,
+		time = 240,
+		Tags = InHandCraft,
+		OnTest = Recipe.OnTest.QolcCorpseDisposal,
+		category = Cooking,
+		xpAward = Butchering:10,
+
+		inputs
+		{
+			item 1 tags[base:sharpknife;base:meatcleaver;base:axe] mode:keep flags[MayDegradeLight;IsNotDull],
+			item 1 [Base.CorpseMale;Base.CorpseFemale] mode:destroy,
+		}
+
+		outputs
+		{
+			item 3 Base.QolcCorpseFlesh,
+		}
+	}
+
+	/*
+	 * Cooking 7 is the gate the whole chain hangs on. Below it a body is only compost.
+	 */
+	craftRecipe QolcPrepareCorpseFlesh
+	{
+		timedAction = SliceMeat_Surface,
+		time = 300,
+		Tags = AnySurfaceCraft,
+		SkillRequired = Cooking:7,
+		OnTest = Recipe.OnTest.QolcCorpseDisposal,
+		category = Cooking,
+		xpAward = Cooking:15,
+
+		inputs
+		{
+			item 1 tags[base:sharpknife;base:meatcleaver] mode:keep flags[MayDegradeLight;IsNotDull],
+			item 1 [Base.QolcCorpseFlesh] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.QolcPreparedCorpseFlesh,
+		}
+	}
+
+	/* Packed in salt, and then left alone for three days. */
+	craftRecipe QolcCureCorpseFlesh
+	{
+		timedAction = Making,
+		time = 120,
+		Tags = AnySurfaceCraft,
+		SkillRequired = Cooking:7,
+		OnTest = Recipe.OnTest.QolcCorpseDisposal,
+		category = Cooking,
+		xpAward = Cooking:10,
+
+		inputs
+		{
+			item 1 [Base.QolcPreparedCorpseFlesh] mode:destroy,
+			item 2 [Base.Salt],
+		}
+
+		outputs
+		{
+			item 1 Base.QolcCuringCorpseFlesh,
+		}
+	}
+}

@@ -67,5 +67,9 @@
     "Tooltip_QoLC_WorkbookCarpentry": "Exercises to work through with a saw and a hammer. Costs planks, teaches carpentry.",
     "Tooltip_QoLC_WorkbookElectrical": "Exercises to work through with a screwdriver. Costs scrap electronics and wire, teaches electrical.",
     "Tooltip_QoLC_WorkbookWelding": "Exercises to work through with a torch and a mask. Costs scrap metal, teaches welding.",
-    "Tooltip_QoLC_WorkbookTailoring": "Exercises to work through with scissors and a needle. Costs rags and thread, teaches tailoring."
+    "Tooltip_QoLC_WorkbookTailoring": "Exercises to work through with scissors and a needle. Costs rags and thread, teaches tailoring.",
+    "Tooltip_QoLC_CorpseFlesh": "Is there anything you would not do to survive? Eating this will make you very ill. It composts.",
+    "Tooltip_QoLC_PreparedCorpseFlesh": "Trimmed and boned properly. Still a mistake to eat, and still a long way from food.",
+    "Tooltip_QoLC_CuringCorpseFlesh": "Packed in salt. Leave it somewhere that is not cold for three days.",
+    "Tooltip_QoLC_CuredCorpseFlesh": "Cured through. Raw, so cook it, and then it is meat like any other."
 }

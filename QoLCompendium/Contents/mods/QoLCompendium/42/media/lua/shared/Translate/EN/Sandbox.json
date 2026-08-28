@@ -44,5 +44,7 @@
     "Sandbox_QoLC_ClothRecyclingEnabled": "Cloth Recycling",
     "Sandbox_QoLC_ClothRecyclingEnabled_tooltip": "Lets you tear a bath towel or a dish cloth into rags, and sew twelve rags back into a bedsheet. The base game can do neither: only the bedsheet carries the tag that makes cloth rippable, and nothing turns rags back into anything. A towel gives three rags and a dish cloth one, against the bedsheet's ten.",
     "Sandbox_QoLC_WorkbooksEnabled": "DIY Workbooks",
-    "Sandbox_QoLC_WorkbooksEnabled_tooltip": "Adds four practice manuals for carpentry, electrical, welding and tailoring. Holding one lets you work an exercise from it, spending materials for experience in that trade. Every one is a net loss of materials, so this is somewhere to put a surplus rather than a way to make anything. Off stops them spawning and makes the exercises uncraftable."
+    "Sandbox_QoLC_WorkbooksEnabled_tooltip": "Adds four practice manuals for carpentry, electrical, welding and tailoring. Holding one lets you work an exercise from it, spending materials for experience in that trade. Every one is a net loss of materials, so this is somewhere to put a surplus rather than a way to make anything. Off stops them spawning and makes the exercises uncraftable.",
+    "Sandbox_QoLC_CorpseDisposalEnabled": "Corpse Disposal",
+    "Sandbox_QoLC_CorpseDisposalEnabled_tooltip": "Butcher a body for flesh that can be composted, and, at Cooking 7, prepared and then cured in salt over three days into meat a pot will accept. The base game can burn, bury or dump a corpse but never get anything back from one. Off by default, because this is cannibalism and not a fix for anything."
 }

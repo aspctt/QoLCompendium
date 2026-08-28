@@ -153,6 +153,12 @@ spending materials for experience in that trade. Every exercise is a net loss of
 goods, so this is somewhere to put a surplus of planks or scrap once the world
 has stopped offering anything else to build, not a way to make anything.
 
+**Corpse Disposal** - Butcher a body for flesh that can be composted, and at
+Cooking 7 prepare and then salt cure it over three days into meat a pot will
+accept. The base game can burn, bury or dump a corpse but never get anything
+back from one. Eating it before it is cured will make you very ill. Off by
+default, being the one thing here that adds something rather than repairing it.
+
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
 door or window open with a crowbar. Failing a pick jams the lock for good, and
 the pick can stick or snap. Two manuals teach it, and a burglar already knows.

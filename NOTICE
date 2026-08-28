@@ -47,15 +47,16 @@ project's licence.
     Not taken: the loose ammo icons and every world model. Vanilla's are fine.
     The code that applies them was written for this project.
 
-  Cloth Recycling and DIY Workbooks
+  Cloth Recycling, DIY Workbooks and Corpse Disposal
     From "Def's Long Term Survival", Steam Workshop 1962914415, by DefbeatCZ.
     Stated terms: MIT. The Workshop download carries no licence file; the licence
     is in the GitHub repository the mod's own mod.info points at,
     https://github.com/DefbeatCZ/DefsLTS, as Copyright (c) 2020 DefbeatCZ.
 
-    Bundled: no files. Every recipe in that mod is build 41 syntax, which build 42
-    replaced outright, so nothing there could be carried across even had it been
-    wanted.
+    Bundled: two icons, Item_CorpseFlesh.png and Item_DriedMeat.png, carried into
+    QoLCompendium.pack as the corpse flesh and the curing flesh. No code: every
+    recipe in that mod is build 41 syntax, which build 42 replaced outright, so
+    nothing there could be carried across even had it been wanted.
 
     Taken: two things. The observation that a towel and a dish cloth cannot be
     torn up and that rags cannot be sewn back into cloth. And, for the workbooks,
@@ -64,6 +65,11 @@ project's licence.
     materials each exercise asks for and returns are the author's judgement and
     are carried across; the twenty five experience is vanilla's own figure for a
     craft of that size. The recipes themselves are written for this project.
+
+    And, for corpse disposal, butchering a body into flesh that composts, three
+    pieces to a body, and poisoning whoever eats it. The poison figure is the
+    author's. The preparing and salt curing stages after it are ours, added
+    because build 42's compost bin and its rotting clock make them possible.
 
   Flamingos
     From "Flamingo Fix", Steam Workshop 2913993465. The author credits Woodstock

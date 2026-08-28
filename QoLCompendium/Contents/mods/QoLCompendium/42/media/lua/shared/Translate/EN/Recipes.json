@@ -1,5 +1,7 @@
 {
     "MakeRifleSling": "Make Rifle Sling",
+    "QolcButcherCorpse": "Butcher Corpse",
+    "QolcCureCorpseFlesh": "Pack Corpse Flesh in Salt",
     "QolcCutWallet": "Cut Up Wallet",
     "QolcMakeLockpickFromHairpin": "Make Lockpick from Hairpin",
     "QolcMakeLockpickFromPaperclip": "Make Lockpick from Paperclip",
@@ -8,6 +10,7 @@
     "QolcPracticeElectrical": "Practise Electrical",
     "QolcPracticeTailoring": "Practise Tailoring",
     "QolcPracticeWelding": "Practise Welding",
+    "QolcPrepareCorpseFlesh": "Prepare Corpse Flesh",
     "QolcRipBathTowel": "Rip Bath Towel",
     "QolcRipDishCloth": "Rip Dish Cloth",
     "QolcSewSheet": "Sew Sheet from Ripped Sheets"
