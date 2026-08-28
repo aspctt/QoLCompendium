@@ -42,5 +42,7 @@
     "Sandbox_QoLC_CutClothingEnabled": "Cut Up Any Clothing",
     "Sandbox_QoLC_CutClothingEnabled_tooltip": "Lets you cut up the clothing the base game forgot: underwear, socks, bandanas, scarves, gloves, hide trousers, shoes and empty wallets. The garment yields whatever it is made of, so leather boots give leather strips. Off leaves every one of them uncuttable, exactly as the base game has it.",
     "Sandbox_QoLC_ClothRecyclingEnabled": "Cloth Recycling",
-    "Sandbox_QoLC_ClothRecyclingEnabled_tooltip": "Lets you tear a bath towel or a dish cloth into rags, and sew twelve rags back into a bedsheet. The base game can do neither: only the bedsheet carries the tag that makes cloth rippable, and nothing turns rags back into anything. A towel gives three rags and a dish cloth one, against the bedsheet's ten."
+    "Sandbox_QoLC_ClothRecyclingEnabled_tooltip": "Lets you tear a bath towel or a dish cloth into rags, and sew twelve rags back into a bedsheet. The base game can do neither: only the bedsheet carries the tag that makes cloth rippable, and nothing turns rags back into anything. A towel gives three rags and a dish cloth one, against the bedsheet's ten.",
+    "Sandbox_QoLC_WorkbooksEnabled": "DIY Workbooks",
+    "Sandbox_QoLC_WorkbooksEnabled_tooltip": "Adds four practice manuals for carpentry, electrical, welding and tailoring. Holding one lets you work an exercise from it, spending materials for experience in that trade. Every one is a net loss of materials, so this is somewhere to put a surplus rather than a way to make anything. Off stops them spawning and makes the exercises uncraftable."
 }

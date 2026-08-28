@@ -52,6 +52,7 @@ description=[*]A magazine that teaches the Nutritionist trait
 description=[*]Lockpicking, with picks, manuals and a crowbar
 description=[*]Sterilized rags usable wherever ripped sheets are
 description=[*]Towels and dish cloths tear into rags, and rags sew back into a sheet
+description=[*]Four DIY manuals that trade materials for skill experience
 description=[*]A torch hangs off your belt, like a screwdriver
 description=[/list]
 description=

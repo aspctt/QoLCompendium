@@ -63,5 +63,9 @@
     "UI_optionscreen_binding_Hotbar 16": "Hotbar 16",
     "Tooltip_QoLC_Lockpick": "Thin enough to work a pin tumbler, with a screwdriver for tension.",
     "Tooltip_QoLC_LockpickBook1": "Teaches how to make a pick, and how to use one.",
-    "Tooltip_QoLC_LockpickBook2": "Teaches how to lever a lock open with a crowbar."
+    "Tooltip_QoLC_LockpickBook2": "Teaches how to lever a lock open with a crowbar.",
+    "Tooltip_QoLC_WorkbookCarpentry": "Exercises to work through with a saw and a hammer. Costs planks, teaches carpentry.",
+    "Tooltip_QoLC_WorkbookElectrical": "Exercises to work through with a screwdriver. Costs scrap electronics and wire, teaches electrical.",
+    "Tooltip_QoLC_WorkbookWelding": "Exercises to work through with a torch and a mask. Costs scrap metal, teaches welding.",
+    "Tooltip_QoLC_WorkbookTailoring": "Exercises to work through with scissors and a needle. Costs rags and thread, teaches tailoring."
 }

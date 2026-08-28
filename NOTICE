@@ -47,7 +47,7 @@ project's licence.
     Not taken: the loose ammo icons and every world model. Vanilla's are fine.
     The code that applies them was written for this project.
 
-  Cloth Recycling
+  Cloth Recycling and DIY Workbooks
     From "Def's Long Term Survival", Steam Workshop 1962914415, by DefbeatCZ.
     Stated terms: MIT. The Workshop download carries no licence file; the licence
     is in the GitHub repository the mod's own mod.info points at,
@@ -57,9 +57,13 @@ project's licence.
     replaced outright, so nothing there could be carried across even had it been
     wanted.
 
-    Taken: the observation, from the author's own wanted features notes, that a
-    towel and a dish cloth cannot be torn up and that rags cannot be sewn back
-    into cloth. The recipes, the yields and the losses here are ours.
+    Taken: two things. The observation that a towel and a dish cloth cannot be
+    torn up and that rags cannot be sewn back into cloth. And, for the workbooks,
+    the whole shape of the idea: four manuals, one per trade, each held in hand
+    while an exercise is worked from it, spending materials for experience. The
+    materials each exercise asks for and returns are the author's judgement and
+    are carried across; the twenty five experience is vanilla's own figure for a
+    craft of that size. The recipes themselves are written for this project.
 
   Flamingos
     From "Flamingo Fix", Steam Workshop 2913993465. The author credits Woodstock

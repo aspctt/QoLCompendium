@@ -222,3 +222,18 @@ option QoLC.ClothRecyclingEnabled
     page = QoLC,
     translation = QoLC_ClothRecyclingEnabled,
 }
+
+/*
+ * Four practice manuals that trade materials for experience in a trade. Every exercise is
+ * a net loss of goods, so nothing here makes anything, but it does give a settled base
+ * somewhere to put a surplus of planks or scrap.
+ *
+ * Balance rather than presentation, and the sharpest kind: it changes how a skill is
+ * levelled. A server has to settle that for everyone rather than each player deciding.
+ */
+option QoLC.WorkbooksEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_WorkbooksEnabled,
+}

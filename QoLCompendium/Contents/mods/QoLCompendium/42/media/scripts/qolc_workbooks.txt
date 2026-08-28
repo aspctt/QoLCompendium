@@ -1,0 +1,173 @@
+/*
+ * DIY Workbooks
+ * Def's Long Term Survival, Workshop 1962914415 - Original idea, by DefbeatCZ
+ * aspctt - 28.08.2026
+ * Four practice manuals. Holding one lets you work through an exercise from it, which
+ * costs materials and pays experience in that trade.
+ *
+ * The point is a way to spend materials on a skill when the world has stopped offering
+ * anything else to build. Every one of them is a net loss: two planks become one piece of
+ * unusable wood, two scraps and a length of wire become one scrap, two scraps and two
+ * torch uses become one scrap, three rags and two threads become one rag. Nothing here
+ * makes anything, it only trades goods for practice.
+ *
+ * Twenty five experience is vanilla's own figure rather than a guess. MakeMetalSheet and
+ * MakeSmallMetalSheet both pay MetalWelding:25, and each of those is roughly this much
+ * work for roughly this many materials.
+ *
+ * The book is a kept input rather than something read. That is the original's design and
+ * it is the better one: a book that teaches a recipe is read once and then the grind runs
+ * forever, while a book held in hand can be lost, and has to be carried to wherever the
+ * work is done. It is also why these are ItemType = base:normal rather than literature.
+ * A literature item the game cannot read from would offer a Read entry that does nothing,
+ * which is the dead menu entry the Flag A Book As Seen feature exists to fix elsewhere.
+ *
+ * Icons are vanilla's own generic book sprites out of UI2.pack. Nothing is drawn for
+ * these, so nothing joins QoLCompendium.pack for them either.
+ *
+ * Two torch uses rather than two torches on the welding one. A blowtorch is
+ * base:drainable, and an input with no mode counts a drainable in uses, which is what
+ * vanilla's own welding recipes rely on with the identical "item 2 [Base.BlowTorch]".
+ *
+ * OnTest is the sandbox switch. See 42/media/lua/shared/qolc_workbooks.lua.
+ */
+module Base
+{
+	item QolcWorkbookCarpentry
+	{
+		DisplayCategory = Literature,
+		ItemType = base:normal,
+		Weight = 0.4,
+		Icon = Book8,
+		StaticModel = BookBrown,
+		Tooltip = Tooltip_QoLC_WorkbookCarpentry,
+		WorldStaticModel = BookBrown_Ground,
+	}
+
+	item QolcWorkbookElectrical
+	{
+		DisplayCategory = Literature,
+		ItemType = base:normal,
+		Weight = 0.4,
+		Icon = Book6,
+		StaticModel = BookRedPink,
+		Tooltip = Tooltip_QoLC_WorkbookElectrical,
+		WorldStaticModel = BookRedPink_Ground,
+	}
+
+	item QolcWorkbookWelding
+	{
+		DisplayCategory = Literature,
+		ItemType = base:normal,
+		Weight = 0.4,
+		Icon = Book7,
+		StaticModel = BookGrey,
+		Tooltip = Tooltip_QoLC_WorkbookWelding,
+		WorldStaticModel = BookGrey_Ground,
+	}
+
+	item QolcWorkbookTailoring
+	{
+		DisplayCategory = Literature,
+		ItemType = base:normal,
+		Weight = 0.4,
+		Icon = Book11,
+		StaticModel = BookYellow,
+		Tooltip = Tooltip_QoLC_WorkbookTailoring,
+		WorldStaticModel = BookYellow_Ground,
+	}
+
+	/* Two planks into one piece of unusable wood. Sawn, measured, sawn again. */
+	craftRecipe QolcPracticeCarpentry
+	{
+		timedAction = Making,
+		time = 480,
+		Tags = InHandCraft,
+		OnTest = Recipe.OnTest.QolcWorkbooks,
+		category = Carpentry,
+		xpAward = Woodwork:25,
+
+		inputs
+		{
+			item 1 [Base.QolcWorkbookCarpentry] mode:keep,
+			item 1 tags[base:saw] mode:keep flags[MayDegradeLight],
+			item 1 tags[base:hammer] mode:keep,
+			item 2 [Base.Plank] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.UnusableWood,
+		}
+	}
+
+	craftRecipe QolcPracticeElectrical
+	{
+		timedAction = MakingElectrical,
+		time = 480,
+		Tags = InHandCraft,
+		OnTest = Recipe.OnTest.QolcWorkbooks,
+		category = Electrical,
+		xpAward = Electricity:25,
+
+		inputs
+		{
+			item 1 [Base.QolcWorkbookElectrical] mode:keep,
+			item 1 tags[base:screwdriver] mode:keep,
+			item 2 [Base.ElectronicsScrap] mode:destroy,
+			item 1 [Base.ElectricWire;Base.Wire] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.ElectronicsScrap,
+		}
+	}
+
+	craftRecipe QolcPracticeWelding
+	{
+		timedAction = Welding,
+		time = 480,
+		Tags = InHandCraft;Welding,
+		OnTest = Recipe.OnTest.QolcWorkbooks,
+		category = Metalworking,
+		xpAward = MetalWelding:25,
+
+		inputs
+		{
+			item 1 [Base.QolcWorkbookWelding] mode:keep,
+			item 1 tags[base:weldingmask] mode:keep,
+			item 2 [Base.BlowTorch],
+			item 2 [Base.ScrapMetal] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.ScrapMetal,
+		}
+	}
+
+	craftRecipe QolcPracticeTailoring
+	{
+		timedAction = SewingCloth,
+		time = 480,
+		Tags = InHandCraft,
+		OnTest = Recipe.OnTest.QolcWorkbooks,
+		category = Tailoring,
+		xpAward = Tailoring:25,
+
+		inputs
+		{
+			item 1 [Base.QolcWorkbookTailoring] mode:keep,
+			item 1 tags[base:scissors] mode:keep flags[SharpnessCheck;IsNotDull],
+			item 1 tags[base:sewingneedle] mode:keep,
+			item 2 tags[base:thread],
+			item 3 [Base.RippedSheets] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.RippedSheets,
+		}
+	}
+}

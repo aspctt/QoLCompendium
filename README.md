@@ -147,6 +147,12 @@ bathroom and kitchen cannot be torn up at all. A towel gives three rags and a
 dish cloth one, against a bedsheet's ten, and sewing costs twelve so the round
 trip loses rather than gains.
 
+**DIY Workbooks** - Four practice manuals, for carpentry, electrical, welding and
+tailoring, found where books are. Holding one lets you work an exercise from it,
+spending materials for experience in that trade. Every exercise is a net loss of
+goods, so this is somewhere to put a surplus of planks or scrap once the world
+has stopped offering anything else to build, not a way to make anything.
+
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
 door or window open with a crowbar. Failing a pick jams the lock for good, and
 the pick can stick or snap. Two manuals teach it, and a burglar already knows.
