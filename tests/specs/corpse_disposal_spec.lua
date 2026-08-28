@@ -108,18 +108,61 @@ Test("cured flesh behaves as raw meat rather than as a snack", function()
 end)
 
 --// Butchering
-Test("butchering destroys the corpse", function()
-	-- The disposal half. A recipe that read the body and left it would be a flesh printer.
-	AssertContains(Block("QolcButcherCorpse"), "[Base.CorpseMale;Base.CorpseFemale] mode:destroy",
-		"the body goes")
+Test("butchering the body is not a recipe, because it could never be one", function()
+	-- Reported in game: the entry showed in the crafting screen and nothing ever satisfied
+	-- it. A human corpse never reaches a container crafting can see. Carried it is a
+	-- grapple, since ISGrabCorpseItem sends only Base.CorpseAnimal to the inventory and
+	-- routes a human body through pickUpCorpseItem, which the jar shows refusing while
+	-- already grappling. On the ground it is an IsoDeadBody rather than an item on a floor.
+	AssertNil(Block("QolcButcherCorpse"), "a recipe naming a corpse can never fire")
+
+	-- The recipe bodies rather than the file, since the header explains the corpse item by
+	-- naming it and that is the one place the words belong.
+	for Name in string.gmatch(Script(), "craftRecipe (%w+)") do
+		AssertFalse(string.find(Block(Name) or "", "Base.Corpse", 1, true) ~= nil,
+			Name .. " must not ask for a corpse item")
+	end
 end)
 
-Test("butchering needs something sharp, and it survives", function()
-	local Text = Block("QolcButcherCorpse")
+Test("the world action exists and takes the body apart", function()
+	AssertNotNil(QolcButcherCorpseAction, "the action the menu queues must exist")
 
-	AssertContains(Text, "base:sharpknife", "a knife")
-	AssertContains(Text, "mode:keep", "which is not consumed")
-	AssertContains(Text, "IsNotDull", "and has to have an edge")
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	local Square = Harness.NewObjectSquare(0, 0, 0, {})
+	local Body = Harness.NewDeadBody(Square)
+
+	QolcButcherCorpseAction:new(Player, Body, Knife, 10):perform()
+
+	AssertTrue(Body.Removed, "the body should be gone")
+	AssertEquals(#Square.Dropped, 3, "and three pieces left where it lay")
+	AssertEquals(Square.Dropped[1], "Base.QolcCorpseFlesh", "of flesh")
+end)
+
+Test("the flesh is dropped rather than handed over", function()
+	-- Three pieces of a body is more than most characters have room for, and silently
+	-- failing to give them would be worse than leaving them at your feet.
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	local Square = Harness.NewObjectSquare(0, 0, 0, {})
+	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Square), Knife, 10):perform()
+
+	AssertEquals(#Player:getInventory().Items, 1, "only the knife is still carried")
+end)
+
+Test("a body with no square is refused rather than throwing", function()
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	local Body = Harness.NewDeadBody(nil)
+	local Action = QolcButcherCorpseAction:new(Player, Body, Knife, 10)
+
+	AssertFalse(Action:isValid(), "nothing to stand over")
 end)
 
 Test("preparing is gated behind Cooking 7", function()
@@ -129,13 +172,13 @@ Test("preparing is gated behind Cooking 7", function()
 end)
 
 --// The Switch
-Test("the switch is hung on all three recipes", function()
+Test("the switch is hung on both recipes", function()
 	local Count = 0
 	for _ in string.gmatch(Script(), "OnTest = Recipe%.OnTest%.QolcCorpseDisposal") do
 		Count = Count + 1
 	end
 
-	AssertEquals(Count, 3, "all three, or one stays craftable with the feature off")
+	AssertEquals(Count, 2, "both recipes, the butchering being a world action instead")
 end)
 
 Test("this one ships off, unlike every other feature here", function()

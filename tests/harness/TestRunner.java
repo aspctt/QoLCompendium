@@ -28,6 +28,7 @@ public class TestRunner {
 	private static List<String> characterStats = new ArrayList<String>();
 	private static List<String> characterTraits = new ArrayList<String>();
 	private static List<String> proceduralNames = new ArrayList<String>();
+	private static List<String> itemTagNames = new ArrayList<String>();
 	private static final Map<String, float[]> statBounds = new LinkedHashMap<String, float[]>();
 	private static final Map<String, Object> sandboxDefaults = new LinkedHashMap<String, Object>();
 	private static int translationFailures = 0;
@@ -50,6 +51,12 @@ public class TestRunner {
 		characterTraits = readConstants("zombie.scripting.objects.CharacterTrait");
 		System.out.println("CharacterTrait constants found in this build: " + characterTraits.size());
 
+		// ItemTag is how build 42 asks a container for a tool: getFirstTagEvalRecurse takes
+		// the constant rather than a string, so a misspelled one is a null argument and the
+		// call throws rather than simply finding nothing.
+		itemTagNames = readConstants("zombie.scripting.objects.ItemTag");
+		System.out.println("ItemTag constants found in this build: " + itemTagNames.size());
+
 		proceduralNames = readProceduralNames();
 		System.out.println("Loot tables found in this build: " + proceduralNames.size());
 
@@ -64,6 +71,7 @@ public class TestRunner {
 			+ checkExposedReturns()
 			+ checkItemTypes()
 			+ checkRecipeNames()
+			+ checkTranslationFiles()
 			+ checkTileDefs();
 
 		// Discovery pass: load everything once just to learn the test names.
@@ -138,6 +146,10 @@ public class TestRunner {
 		KahluaTable traits = platform.newTable();
 		for (String n : characterTraits) traits.rawset(n, n);
 		env.rawset("CharacterTrait", traits);
+
+		KahluaTable itemTags = platform.newTable();
+		for (String n : itemTagNames) itemTags.rawset(n, n);
+		env.rawset("ItemTag", itemTags);
 
 		KahluaTable defaults = platform.newTable();
 		for (Map.Entry<String, Object> e : sandboxDefaults.entrySet()) {
@@ -282,6 +294,71 @@ public class TestRunner {
 			}
 		}
 		return thread;
+	}
+
+	/**
+	 * Every translation key must sit in the file its prefix demands.
+	 *
+	 * Translator.getTextInternal does not search. It reads the key's prefix and goes to one
+	 * map: UI_ to ui, IGUI_ to igui, ContextMenu_ to contextMenu, Tooltip_ to tooltip, and
+	 * so on for twenty four prefixes. A key in the wrong file is never found, and the game
+	 * then draws the key itself, which on an item tooltip is easy to miss until someone
+	 * reports it.
+	 *
+	 * That is exactly what happened: eleven Tooltip_ keys sat in UI.json and ContextMenu.json,
+	 * three of them shipped, and no test could see it because the harness loads every
+	 * translation into one table and so found them all.
+	 */
+	private static int checkTranslationFiles() throws IOException {
+		// Only the prefixes this mod uses. The others are vanilla's business.
+		String[][] owners = {
+			{ "Tooltip_", "Tooltip.json" },
+			{ "ContextMenu_", "ContextMenu.json" },
+			{ "Sandbox_", "Sandbox.json" },
+			{ "IGUI_", "IG_UI.json" },
+			{ "UI_", "UI.json" },
+		};
+
+		File dir = new File(modRoot, "42/media/lua/shared/Translate/EN");
+		File[] files = dir.listFiles();
+		if (files == null) return 0;
+
+		java.util.regex.Pattern entry =
+			java.util.regex.Pattern.compile("^\s*\"(.+?)\"\s*:");
+		int bad = 0;
+
+		for (File f : files) {
+			if (!f.getName().endsWith(".json")) continue;
+
+			BufferedReader r = new BufferedReader(
+				new InputStreamReader(new FileInputStream(f), "UTF-8"));
+			String line;
+			int n = 0;
+			try {
+				while ((line = r.readLine()) != null) {
+					n++;
+					java.util.regex.Matcher m = entry.matcher(line);
+					if (!m.find()) continue;
+
+					String key = m.group(1);
+					for (String[] owner : owners) {
+						if (!key.startsWith(owner[0])) continue;
+						if (f.getName().equals(owner[1])) break;
+
+						System.out.println("  FAIL  " + key + " is in " + f.getName()
+							+ " but Translator only looks for " + owner[0]
+							+ " keys in " + owner[1] + "  (" + f.getName() + ":" + n + ")");
+						bad++;
+						break;
+					}
+				}
+			} finally {
+				r.close();
+			}
+		}
+
+		if (bad > 0) System.out.println();
+		return bad;
 	}
 
 	private static boolean isTranslation(File f) {

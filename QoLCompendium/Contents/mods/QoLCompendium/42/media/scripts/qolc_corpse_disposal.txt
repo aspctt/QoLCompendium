@@ -8,10 +8,12 @@
  * Build 42 already disposes of corpses: burn, bury, throw over a fence, put on a campfire.
  * What it has never offered is getting anything back, and that is the whole of this.
  *
- * A corpse is still an inventory item in this build, CorpseMale and CorpseFemale, weight
- * twenty and both hands, which is why this is an ordinary recipe rather than the ground
- * context menu the original's notes expected. Grab Corpse puts one in your hands and the
- * crafting screen sees it from there.
+ * Butchering the body itself is not here. It is a world action, in
+ * 42/media/lua/client/qolc_corpse_menu.lua, because a human corpse never reaches a
+ * container the crafting screen can see: carried it is a grapple, and on the ground it is
+ * an IsoDeadBody rather than an item on the floor. A recipe naming Base.CorpseMale sat in
+ * this file for a version and could never fire. The two stages below work on ordinary
+ * items and are ordinary recipes.
  *
  * The chain, and why it has four items rather than two:
  *
@@ -159,31 +161,6 @@ module Base
 		Tooltip = Tooltip_QoLC_CuredCorpseFlesh,
 		StaticModel = Steak,
 		WorldStaticModel = Steak,
-	}
-
-	/*
-	 * The corpse is destroyed, which is the disposal half. Three pieces of flesh is the
-	 * original's figure.
-	 */
-	craftRecipe QolcButcherCorpse
-	{
-		timedAction = SliceMeat,
-		time = 240,
-		Tags = InHandCraft,
-		OnTest = Recipe.OnTest.QolcCorpseDisposal,
-		category = Cooking,
-		xpAward = Butchering:10,
-
-		inputs
-		{
-			item 1 tags[base:sharpknife;base:meatcleaver;base:axe] mode:keep flags[MayDegradeLight;IsNotDull],
-			item 1 [Base.CorpseMale;Base.CorpseFemale] mode:destroy,
-		}
-
-		outputs
-		{
-			item 3 Base.QolcCorpseFlesh,
-		}
 	}
 
 	/*

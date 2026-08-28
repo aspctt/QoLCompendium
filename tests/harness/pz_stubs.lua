@@ -302,6 +302,11 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return Holder:isInCharacterInventory(Character)
 	end
 
+	function Container:AddItem(Item)
+		table.insert(self.Items, Item)
+		return Item
+	end
+
 	function Container:contains(Item)
 		for _, Held in ipairs(self.Items) do
 			if Held == Item then return true end
@@ -2789,9 +2794,28 @@ function Harness.NewObjectSquare(X, Y, Z, Objects)
 	Objects = Objects or {}
 
 	local Square = {}
+	Square.Dropped = {}
+	Square.Bodies = {}
+
 	function Square:getX() return X or 0 end
 	function Square:getY() return Y or 0 end
 	function Square:getZ() return Z or 0 end
+
+	-- What anything dropped on the ground goes through, by full type in the order it landed.
+	function Square:AddWorldInventoryItem(Item, _OffX, _OffY, _OffZ)
+		table.insert(self.Dropped, Item and Item:getFullType() or nil)
+		return Item
+	end
+
+	-- The dead bodies on this square. Vanilla's own corpse menus walk this rather than the
+	-- object list, because a body is a moving object that has stopped rather than furniture.
+	function Square:getStaticMovingObjects()
+		local Bodies = self.Bodies
+		local List = {}
+		function List:size() return #Bodies end
+		function List:get(Index) return Bodies[Index + 1] end
+		return List
+	end
 
 	function Square:getObjects()
 		local List = {}
@@ -3333,6 +3357,13 @@ ISContextMenu = {}
 function ISContextMenu:getNew() return NewContextMenu() end
 
 Metabolics = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
+
+-- A fresh item from its full type, which is how anything spawns one out of thin air.
+function instanceItem(FullType)
+	local Item = Harness.NewInventoryItem((FullType or "Base.Thing"):match("[^.]+$"))
+	Item.FullType = FullType
+	return Item
+end
 CharacterActionAnims = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
 
 --// Transfers
@@ -3923,6 +3954,28 @@ local function NewLockable(Class, Values)
 	return Object
 end
 
+-- A body on the ground. Not an item in a container: carried it is a grapple, and lying
+-- there it is an IsoDeadBody, which is the whole reason butchering one is a world action
+-- rather than a recipe.
+function Harness.NewDeadBody(Square, Values)
+	Values = Values or {}
+
+	local Body = {}
+	Body.Class = "IsoDeadBody"
+	Body.Removed = false
+
+	function Body:getSquare() return Square end
+	function Body:isSkeleton() return Values.Skeleton and true or false end
+	function Body:isFemale() return Values.Female and true or false end
+	function Body:isZombie() return Values.Zombie ~= false end
+	function Body:removeFromWorld() self.Removed = true end
+	function Body:removeFromSquare() self.Removed = true end
+
+	if Square and Square.Bodies then table.insert(Square.Bodies, Body) end
+
+	return Body
+end
+
 function Harness.NewDoorLock(Values) return NewLockable("IsoDoor", Values) end
 function Harness.NewWindowLock(Values) return NewLockable("IsoWindow", Values) end
 
@@ -3949,6 +4002,8 @@ function Harness.NewTool(Type, Condition)
 
 	function Item:getType() return Type end
 	function Item:getCondition() return self.Condition end
+	function Item:setCondition(Value) self.Condition = Value end
+	function Item:isBroken() return (self.Condition or 0) <= 0 end
 	function Item:getDoorDamage() return self.DoorDamage end
 	function Item:setDoorDamage(Value) self.DoorDamage = Value end
 
