@@ -31,6 +31,12 @@ local function Number(Text, Field)
 	return tonumber((Text or ""):match(Field .. " = (%-?%d+)"))
 end
 
+-- The raw text of a field, decimals and all, so -30.0 and 220.0 compare as written rather
+-- than being rounded down to whole numbers by Number above.
+local function Value(Text, Field)
+	return (Text or ""):match("%s" .. Field .. " = ([^,]+),")
+end
+
 local function SetEnabled(Value)
 	SandboxVars.QoLC = SandboxVars.QoLC or {}
 	SandboxVars.QoLC.CorpseDisposalEnabled = Value
@@ -90,6 +96,35 @@ Test("cured meat arrives fresh rather than already stale", function()
 		"cured meat is born aged " .. tostring(Cures) .. " and stops being fresh at "
 			.. tostring(Fresh))
 	AssertTrue(Rots > Fresh, "and it should have somewhere to rot to after that")
+end)
+
+Test("the curing stage carries the cured stage's hunger and nutrition", function()
+	-- Reported in game: the cured meat had no eat option at all, raw or cooked.
+	--
+	-- Food.updateRotting builds the replacement with InventoryItemFactory.CreateItem(String,
+	-- Food), which creates the new item from its own script and then overwrites baseHunger,
+	-- hungChange, boredom, unhappiness, calories, carbohydrates, lipids and proteins with the
+	-- old item's. So the cured meat's own numbers are discarded and the curing stage's are
+	-- used in their place. With none declared there every one arrived as zero, and
+	-- ISInventoryPaneContextMenu only offers Eat for food whose getHungChange is below zero.
+	--
+	-- Vanilla mirrors these for the same reason. Icecream and IcecreamMelted carry the same
+	-- four nutrition lines and the same -30.0, as do SugarBeetSyrupPot and SugarBeetSugarPot.
+	local Curing = Item("QolcCuringCorpseFlesh")
+	local Cured = Item("QolcCuredCorpseFlesh")
+
+	local Copied = { "HungerChange", "UnhappyChange", "Calories", "Carbohydrates",
+		"Lipids", "Proteins" }
+
+	for _, Field in ipairs(Copied) do
+		local Wanted = Value(Cured, Field)
+		AssertNotNil(Wanted, "the cured stage should declare " .. Field)
+		AssertEquals(Value(Curing, Field), Wanted,
+			Field .. " is handed forward from the curing stage, so the two have to match")
+	end
+
+	AssertTrue(tonumber(Value(Cured, "HungerChange")) < 0,
+		"and it has to be worth eating for the option to appear")
 end)
 
 Test("the curing stage turns into the cured one when it rots", function()

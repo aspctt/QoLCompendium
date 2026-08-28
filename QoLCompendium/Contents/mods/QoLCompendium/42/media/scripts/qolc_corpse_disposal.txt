@@ -110,6 +110,20 @@ module Base
 	 * CantEat because a fistful of salted raw flesh part way through curing is not a meal
 	 * and should not be offered as one. It is still compostable, so a batch left too long
 	 * somewhere cold is not simply wasted.
+	 *
+	 * The hunger and nutrition below are the cured item's numbers, repeated. Nothing ever
+	 * reads them from here, since CantEat means this is never eaten. They are here because
+	 * ReplaceOnRotten hands them forward: Food.updateRotting builds the replacement through
+	 * InventoryItemFactory.CreateItem(String, Food), which creates the new item from its own
+	 * script and then overwrites baseHunger, hungChange, boredom, unhappiness, calories,
+	 * carbohydrates, lipids and proteins with this item's. Leaving them out set every one of
+	 * them to zero on the cured meat, and the eat option is only offered for food whose
+	 * hunger is below zero, so the cured meat could not be eaten at all, cooked or raw.
+	 * Reported in game.
+	 *
+	 * Vanilla mirrors these the same way and for the same reason: Icecream and
+	 * IcecreamMelted carry the same four nutrition lines and the same -30.0, and so do
+	 * SugarBeetSyrupPot and SugarBeetSugarPot.
 	 */
 	item QolcCuringCorpseFlesh
 	{
@@ -122,6 +136,12 @@ module Base
 		DaysFresh = 2,
 		DaysTotallyRotten = 3,
 		ReplaceOnRotten = Base.QolcCuredCorpseFlesh,
+		HungerChange = -30.0,
+		UnhappyChange = 20,
+		Calories = 220.0,
+		Carbohydrates = 0.0,
+		Lipids = 9.35,
+		Proteins = 31.62,
 		Tags = base:iscompostable,
 		Tooltip = Tooltip_QoLC_CuringCorpseFlesh,
 		StaticModel = MeatPatty,
@@ -132,6 +152,9 @@ module Base
 	 * Raw meat, in the sense a steak is raw meat: eating it uncooked makes you ill, and
 	 * cooking it does not. The EvolvedRecipe line is what puts it in a stew, and the
 	 * numbers beside each are how much of the pot it fills, copied from Steak's own.
+	 *
+	 * The hunger and nutrition below are declared again on the curing stage, and it is that
+	 * copy the game actually uses. See the note there.
 	 *
 	 * Six and nine rather than three and six, because the three days spent curing come with
 	 * it. Food.updateRotting creates the replacement and then calls setAge with the old
