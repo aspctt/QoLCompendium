@@ -13,7 +13,7 @@
     "UI_options_QoLC_Features_Generator": "Generator Fuel And Range",
     "UI_options_QoLC_Features_Generator_tooltip": "Adds how long the fuel lasts to the generator window, and highlights the squares it powers.",
     "UI_options_QoLC_Features_Material": "Clothing Material",
-    "UI_options_QoLC_Features_Material_tooltip": "Adds what a garment is made of to its tooltip, coloured by fabric.",
+    "UI_options_QoLC_Features_Material_tooltip": "Adds what a garment is made of to its tooltip, colored by fabric.",
     "UI_options_QoLC_Features_TakeAmount": "Take Any Amount",
     "UI_options_QoLC_Features_TakeAmount_tooltip": "Adds a typed amount to the grab menu, alongside vanilla's one, half and all.",
     "UI_options_QoLC_Features_FlagBook": "Flag A Book As Seen",
