@@ -111,6 +111,21 @@ Test("curing costs salt", function()
 	AssertContains(Block("QolcCureCorpseFlesh"), "[Base.Salt]", "salt is what cures it")
 end)
 
+Test("the flesh is counted in pieces rather than in hunger", function()
+	-- Build 42 counts a food input in hunger, not items: isUsesPartialItem is true for a
+	-- base:food item whose HungerChange exceeds one, and the crafting widget then labels it
+	-- in Uses. This flesh is worth 25 hunger, so it read as 25 whatever was held.
+	--
+	-- Destroy, keep and ItemCount each suppress that, so vanilla was always right. Both are
+	-- asserted so a replacement crafting menu testing only one still agrees.
+	for _, Name in ipairs({ "QolcPrepareCorpseFlesh", "QolcCureCorpseFlesh" }) do
+		local Line = Block(Name):match("(item [^\n]*Flesh[^\n]*)")
+		AssertNotNil(Line, Name .. " should take flesh")
+		AssertContains(Line, "mode:destroy", Name .. " should spend it whole")
+		AssertContains(Line, "flags[ItemCount]", Name .. " should say so twice over")
+	end
+end)
+
 --// The Cured Meat
 Test("cured flesh behaves as raw meat rather than as a snack", function()
 	-- DangerousUncooked is how the game says raw meat: eating it uncooked makes you ill,
