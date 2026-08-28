@@ -140,6 +140,13 @@ the base game gives it one tag where the plain rag gets six, so it is refused as
 binding, as fire fuel, as tinder and as weapon binding. It now carries those
 tags, and works wherever a ripped sheet works.
 
+**Cloth Recycling** - Tear a bath towel or a dish cloth into rags, and sew rags
+back into a bedsheet. The base game can do neither: only the bedsheet itself
+carries the tag that makes cloth rippable, so the two cloth things in every
+bathroom and kitchen cannot be torn up at all. A towel gives three rags and a
+dish cloth one, against a bedsheet's ten, and sewing costs twelve so the round
+trip loses rather than gains.
+
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
 door or window open with a crowbar. Failing a pick jams the lock for good, and
 the pick can stick or snap. Two manuals teach it, and a burglar already knows.

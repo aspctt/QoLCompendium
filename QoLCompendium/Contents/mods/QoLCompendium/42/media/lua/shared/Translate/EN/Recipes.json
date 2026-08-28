@@ -3,5 +3,8 @@
     "QolcCutWallet": "Cut Up Wallet",
     "QolcMakeLockpickFromHairpin": "Make Lockpick from Hairpin",
     "QolcMakeLockpickFromPaperclip": "Make Lockpick from Paperclip",
-    "QolcMakeLockpickFromWire": "Make Lockpick from Wire"
+    "QolcMakeLockpickFromWire": "Make Lockpick from Wire",
+    "QolcRipBathTowel": "Rip Bath Towel",
+    "QolcRipDishCloth": "Rip Dish Cloth",
+    "QolcSewSheet": "Sew Sheet from Ripped Sheets"
 }

@@ -206,3 +206,19 @@ option QoLC.CutClothingEnabled
     page = QoLC,
     translation = QoLC_CutClothingEnabled,
 }
+
+/*
+ * Tearing a bath towel or a dish cloth into rags, and sewing rags back into a bedsheet.
+ * The base game can do neither: only the bedsheet itself carries base:sheet, so the two
+ * cloth things in every bathroom and kitchen cannot be torn up at all.
+ *
+ * Balance rather than presentation, because it changes how much cloth a world holds and
+ * gives a settled base a way to make sheets rather than only find them. Off leaves towels
+ * and dish cloths as the base game has them, and there is no route back to a sheet.
+ */
+option QoLC.ClothRecyclingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_ClothRecyclingEnabled,
+}

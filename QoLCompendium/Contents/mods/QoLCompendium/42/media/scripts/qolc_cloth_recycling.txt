@@ -1,0 +1,108 @@
+/*
+ * Cloth Recycling
+ * Def's Long Term Survival, Workshop 1962914415 - Original idea, by DefbeatCZ
+ * aspctt - 28.08.2026
+ * Tearing a towel or a dish cloth into rags, and sewing rags back into a bedsheet.
+ *
+ * Build 42 rips a bedsheet into ten rags through RipSheets, which takes anything carrying
+ * base:sheet. Only the bedsheet itself carries it. A bath towel is base:cleanstains and
+ * base:spawnfullunlesslaundry, a dish cloth is base:cleanstains, and neither can be torn
+ * up by any route in the game, which is odd for two things that are plainly cloth and are
+ * in every bathroom and kitchen in Knox County.
+ *
+ * The tag is not simply added to them, because RipSheets pays a flat ten rags for anything
+ * that carries it. A dish cloth is not ten rags of cloth. These are recipes of their own so
+ * the yield can be honest about the size of the thing: three for a towel, one for a cloth,
+ * against the bedsheet's ten.
+ *
+ * mode:destroy on both, and that is load bearing rather than decoration. Both are
+ * base:drainable with UseDelta 0.1, ten wipes to a towel. Verified in the jar:
+ * InputScript.isUsesPartialItem returns false as soon as the input is destroy, keep or
+ * ItemCount, and only otherwise treats a drainable with a UseDelta under one as counted in
+ * uses. Without the mode, "item 1" would take a tenth of a towel and leave the rest.
+ *
+ * A part used towel gives the same three rags as a fresh one. There is nothing to exploit
+ * in that: a towel is spent by wiping, becomes the wet item, dries back to a full one, and
+ * ripping it is one way whatever state it was in. Requiring a full one would only mean
+ * carrying a damp towel around until it dried.
+ *
+ * The wet towels are deliberately absent. They dry back into these on their own, which is
+ * the game's own answer, and a recipe for the wet ones would be a second path to the same
+ * place.
+ *
+ * Sewing rags back into a sheet closes the loop the other way, and it is deliberately
+ * lossy. A sheet rips into ten and sews back from twelve, so the round trip costs two rags
+ * and the thread. Anything cheaper would be a machine for making cloth out of nothing.
+ *
+ * OnTest is the sandbox switch, the same shape qolc_cut_clothing uses. See
+ * 42/media/lua/shared/qolc_cloth_recycling.lua.
+ */
+module Base
+{
+	/* Vanilla's RipSheets, in miniature. Same action, same tags, smaller yield. */
+	craftRecipe QolcRipBathTowel
+	{
+		timedAction = RipClothing,
+		time = 40,
+		Tags = InHandCraft;CanBeDoneInDark,
+		OnTest = Recipe.OnTest.QolcClothRecycling,
+		category = Tailoring,
+
+		inputs
+		{
+			item 1 [Base.BathTowel] mode:destroy,
+		}
+
+		outputs
+		{
+			item 3 Base.RippedSheets,
+		}
+	}
+
+	craftRecipe QolcRipDishCloth
+	{
+		timedAction = RipClothing,
+		time = 30,
+		Tags = InHandCraft;CanBeDoneInDark,
+		OnTest = Recipe.OnTest.QolcClothRecycling,
+		category = Tailoring,
+
+		inputs
+		{
+			item 1 [Base.DishCloth] mode:destroy,
+		}
+
+		outputs
+		{
+			item 1 Base.RippedSheets,
+		}
+	}
+
+	/*
+	 * Twelve against the ten a sheet rips into, so the round trip loses rather than gains.
+	 * Tailoring 2 and the thread keep it out of reach on day one, which is the point: this
+	 * is for a base with a pile of rags and no sheets left, not a way to skip looting.
+	 */
+	craftRecipe QolcSewSheet
+	{
+		timedAction = SewingCloth,
+		time = 200,
+		Tags = AnySurfaceCraft,
+		SkillRequired = Tailoring:2,
+		xpAward = Tailoring:15,
+		OnTest = Recipe.OnTest.QolcClothRecycling,
+		category = Tailoring,
+
+		inputs
+		{
+			item 1 tags[base:sewingneedle] mode:keep,
+			item 12 [Base.RippedSheets] mode:destroy,
+			item 2 tags[base:thread],
+		}
+
+		outputs
+		{
+			item 1 Base.Sheet,
+		}
+	}
+}
