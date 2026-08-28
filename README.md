@@ -159,6 +159,11 @@ accept. The base game can burn, bury or dump a corpse but never get anything
 back from one. Eating it before it is cured will make you very ill. Off by
 default, being the one thing here that adds something rather than repairing it.
 
+**Metalworking Gaps** - Forge recipes for four things the base game has items for
+and no way to make: wire, metal pipe, welding rods and electrical wire. Wire is
+the plainest case, being craftable only from barbed wire, which is craftable only
+from wire. Sheet metal is left alone, since that one genuinely works.
+
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
 door or window open with a crowbar. Failing a pick jams the lock for good, and
 the pick can stick or snap. Two manuals teach it, and a burglar already knows.

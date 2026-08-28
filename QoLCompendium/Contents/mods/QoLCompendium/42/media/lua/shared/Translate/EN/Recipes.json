@@ -1,6 +1,10 @@
 {
     "MakeRifleSling": "Make Rifle Sling",
     "QolcButcherCorpse": "Butcher Corpse",
+    "QolcCraftElectricalWire": "Make Electrical Wire",
+    "QolcCraftIronPipe": "Forge Metal Pipe",
+    "QolcCraftWeldingRod": "Forge Welding Rods",
+    "QolcCraftWire": "Draw Wire",
     "QolcCureCorpseFlesh": "Pack Corpse Flesh in Salt",
     "QolcCutWallet": "Cut Up Wallet",
     "QolcMakeLockpickFromHairpin": "Make Lockpick from Hairpin",

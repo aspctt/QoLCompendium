@@ -252,3 +252,18 @@ option QoLC.CorpseDisposalEnabled
     page = QoLC,
     translation = QoLC_CorpseDisposalEnabled,
 }
+
+/*
+ * Forge recipes for wire, metal pipe, welding rods and electrical wire, none of which the
+ * base game can make. Wire is the plainest case: it comes only from barbed wire, and barbed
+ * wire comes only from wire.
+ *
+ * Balance rather than presentation, because it changes what a base can build without
+ * looting for it. Off leaves all four as the game has them.
+ */
+option QoLC.MetalworkingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_MetalworkingEnabled,
+}

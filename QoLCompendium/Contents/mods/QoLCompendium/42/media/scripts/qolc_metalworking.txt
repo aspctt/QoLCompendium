@@ -1,0 +1,205 @@
+/*
+ * Metalworking Gaps
+ * aspctt - 28.08.2026
+ * Four things build 42 has items for and no way to make.
+ *
+ * Each of these was checked against the installed build rather than assumed, because the
+ * whole point is that they close a hole and a hole that was not there would just be
+ * duplication:
+ *
+ *   Wire          made only from BarbedWire, which is made only from Wire. A closed loop,
+ *                 and the single way into it is GetWireBack from a BrokenFishingNet.
+ *   MetalPipe     no producer anywhere in the game.
+ *   WeldingRods   no producer anywhere in the game.
+ *   ElectricWire  only by dismantling a PowerBar or an improvised lighter.
+ *
+ * Sheet metal is deliberately absent. That one already works: Forge_Steel_Sheet takes a
+ * SteelBlock at a forge, so there is a real path up from ore, and adding a blowtorch
+ * shortcut beside it would undercut a tree the game rebuilt on purpose.
+ *
+ * MetalBar is not used as a material anywhere here. It has no producer either, only
+ * appearing on the input side of the blacksmith mappers, so spending it would have left
+ * these capped by loot and the gap still open. The pipe mandrel still accepts a MetalBar,
+ * since a looted bar is a perfectly good thing to wrap pipe around, but it no longer has
+ * to be one.
+ *
+ * Each recipe follows how the thing is actually made, which is also what chains them
+ * together:
+ *
+ *   Wire is drawn, not cast. A bar is tapered, pulled through the drawplate and annealed
+ *   between passes, and drawing multiplies length, which is why one bar is worth two
+ *   spools rather than one.
+ *
+ *   Pipe is rolled, not wrapped. Wrought iron pipe was made by rolling a flat strip round
+ *   a mandrel and forge welding the seam, so the stock is a small sheet and the bar is the
+ *   mandrel it is formed on. Limestone is the flux the seam weld needs, which is the same
+ *   thing it does in the rod recipe below.
+ *
+ *   A welding rod is a wire core with a flux coating baked onto it. So the core is wire,
+ *   and the coating is what was already here and already right: limestone for the
+ *   carbonate, the crucible's glass for the silica, and splinters for the cellulose, which
+ *   is genuinely how a cellulosic electrode is bound.
+ *
+ *   Electrical wire needs a conductor, and steel is not one. Copper or aluminium, drawn on
+ *   the same plate and insulated with tape. Aluminium house wiring is not a compromise
+ *   here either, it is what America was actually wiring houses with in the seventies.
+ *
+ * Experience is inside the band vanilla pays at each gate level, checked against every
+ * blacksmithing recipe in the game: 10 to 35 at Blacksmith 2, 20 to 45 at 3, 10 to 50 at
+ * 4. These sit low in their bands because they are repeatable utility crafts rather than
+ * showpieces.
+ *
+ * All four have to be learned, which is also vanilla's convention rather than a choice
+ * made here. Above Blacksmith 1 the game gates effectively everything: nine recipes at
+ * level 2 need learning and none is free, thirty at level 4 and none is free. Every one of
+ * the 106 learned blacksmithing recipes carries an AutoLearnAll so it arrives by levelling
+ * anyway, two levels above its requirement in 66 cases and one in 33. These use one, so a
+ * smith who can already meet the requirement is a single level away from knowing it.
+ *
+ * Two costs read as larger than they are. Wire and CeramicCrucibleWithGlass are both
+ * base:drainable, and an input with no mode counts a drainable in uses rather than whole
+ * items: verified in the jar, InputScript.isUsesPartialItem returns false only for
+ * destroy, keep or ItemCount. So ten Wire is ten uses, which is one full spool, and one
+ * crucible is one use of it. Vanilla's own glassmaking recipes spend a crucible the same
+ * way.
+ *
+ * Field names are lowercase to match vanilla, which writes time and category that way in
+ * all of its 862 and 600 uses. CraftRecipe compares them with equalsIgnoreCase so either
+ * would work, but matching the game is worth more than matching whoever typed it first.
+ *
+ * OnTest is the sandbox switch. See 42/media/lua/shared/qolc_metalworking.lua.
+ */
+module Base
+{
+	/*
+	 * The one that matters most, because it opens the loop. A drawplate and a bar, and
+	 * the wire and barbed wire economy has a bottom to it at last.
+	 */
+	craftRecipe QolcCraftWire
+	{
+		time = 240,
+		timedAction = MakingHammer_Surface,
+		Tags = Forge,
+		SkillRequired = Blacksmith:2,
+		NeedToBeLearn = true,
+		AutoLearnAll = Blacksmith:3,
+		OnTest = Recipe.OnTest.QolcMetalworking,
+		category = Blacksmithing,
+		xpAward = Blacksmith:15,
+
+		inputs
+		{
+			item 1 tags[base:smithinghammer] mode:keep,
+			item 1 [Base.DrawPlate] mode:keep,
+			item 1 tags[base:tongs;base:crudetongs] mode:keep flags[MayDegradeLight],
+			item 1 tags[base:metalworkingpliers] mode:keep,
+			item 4 tags[base:charcoal],
+			item 1 [Base.IronBar;Base.SteelBar;2:Base.IronBarHalf;2:Base.SteelBarHalf;4:Base.IronBarQuarter;4:Base.SteelBarQuarter] flags[IsExclusive],
+		}
+
+		outputs
+		{
+			item 2 Base.Wire,
+		}
+	}
+
+	/*
+	 * A bar wrapped around another bar. The mandrel is kept and wears heavily, so it is a
+	 * tool rather than a cost, and it takes a looted MetalBar or a forged one either way.
+	 */
+	craftRecipe QolcCraftIronPipe
+	{
+		time = 180,
+		timedAction = MakingHammer_Surface,
+		Tags = AdvancedForge,
+		SkillRequired = Blacksmith:3,
+		NeedToBeLearn = true,
+		AutoLearnAll = Blacksmith:4,
+		OnTest = Recipe.OnTest.QolcMetalworking,
+		category = Blacksmithing,
+		xpAward = Blacksmith:25,
+
+		inputs
+		{
+			item 1 tags[base:smithinghammer] mode:keep,
+			item 1 tags[base:tongs;base:crudetongs] mode:keep flags[MayDegradeLight],
+			item 1 tags[base:metalworkingpliers] mode:keep,
+			item 4 tags[base:charcoal],
+			item 1 [Base.MetalBar;Base.IronBar;Base.SteelBar] mode:keep flags[MayDegradeHeavy],
+			item 1 [Base.SmallSheetMetal],
+			item 1 [Base.Limestone],
+		}
+
+		outputs
+		{
+			item 1 Base.MetalPipe,
+		}
+	}
+
+	/*
+	 * Flux and filler. The limestone and the glass are the flux, the splinters are what
+	 * the coating is bound with, and three bars become two rods of twenty uses each.
+	 */
+	craftRecipe QolcCraftWeldingRod
+	{
+		time = 360,
+		timedAction = MakingHammer_Surface,
+		Tags = Forge,
+		SkillRequired = Blacksmith:4,
+		NeedToBeLearn = true,
+		AutoLearnAll = Blacksmith:5,
+		OnTest = Recipe.OnTest.QolcMetalworking,
+		category = Blacksmithing,
+		xpAward = Blacksmith:30,
+
+		inputs
+		{
+			item 1 tags[base:smithinghammer] mode:keep,
+			item 1 tags[base:tongs;base:crudetongs] mode:keep flags[MayDegradeLight],
+			item 1 tags[base:metalworkingchisel] mode:keep flags[MayDegradeLight],
+			item 1 tags[base:metalworkingpliers] mode:keep,
+			item 12 tags[base:charcoal],
+			item 20 [Base.Wire],
+			item 1 [Base.Limestone],
+			item 1 [Base.CeramicCrucibleWithGlass],
+			item 6 [Base.Splinters],
+		}
+
+		outputs
+		{
+			item 2 Base.WeldingRods,
+		}
+	}
+
+	/*
+	 * The only one off the forge. Copper would be the honest conductor, but the game gives
+	 * aluminium as the scrap you actually find, and the base game already treats the two
+	 * as interchangeable for wiring.
+	 */
+	craftRecipe QolcCraftElectricalWire
+	{
+		time = 140,
+		timedAction = MakingElectrical,
+		Tags = AnySurfaceCraft,
+		SkillRequired = Electricity:2,
+		NeedToBeLearn = true,
+		AutoLearnAll = Electricity:3,
+		OnTest = Recipe.OnTest.QolcMetalworking,
+		category = Electrical,
+		xpAward = Electricity:6,
+
+		inputs
+		{
+			item 1 [Base.DrawPlate] mode:keep,
+			item 1 tags[base:pliers] mode:keep,
+			item 1 tags[base:scissors] mode:keep,
+			item 1 [Base.Aluminum;4:Base.AluminumFragments;6:Base.CopperScrap] flags[IsExclusive],
+			item 2 [Base.DuctTape],
+		}
+
+		outputs
+		{
+			item 2 Base.ElectricWire,
+		}
+	}
+}
