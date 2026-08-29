@@ -29,6 +29,7 @@ public class TestRunner {
 	private static List<String> characterTraits = new ArrayList<String>();
 	private static List<String> proceduralNames = new ArrayList<String>();
 	private static List<String> itemTagNames = new ArrayList<String>();
+	private static Map<String, List<String>> vanillaItemTagMap = new LinkedHashMap<String, List<String>>();
 	private static final Map<String, float[]> statBounds = new LinkedHashMap<String, float[]>();
 	private static final Map<String, Object> sandboxDefaults = new LinkedHashMap<String, Object>();
 	private static int translationFailures = 0;
@@ -56,6 +57,9 @@ public class TestRunner {
 		// call throws rather than simply finding nothing.
 		itemTagNames = readConstants("zombie.scripting.objects.ItemTag");
 		System.out.println("ItemTag constants found in this build: " + itemTagNames.size());
+
+		vanillaItemTagMap = readItemTagMap(new File(gameDir, "media/scripts"));
+		System.out.println("Tagged items found in this build: " + vanillaItemTagMap.size());
 
 		proceduralNames = readProceduralNames();
 		System.out.println("Loot tables found in this build: " + proceduralNames.size());
@@ -150,6 +154,19 @@ public class TestRunner {
 		KahluaTable itemTags = platform.newTable();
 		for (String n : itemTagNames) itemTags.rawset(n, n);
 		env.rawset("ItemTag", itemTags);
+
+		// The tags the game itself puts on each of its items, so a stub item named after a
+		// real one carries the real thing's tags rather than whatever the spec assumed. A
+		// container is asked for a tool by tag in build 42, and a harness that made those up
+		// would agree with the code under test and disagree with the game.
+		KahluaTable vanillaItemTags = platform.newTable();
+		for (Map.Entry<String, List<String>> e : vanillaItemTagMap.entrySet()) {
+			KahluaTable owned = platform.newTable();
+			int at = 1;
+			for (String tag : e.getValue()) owned.rawset(Double.valueOf(at++), tag);
+			vanillaItemTags.rawset(e.getKey(), owned);
+		}
+		env.rawset("VanillaItemTags", vanillaItemTags);
 
 		KahluaTable defaults = platform.newTable();
 		for (Map.Entry<String, Object> e : sandboxDefaults.entrySet()) {
@@ -1442,6 +1459,48 @@ public class TestRunner {
 	}
 
 	/** Every name appearing in a Tags = a;b;c line under the given scripts directory. */
+	/**
+	 * Every item the game declares, mapped to the tags declared inside its own block. Used
+	 * to give a stub item the tags its real counterpart carries.
+	 */
+	private static Map<String, List<String>> readItemTagMap(File scripts) throws IOException {
+		Map<String, List<String>> found = new LinkedHashMap<String, List<String>>();
+		if (!scripts.isDirectory()) return found;
+
+		java.util.regex.Pattern block = java.util.regex.Pattern.compile(
+			"\\bitem\\s+(\\w+)\\s*\\r?\\n\\s*\\{(.*?)\\n\\s*\\}",
+			java.util.regex.Pattern.DOTALL);
+		java.util.regex.Pattern tags = java.util.regex.Pattern.compile(
+			"^\\s*Tags\\s*=\\s*([^,]+),?\\s*$", java.util.regex.Pattern.MULTILINE);
+
+		java.util.ArrayDeque<File> queue = new java.util.ArrayDeque<File>();
+		queue.add(scripts);
+		while (!queue.isEmpty()) {
+			File dir = queue.poll();
+			File[] files = dir.listFiles();
+			if (files == null) continue;
+			for (File f : files) {
+				if (f.isDirectory()) { queue.add(f); continue; }
+				if (!f.getName().endsWith(".txt")) continue;
+
+				java.util.regex.Matcher m = block.matcher(readAll(f));
+				while (m.find()) {
+					java.util.regex.Matcher t = tags.matcher(m.group(2));
+					if (!t.find()) continue;
+
+					List<String> owned = new ArrayList<String>();
+					for (String tag : t.group(1).split(";")) {
+						tag = tag.trim();
+						if (tag.length() > 0) owned.add(tag);
+					}
+					if (!owned.isEmpty()) found.put(m.group(1), owned);
+				}
+			}
+		}
+
+		return found;
+	}
+
 	private static Set<String> readTagNames(File scripts) throws IOException {
 		Set<String> found = new LinkedHashSet<String>();
 		if (!scripts.isDirectory()) return found;

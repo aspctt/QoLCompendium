@@ -151,14 +151,39 @@ option QoLC.NutritionistMagEnabled
 
 /*
  * Lockpicking, which the base game has none of: no picks, no recipes, and nothing on a
- * door that opens a lock without its key. Off stops the books spawning and takes the
- * options off the menu; picks already made stay in the world as junk.
+ * door that opens a lock without its key. Off stops the picks, the hairpins and the first
+ * manual spawning and takes picking off the menu; picks already made stay as junk.
+ *
+ * Covers car doors and boots as well as buildings. A failed pick on a car sets vanilla's
+ * own VehicleDoor.lockBroken, which the jar shows canUnlockDoor refusing, so the key stops
+ * working too. That is the same dead end a jammed house lock already is.
  */
 option QoLC.LockpickingEnabled
 {
     type = boolean, default = true,
     page = QoLC,
     translation = QoLC_LockpickingEnabled,
+}
+
+/*
+ * Levering a lock with a crowbar, which is the other half of the same feature and was one
+ * switch with it until a player asked for the two apart. They are worth separating: picking
+ * wants two tools, a manual and a recipe, and prying wants a crowbar and a shoulder, so a
+ * server can reasonably want one and not the other.
+ *
+ * Covers car doors and boots as well as buildings. Forcing a car lock takes the lock with
+ * it: canLockDoor refuses a broken lock, so the door can never be locked again, which is
+ * what perma locking already does to a forced window.
+ *
+ * On by default, so a save that predates this keeps what it already had. Off stops the
+ * second manual spawning, takes forcing off doors, windows and vehicles, and stops a
+ * burglar starting out knowing how.
+ */
+option QoLC.PryingEnabled
+{
+    type = boolean, default = true,
+    page = QoLC,
+    translation = QoLC_PryingEnabled,
 }
 
 /*

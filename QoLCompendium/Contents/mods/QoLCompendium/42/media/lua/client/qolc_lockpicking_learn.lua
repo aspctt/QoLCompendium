@@ -33,13 +33,19 @@ local PICKING = {
 }
 
 --// Functions
-local function Enabled()
+local function Switch(Name)
 	local Vars = SandboxVars and SandboxVars.QoLC
-	local Value = Vars and Vars.LockpickingEnabled
+	local Value = Vars and Vars[Name]
 
 	if Value ~= nil then return Value and true or false end
 	return true
 end
+
+-- Two switches since a player asked for the halves apart. Everything about the crowbar is
+-- prying and everything about the pick is lockpicking, including which manual spawns and
+-- which half of a burglar's head start survives one of them being off.
+local function PickingEnabled() return Switch("LockpickingEnabled") end
+local function PryingEnabled() return Switch("PryingEnabled") end
 
 -- Read by the menu, so both halves agree on what knowing means.
 function QolcKnowsForcing(Player)
@@ -62,7 +68,7 @@ local VanillaComplete = ISReadABook.complete
 function ISReadABook:complete(...)
 	local Result = VanillaComplete(self, ...)
 
-	if Enabled() and self.item and self.character
+	if PryingEnabled() and self.item and self.character
 		and self.item:getFullType() == BOOK and QolcLearnForcing(self.character) then
 		self.character:Say(getText("IGUI_QoLC_LearnedForcing"))
 	end
@@ -84,15 +90,16 @@ end
 -- made moments earlier it can run before the profession's traits are on them, and the
 -- grant then finds no burglar and does nothing for the life of that save.
 local function Grant(Player)
-	if not Enabled() then return end
 	if not Player then return end
 	if not Player:hasTrait(CharacterTrait.BURGLAR) then return end
 
-	for _, Recipe in ipairs(PICKING) do
-		Player:learnRecipe(Recipe)
+	if PickingEnabled() then
+		for _, Recipe in ipairs(PICKING) do
+			Player:learnRecipe(Recipe)
+		end
 	end
 
-	QolcLearnForcing(Player)
+	if PryingEnabled() then QolcLearnForcing(Player) end
 end
 
 function QolcGrantBurglar(Player)

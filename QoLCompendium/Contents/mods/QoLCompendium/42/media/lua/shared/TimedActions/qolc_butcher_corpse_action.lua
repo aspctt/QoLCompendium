@@ -33,6 +33,14 @@ local FLESH = "Base.QolcCorpseFlesh"
 -- The original's figure. A body is three pieces of anything worth carrying.
 local YIELD = 3
 
+-- Vanilla awards butchering experience per item taken off a carcass, through
+-- ButcheringUtil.giveItems, and AnimalPartsDefinitions sets the rate per animal: 25 for a
+-- deer or a grown cow, 18 for a boar or a calf, 10 for a sheep, 7 for a hen. A body is a
+-- boar, near enough, so 18. Three pieces makes 54 for the whole job, against the several
+-- hundred a deer gives, which is right: this is a knife in a field, not a full break down
+-- on a hook.
+local XP_PER_PIECE = 18
+
 --// The Action
 function QolcButcherCorpseAction:isValid()
 	if not self.body then return false end
@@ -72,18 +80,46 @@ function QolcButcherCorpseAction:perform()
 	--
 	-- The square is the fallback for a character with no inventory at all, which should not
 	-- happen but is cheaper to allow for than to have the flesh vanish if it does.
+	--
+	-- sendAddItemToContainer after each one, which is what vanilla's own butchering does in
+	-- ButcheringUtil.giveItems. It is a no-op unless GameServer.server, so it costs nothing
+	-- where it does not apply and is correct where it does.
 	for _ = 1, YIELD do
 		local Flesh = instanceItem(FLESH)
 
 		if Inventory then
 			Inventory:AddItem(Flesh)
+			if sendAddItemToContainer then sendAddItemToContainer(Inventory, Flesh) end
 		elseif Square then
 			Square:AddWorldInventoryItem(Flesh, 0, 0, 0)
 		end
 	end
 
-	self.body:removeFromWorld()
-	self.body:removeFromSquare()
+	-- getXp():AddXP rather than the addXp global, which is what vanilla's butchering calls.
+	-- The global is LuaManager.GlobalObject.addXp, and the jar shows it handing off to
+	-- GameServer.addXp when this is the server and otherwise doing nothing at all unless
+	-- GameClient.client is false. Vanilla gets away with it because butchering an animal is
+	-- driven from the server. This is a client queued action, so on a server it would award
+	-- nothing. XP.AddXP takes the local player branch and works on both.
+	if self.character.getXp and Perks and Perks.Butchering then
+		self.character:getXp():AddXP(Perks.Butchering, XP_PER_PIECE * YIELD)
+	end
+
+	-- removeCorpse, not removeFromWorld and removeFromSquare. A corpse is not an ordinary
+	-- world object: IsoGridSquare.removeCorpse sends RemoveCorpseFromMap, from a client to
+	-- the server and from a server out to everyone near it, calls checkAddedRemovedItems so
+	-- the body's own container is reconciled, invalidates the render chunk, and only then
+	-- does the same two removals this used to do on its own. It finishes by triggering
+	-- OnContainerUpdate, which is how the inventory panel learns to redraw.
+	--
+	-- Vanilla removes every carcass this way, three times over in ButcheringUtil, and the
+	-- one place that tried the bare pair, ISGetAnimalBones, has them commented out.
+	if Square and Square.removeCorpse then
+		Square:removeCorpse(self.body, false)
+	else
+		self.body:removeFromWorld()
+		self.body:removeFromSquare()
+	end
 
 	if self.knife then
 		self.knife:setCondition(self.knife:getCondition() - 1)

@@ -227,6 +227,57 @@ Test("the flesh is handed over rather than left in the grass", function()
 	AssertEquals(#Square.Dropped, 0, "and nothing left on the ground")
 end)
 
+Test("the body is taken off the map the way a corpse is taken off the map", function()
+	-- Reported in game alongside the missing experience. A corpse is not an ordinary world
+	-- object. IsoGridSquare.removeCorpse sends RemoveCorpseFromMap, from a client up to the
+	-- server and from a server out to everyone nearby, reconciles the body's own container
+	-- through checkAddedRemovedItems, invalidates the render chunk, does removeFromWorld and
+	-- removeFromSquare, and then triggers OnContainerUpdate so the panel redraws.
+	--
+	-- Calling the last two on their own, which this used to do, skips all of that. Vanilla
+	-- removes every carcass through removeCorpse, three times in ButcheringUtil, and the one
+	-- place that tried the bare pair has them commented out.
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	local Square = Harness.NewObjectSquare(0, 0, 0, {})
+	local Body = Harness.NewDeadBody(Square)
+
+	QolcButcherCorpseAction:new(Player, Body, Knife, 10):perform()
+
+	AssertEquals(Square.CorpsesRemoved, 1, "removeCorpse, once")
+	AssertTrue(Square.CorpseSynced, "and told to sync it, which is what false in the second argument means")
+	AssertTrue(Body.Removed, "the body should still be gone")
+end)
+
+Test("every piece is announced to the container", function()
+	-- What vanilla's own butchering does after each AddItem in ButcheringUtil.giveItems. The
+	-- global is inert unless this is the server, so it costs nothing where it does not apply.
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Harness.NewObjectSquare(0, 0, 0, {})),
+		Knife, 10):perform()
+
+	AssertEquals(#Harness.SentToContainer, 3, "one per piece")
+end)
+
+Test("butchering is worth butchering experience", function()
+	-- Asked in game, and the answer was no. Vanilla awards per item taken off a carcass,
+	-- through ButcheringUtil.giveItems, at a rate AnimalPartsDefinitions sets per animal: 25
+	-- for a deer, 18 for a boar, 10 for a sheep, 7 for a hen. A body is a boar, near enough.
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Harness.NewObjectSquare(0, 0, 0, {})),
+		Knife, 10):perform()
+
+	AssertEquals((Player.Xp or {})[Perks.Butchering], 54, "three pieces at the boar rate")
+end)
+
 Test("a body with no square is refused rather than throwing", function()
 	local Player = Harness.NewPlayer(0, true)
 	local Knife = Harness.NewTool("HuntingKnife")

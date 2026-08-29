@@ -77,12 +77,16 @@ function QolcPickLockAction:isValid()
 	local Secondary = self.character:getSecondaryHandItem()
 	if not Primary or not Secondary then return false end
 
-	return Primary:getType() == "Screwdriver" and Secondary:getType() == "QolcLockpick"
+	-- Whatever counts as a screwdriver, not an item literally called one. The menu offers
+	-- this for a multitool, and an action that then refused would be worse than no option.
+	return QolcIsScrewdriver(Primary) and Secondary:getType() == "QolcLockpick"
 end
 
 function QolcPickLockAction:start()
 	self:setActionAnim("Disassemble")
-	self:setOverrideHandModelsString("Screwdriver", nil)
+
+	-- The item rather than a model name, so a multitool is drawn as a multitool.
+	self:setOverrideHandModels(self.character:getPrimaryHandItem(), nil)
 
 	self.sound = getSoundManager():PlayWorldSound(
 		"QolcLockpicking", false, self.object:getSquare(), 0, 8, 1, true)

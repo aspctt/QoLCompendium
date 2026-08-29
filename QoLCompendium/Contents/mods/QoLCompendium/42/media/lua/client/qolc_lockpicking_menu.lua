@@ -17,9 +17,8 @@
 require "luautils"
 
 --// Tuning
-local LOCKPICK = "QolcLockpick"
-local SCREWDRIVER = "Screwdriver"
-local CROWBAR = "Crowbar"
+-- What counts as a crowbar or a screwdriver lives in shared/qolc_lock_tools.lua, so the
+-- menu and the actions it queues cannot disagree about it.
 
 -- Picking is gated on a real recipe the first volume teaches. Forcing cannot be, because
 -- the game refuses a LearnedRecipes entry that matches no recipe, so it is a flag on the
@@ -46,8 +45,15 @@ local function GetSandbox(Name, Default)
 	return Default
 end
 
-local function Enabled()
+-- Two switches rather than one, since a player asked for the halves apart. Picking is the
+-- pick, the screwdriver and the recipe; prying is the crowbar. Both default on, so a save
+-- that predates the split keeps what it already had.
+local function PickingEnabled()
 	return GetSandbox("LockpickingEnabled", true) and true or false
+end
+
+local function PryingEnabled()
+	return GetSandbox("PryingEnabled", true) and true or false
 end
 
 local function Clamp(Time)
@@ -63,16 +69,6 @@ end
 -- form skips it and reads the character's own list, the way the crafting screen does.
 local function Knows(Player, Recipe)
 	return Player:isRecipeActuallyKnown(Recipe)
-end
-
--- A usable one, not merely one in the bag. The original checked condition, which matters
--- for a crowbar and does nothing for a hairpin, so it is checked for both the same way.
-local function Usable(Inventory, Type)
-	local Item = Inventory:FindAndReturn(Type)
-	if not Item then return nil end
-	if Item.getCondition and Item:getCondition() <= 0 then return nil end
-
-	return Item
 end
 
 -- Locks are rolled once and remembered. Reading it here rather than at spawn means only
@@ -122,7 +118,7 @@ local function IsPickableDoor(Object, Player)
 	return IsWayIn(Object)
 end
 
-local function PickDoor(_WorldObjects, Door, Player)
+local function PickDoor(_WorldObjects, Door, Player, Screwdriver, Lockpick)
 	if LockLevel(Door) >= JAMMED then
 		luautils.okModal(getText("IGUI_QoLC_LockJammed"), true)
 		return
@@ -136,7 +132,7 @@ local function PickDoor(_WorldObjects, Door, Player)
 	if Player:hasTrait(CharacterTrait.HANDY) then Time = Time - ZombRand(50) end
 
 	if luautils.walkAdjWindowOrDoor(Player, Door:getSquare(), Door) then
-		local Primary, Secondary = luautils.equipItems(Player, SCREWDRIVER, LOCKPICK)
+		local Primary, Secondary = luautils.equipItems(Player, Screwdriver, Lockpick)
 		ISTimedActionQueue.add(
 			QolcPickLockAction:new(Player, Door, Clamp(Time), Primary, Secondary))
 	end
@@ -170,9 +166,9 @@ local function BreakTime(Player, Level)
 	return Clamp(Time)
 end
 
-local function BreakDoor(_WorldObjects, Door, Player)
+local function BreakDoor(_WorldObjects, Door, Player, Crowbar)
 	if luautils.walkToObject(Player, Door) then
-		local Primary, Secondary = luautils.equipItems(Player, CROWBAR)
+		local Primary, Secondary = luautils.equipItems(Player, Crowbar)
 		ISTimedActionQueue.add(
 			QolcBreakLockAction:new(Player, Door, BreakTime(Player, LockLevel(Door)),
 				Primary, Secondary, false))
@@ -190,12 +186,97 @@ local function IsForceableWindow(Object)
 	return Object:isLocked()
 end
 
-local function ForceWindow(_WorldObjects, Window, Player)
+local function ForceWindow(_WorldObjects, Window, Player, Crowbar)
 	if luautils.walkToObject(Player, Window) then
-		local Primary, Secondary = luautils.equipItems(Player, CROWBAR)
+		local Primary, Secondary = luautils.equipItems(Player, Crowbar)
 		ISTimedActionQueue.add(
 			QolcBreakLockAction:new(Player, Window, WINDOW_TIME, Primary, Secondary, true))
 	end
+end
+
+--// Vehicles
+-- Asked for in game, the original having only ever done buildings. A car door is not an
+-- IsoDoor: it is a VehicleDoor hanging off a VehiclePart, reached through the vehicle
+-- rather than through the objects under the cursor, which is why nothing above ever saw one.
+--
+-- getUseablePart is what vanilla's own radial menu uses to decide which door you are stood
+-- at, and the jar shows it refusing anything over six tiles away, on another floor, or while
+-- you are sitting in a vehicle. So standing near the car is the whole of the reach test,
+-- exactly as it is for vanilla's own open and lock options.
+local ENGINE_DOOR = "EngineDoor"
+
+local function VehiclePartUnder(Player)
+	local Vehicle = Player:getUseableVehicle() or Player:getNearVehicle()
+	if not Vehicle then return nil end
+
+	local Part = Vehicle:getUseablePart(Player)
+	if not Part then return nil end
+
+	-- The bonnet is a door part as well, and picking it makes no sense: vanilla opens it for
+	-- anyone who can get inside the car, so its lock is not what is stopping you.
+	if Part:getId() == ENGINE_DOOR then return nil end
+
+	-- Not fitted, so there is no lock on it to work.
+	if not Part:getInventoryItem() then return nil end
+
+	local Door = Part:getDoor()
+	if not Door then return nil end
+	if Door:isOpen() then return nil end
+	if not Door:isLocked() then return nil end
+
+	return Part, Door
+end
+
+-- Rolled once and remembered, the same as a house door. Kept in the part's own mod data,
+-- which VehiclePart.save writes out and transmitPartModData carries to a server, so the
+-- lock is as hard the second time as the first and as hard for everyone.
+local function VehicleLockLevel(Part)
+	local ModData = Part:getModData()
+
+	if not ModData.QolcLockLevel or ModData.QolcLockLevel < 1 then
+		ModData.QolcLockLevel = ZombRand(LOCK_LEVELS) + 1
+
+		local Vehicle = Part:getVehicle()
+		if Vehicle and Vehicle.transmitPartModData then Vehicle:transmitPartModData(Part) end
+	end
+
+	return ModData.QolcLockLevel
+end
+
+local function WalkToPart(Player, Part)
+	ISTimedActionQueue.add(
+		ISPathFindAction:pathToVehicleArea(Player, Part:getVehicle(), Part:getArea()))
+end
+
+local function PickVehicle(_WorldObjects, Part, Player, Screwdriver, Lockpick)
+	-- lockBroken is vanilla's own field and the jar shows canUnlockDoor refusing it, so this
+	-- is the same dead end a jammed house lock is, said in the game's own words.
+	if Part:getDoor():isLockBroken() then
+		luautils.okModal(getText("IGUI_QoLC_LockJammed"), true)
+		return
+	end
+
+	local Panic = Player:getStats():get(CharacterStat.PANIC) or 0
+	local Steps = math.floor((Panic / 25) + 1)
+	local Time = (PICK_BASE + (VehicleLockLevel(Part) + 1) * PICK_STEP + ZombRand(PICK_SPREAD)) * Steps
+
+	if QolcHasNimbleFingers(Player) then Time = Time - 50 end
+	if Player:hasTrait(CharacterTrait.HANDY) then Time = Time - ZombRand(50) end
+
+	WalkToPart(Player, Part)
+
+	local Primary, Secondary = luautils.equipItems(Player, Screwdriver, Lockpick)
+	ISTimedActionQueue.add(
+		QolcPickVehicleLockAction:new(Player, Part, Clamp(Time), Primary, Secondary))
+end
+
+local function BreakVehicle(_WorldObjects, Part, Player, Crowbar)
+	WalkToPart(Player, Part)
+
+	local Primary, Secondary = luautils.equipItems(Player, Crowbar)
+	ISTimedActionQueue.add(
+		QolcBreakVehicleLockAction:new(Player, Part,
+			BreakTime(Player, VehicleLockLevel(Part)), Primary, Secondary))
 end
 
 --// Connections
@@ -209,7 +290,10 @@ end
 
 local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Test)
 	if Test then return end
-	if not Enabled() then return end
+
+	local Picking = PickingEnabled()
+	local Prying = PryingEnabled()
+	if not Picking and not Prying then return end
 
 	local Player = getSpecificPlayer(PlayerNum)
 	if not Player then return end
@@ -222,20 +306,23 @@ local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Te
 			or (instanceof(Object, "IsoThumpable") and Object:isDoor())
 	end)
 
+	local Crowbar = QolcFindCrowbar(Inventory)
+	local Screwdriver = QolcFindScrewdriver(Inventory)
+	local Lockpick = QolcFindLockpick(Inventory)
+
 	if Door and IsPickableDoor(Door, Player) then
 		local Level = LockLevel(Door)
 
-		if Usable(Inventory, SCREWDRIVER) and Usable(Inventory, LOCKPICK)
-			and Knows(Player, KNOWS_PICKING) then
+		if Picking and Screwdriver and Lockpick and Knows(Player, KNOWS_PICKING) then
 			Context:addOption(
 				getText("ContextMenu_QoLC_PickLock") .. " (" .. LevelName(Level) .. ")",
-				WorldObjects, PickDoor, Door, Player)
+				WorldObjects, PickDoor, Door, Player, Screwdriver, Lockpick)
 		end
 
-		if Usable(Inventory, CROWBAR) and QolcKnowsForcing(Player) then
+		if Prying and Crowbar and QolcKnowsForcing(Player) then
 			Context:addOption(
 				getText("ContextMenu_QoLC_ForceLock") .. " (" .. LevelName(Level) .. ")",
-				WorldObjects, BreakDoor, Door, Player)
+				WorldObjects, BreakDoor, Door, Player, Crowbar)
 		end
 	end
 
@@ -243,10 +330,29 @@ local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Te
 		return instanceof(Object, "IsoWindow")
 	end)
 
-	if Window and IsForceableWindow(Window)
-		and Usable(Inventory, CROWBAR) and QolcKnowsForcing(Player) then
+	if Prying and Window and IsForceableWindow(Window) and Crowbar and QolcKnowsForcing(Player) then
 		Context:addOption(getText("ContextMenu_QoLC_ForceWindow"),
-			WorldObjects, ForceWindow, Window, Player)
+			WorldObjects, ForceWindow, Window, Player, Crowbar)
+	end
+
+	-- Named apart from the house options rather than sharing their text, because a car
+	-- parked against a locked front door would otherwise put two identical lines on the menu
+	-- with no way to tell which was which.
+	local Part = VehiclePartUnder(Player)
+	if not Part then return end
+
+	local VehicleLevel = VehicleLockLevel(Part)
+
+	if Picking and Screwdriver and Lockpick and Knows(Player, KNOWS_PICKING) then
+		Context:addOption(
+			getText("ContextMenu_QoLC_PickVehicleLock") .. " (" .. LevelName(VehicleLevel) .. ")",
+			WorldObjects, PickVehicle, Part, Player, Screwdriver, Lockpick)
+	end
+
+	if Prying and Crowbar and QolcKnowsForcing(Player) then
+		Context:addOption(
+			getText("ContextMenu_QoLC_ForceVehicleLock") .. " (" .. LevelName(VehicleLevel) .. ")",
+			WorldObjects, BreakVehicle, Part, Player, Crowbar)
 	end
 end
 

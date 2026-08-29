@@ -155,7 +155,8 @@ has stopped offering anything else to build, not a way to make anything.
 
 **Corpse Disposal** - Butcher a body for flesh that can be composted, and at
 Cooking 7 prepare and then salt cure it over three days into meat a pot will
-accept. The base game can burn, bury or dump a corpse but never get anything
+accept. Butchering pays butchering experience, at the rate the game gives for a
+boar. The base game can burn, bury or dump a corpse but never get anything
 back from one. Eating it before it is cured will make you very ill. Off by
 default, being the one thing here that adds something rather than repairing it.
 
@@ -165,9 +166,13 @@ the plainest case, being craftable only from barbed wire, which is craftable onl
 from wire. Sheet metal is left alone, since that one genuinely works.
 
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
-door or window open with a crowbar. Failing a pick jams the lock for good, and
-the pick can stick or snap. Two manuals teach it, and a burglar already knows.
-Hairpins spawn with the make-up. The base game has no lockpicking at all.
+door or window open with a crowbar. Car doors and boots too, where a wrecked lock
+never works again for anyone, the key included. Failing a pick jams the lock for
+good, and the pick can stick or snap. Two manuals teach it, and a burglar already
+knows. Hairpins spawn with the make-up. The base game has no lockpicking at all.
+Picking and prying are separate sandbox switches, so a server can have one
+without the other. Both tools are found by tag, so a forged crowbar, a multitool,
+and anything a mod adds all count.
 
 
 Options

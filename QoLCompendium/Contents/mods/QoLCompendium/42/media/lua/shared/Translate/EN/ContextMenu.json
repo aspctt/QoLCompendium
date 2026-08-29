@@ -15,5 +15,7 @@
     "ContextMenu_QoLC_PickLock": "Pick Lock",
     "ContextMenu_QoLC_ForceLock": "Force Lock",
     "ContextMenu_QoLC_ForceWindow": "Force Window Latch",
+    "ContextMenu_QoLC_PickVehicleLock": "Pick Vehicle Lock",
+    "ContextMenu_QoLC_ForceVehicleLock": "Force Vehicle Lock",
     "ContextMenu_QoLC_ButcherCorpse": "Butcher Corpse"
 }

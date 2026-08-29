@@ -125,12 +125,27 @@ Test("balance features are server controlled, not tick boxes", function()
 	end
 end)
 
-Test("every sandbox switch label resolves", function()
-	for _, Key in ipairs({ "Sling", "PropanePump", "Blowtorch" }) do
-		local Label = "Sandbox_QoLC_" .. Key .. "Enabled"
-		AssertNotNil(Translations[Label], "no label for " .. Key)
-		AssertNotNil(Translations[Label .. "_tooltip"], "no tooltip for " .. Key)
+Test("every sandbox option has a name and a tooltip", function()
+	-- Every option, not a list of three. A sandbox option with no translation shows the raw
+	-- key on the settings page, which is exactly what the lockpick tooltips did for two
+	-- versions before anyone said so, and a hand kept list only ever catches what someone
+	-- remembered to add to it.
+	--
+	-- The key is fixed: sandbox-options.txt writes translation = QoLC_<Option> for all of
+	-- them, and the game looks up Sandbox_ plus that.
+	local Missing = {}
+	local Seen = 0
+
+	for Key in pairs(QOLC_SANDBOX_DEFAULTS) do
+		Seen = Seen + 1
+		local Label = "Sandbox_QoLC_" .. Key
+
+		if Translations[Label] == nil then table.insert(Missing, Label) end
+		if Translations[Label .. "_tooltip"] == nil then table.insert(Missing, Label .. "_tooltip") end
 	end
+
+	AssertTrue(Seen > 10, "only " .. tostring(Seen) .. " options were read, so nothing was checked")
+	AssertEquals(#Missing, 0, "no translation for: " .. table.concat(Missing, ", "))
 end)
 
 Test("moodle quarters hands the stack back when switched off", function()

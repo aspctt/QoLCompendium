@@ -216,8 +216,8 @@ end)
 Test("a locked car with an open window is disarmed", function()
 	StartWorld()
 	local Vehicle, Square = Car({}, {
-		Harness.NewVehiclePart("window", {}),
-		Harness.NewVehiclePart("window", { Open = true })
+		Harness.NewAlarmVehiclePart("window", {}),
+		Harness.NewAlarmVehiclePart("window", { Open = true })
 	})
 
 	Load(Square)
@@ -227,7 +227,7 @@ end)
 Test("a missing window disarms a car", function()
 	-- Build 42 reports a smashed out window as the part having no item on it
 	StartWorld()
-	local Vehicle, Square = Car({}, { Harness.NewVehiclePart("window", { Missing = true }) })
+	local Vehicle, Square = Car({}, { Harness.NewAlarmVehiclePart("window", { Missing = true }) })
 
 	Load(Square)
 	AssertFalse(Vehicle:isAlarmed(), "there is no window there at all")
@@ -236,8 +236,8 @@ end)
 Test("a shut and locked car keeps its alarm", function()
 	StartWorld()
 	local Vehicle, Square = Car({}, {
-		Harness.NewVehiclePart("door", {}),
-		Harness.NewVehiclePart("window", {})
+		Harness.NewAlarmVehiclePart("door", {}),
+		Harness.NewAlarmVehiclePart("window", {})
 	})
 
 	Load(Square)

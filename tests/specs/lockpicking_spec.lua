@@ -107,6 +107,42 @@ Test("picking needs both tools", function()
 	AssertTrue(string.find(Names, getText(PICK_LOCK), 1, true) == nil, "no pick, no picking")
 end)
 
+Test("a forged crowbar is a crowbar", function()
+	-- Reported in game as a question about other people's mods, and the answer was worse
+	-- than that: build 42 forges its own CrowbarForged, and the name check this used to do
+	-- refused it. Both carry base:crowbar, which is what the menu asks for now, so anything
+	-- a mod adds with that tag works as well.
+	local Player = Burglar()
+	Player.Inventory.Items = { Harness.NewTool("CrowbarForged") }
+
+	AssertContains(Names(Menu(Player, { Harness.NewDoorLock() })), getText(FORCE_LOCK),
+		"the one you made yourself should work")
+end)
+
+Test("a multitool is a screwdriver", function()
+	-- The same fix seen from the other end. base:screwdriver is on the multitool, the
+	-- handiknife, the improvised screwdriver and the old one, and every one of them was
+	-- turned away while this looked for an item literally called Screwdriver.
+	local Player = Burglar()
+	Player.Inventory.Items = { Harness.NewTool("Multitool"), Harness.NewTool("QolcLockpick") }
+
+	AssertContains(Names(Menu(Player, { Harness.NewDoorLock() })), getText(PICK_LOCK),
+		"it has a screwdriver in it")
+end)
+
+Test("a crowbar in a backpack is still a crowbar", function()
+	-- The old lookup was ItemContainer.FindAndReturn, which the jar shows forwarding to
+	-- getFirstType: this container and no further. A worn bag is its own container, so the
+	-- crowbar most people actually carry was invisible. The tag lookup recurses.
+	local Player = Burglar()
+	local Bag = Harness.NewBag("Backpack")
+	Bag:getInventory():AddItem(Harness.NewTool("Crowbar"))
+	Player.Inventory.Items = { Bag }
+
+	AssertContains(Names(Menu(Player, { Harness.NewDoorLock() })), getText(FORCE_LOCK),
+		"it is right there in the bag")
+end)
+
 Test("a broken crowbar is no crowbar", function()
 	local Player = Burglar()
 	Player.Inventory.Items = { Harness.NewTool("Crowbar", 0) }
@@ -298,16 +334,46 @@ Test("failing is louder than succeeding", function()
 end)
 
 --// The Switch
-Test("turning it off takes every option away", function()
+Test("turning both off takes every option away", function()
 	SandboxVars.QoLC.LockpickingEnabled = false
+	SandboxVars.QoLC.PryingEnabled = false
 	local Player = Burglar()
 
 	AssertEquals(#Menu(Player, { Harness.NewDoorLock() }).options, 0, "off means off")
 	AssertEquals(#Menu(Player, { Harness.NewWindowLock() }).options, 0, "windows too")
 end)
 
-Test("the switch is a sandbox option", function()
+Test("the two halves are switched apart", function()
+	-- Asked for in game: picking wants two tools, a manual and a recipe, prying wants a
+	-- crowbar and a shoulder, and a server can reasonably want one and not the other. Each
+	-- switch has to take its own option away and leave the other standing.
+	SandboxVars.QoLC.LockpickingEnabled = false
+	SandboxVars.QoLC.PryingEnabled = true
+
+	local Names = Names(Menu(Burglar(), { Harness.NewDoorLock() }))
+	AssertTrue(string.find(Names, getText(PICK_LOCK), 1, true) == nil, "picking is off")
+	AssertContains(Names, getText(FORCE_LOCK), "prying is not")
+end)
+
+Test("prying off leaves picking alone, and takes the window with it", function()
+	SandboxVars.QoLC.LockpickingEnabled = true
+	SandboxVars.QoLC.PryingEnabled = false
+
+	local Player = Burglar()
+	local Names = Names(Menu(Player, { Harness.NewDoorLock() }))
+
+	AssertContains(Names, getText(PICK_LOCK), "picking is still there")
+	AssertTrue(string.find(Names, getText(FORCE_LOCK), 1, true) == nil, "prying is off")
+	AssertEquals(#Menu(Player, { Harness.NewWindowLock() }).options, 0,
+		"a window has only ever been pried")
+end)
+
+Test("both switches are sandbox options", function()
 	AssertNotNil(QOLC_SANDBOX_DEFAULTS["LockpickingEnabled"], "server controlled")
+	AssertNotNil(QOLC_SANDBOX_DEFAULTS["PryingEnabled"], "and so is the other half")
+
+	-- On by default, both, so a save made before the split keeps what it had.
+	AssertTrue(QOLC_SANDBOX_DEFAULTS["PryingEnabled"], "nobody should lose prying on update")
 end)
 
 --// Learning
@@ -441,14 +507,18 @@ Test("a window is levered at the higher position", function()
 	AssertEquals((Action.AnimVariables or {})["RemoveBarricade"], "CrowbarHigh", "a latch sits higher")
 end)
 
-Test("the crowbar is in hand while forcing", function()
+Test("the crowbar in hand is the one that is drawn", function()
+	-- The item, not the model name "Crowbar". Those were the same thing until the tools were
+	-- looked up by tag, and now they are not: forcing a lock with a forged crowbar drew a
+	-- plain one, and a multitool drew a screwdriver.
 	local Player = Burglar()
-	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+	local Crowbar = Harness.NewTool("CrowbarForged")
+	Player:setPrimaryHandItem(Crowbar)
 
 	local Action = QolcBreakLockAction:new(Player, Harness.NewDoorLock(), 10, nil, nil, false)
 	Action:start()
 
-	AssertEquals(Action.PrimaryHandModel, "Crowbar", "levering an empty hand looks wrong")
+	AssertEquals(Action.PrimaryHand, Crowbar, "levering an empty hand looks wrong")
 end)
 
 --// The Burglar's Head Start
@@ -563,3 +633,265 @@ Test("the tables are seeded whatever the switch says", function()
 		"Base.QolcLockpickBook1"), "and so are the volumes")
 end)
 
+
+--// Vehicles
+-- A car door is a VehicleDoor on a VehiclePart, reached through the vehicle rather than
+-- through the objects under the cursor, which is why none of the door tests above touch one.
+local PICK_VEHICLE = "ContextMenu_QoLC_PickVehicleLock"
+local FORCE_VEHICLE = "ContextMenu_QoLC_ForceVehicleLock"
+
+local function AtVehicle(Player, Values)
+	local Vehicle = Harness.NewLockedVehicle(Values)
+	Player.UseableVehicle = Vehicle
+	return Vehicle
+end
+
+Test("a locked car offers both ways in", function()
+	local Player = Burglar()
+	AtVehicle(Player)
+
+	local Found = Names(Menu(Player, {}))
+	AssertContains(Found, getText(PICK_VEHICLE), "picking")
+	AssertContains(Found, getText(FORCE_VEHICLE), "forcing")
+end)
+
+Test("the car options are named apart from the house ones", function()
+	-- A car parked against a locked front door would otherwise put two identical lines on
+	-- the menu with no way to tell which was which.
+	AssertTrue(getText(PICK_VEHICLE) ~= getText(PICK_LOCK), "picking reads differently")
+	AssertTrue(getText(FORCE_VEHICLE) ~= getText(FORCE_LOCK), "so does forcing")
+
+	local Player = Burglar()
+	AtVehicle(Player)
+
+	local Found = Names(Menu(Player, { Harness.NewDoorLock() }))
+	for _, Key in ipairs({ PICK_LOCK, FORCE_LOCK, PICK_VEHICLE, FORCE_VEHICLE }) do
+		AssertContains(Found, getText(Key), "a door and a car should each offer their own")
+	end
+end)
+
+Test("an unlocked car is left alone", function()
+	local Player = Burglar()
+	AtVehicle(Player, { Locked = false })
+
+	AssertEquals(#Menu(Player, {}).options, 0, "it already opens")
+end)
+
+Test("an open car door is left alone", function()
+	local Player = Burglar()
+	AtVehicle(Player, { Open = true })
+
+	AssertEquals(#Menu(Player, {}).options, 0, "there is nothing to work on")
+end)
+
+Test("a door that is not fitted is left alone", function()
+	-- getInventoryItem is nil for a part that was taken off, and a missing door has no lock.
+	-- Vanilla checks the same thing before offering its own open and lock options.
+	local Player = Burglar()
+	AtVehicle(Player, { Fitted = false })
+
+	AssertEquals(#Menu(Player, {}).options, 0, "no door, no lock")
+end)
+
+Test("the bonnet is left alone", function()
+	-- It is a door part like any other, and picking it makes no sense: vanilla opens it for
+	-- anyone who can get inside the car, so its lock is not what is stopping you.
+	local Player = Burglar()
+	AtVehicle(Player, { PartId = "EngineDoor" })
+
+	AssertEquals(#Menu(Player, {}).options, 0, "not a way in")
+end)
+
+Test("the boot is offered, being a door like the rest", function()
+	local Player = Burglar()
+	AtVehicle(Player, { PartId = "TrunkDoor" })
+
+	AssertContains(Names(Menu(Player, {})), getText(FORCE_VEHICLE), "a boot has a lock on it")
+end)
+
+Test("a car lock keeps its difficulty, and the roll is announced", function()
+	-- Rolled once and remembered, the same as a house door, in the part's own mod data,
+	-- which VehiclePart.save writes out. transmitPartModData carries the roll to a server so
+	-- the lock is as hard for everyone as it is for whoever looked first.
+	local Player = Burglar()
+	local Vehicle = AtVehicle(Player)
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Menu(Player, {})
+	local First = Part:getModData().QolcLockLevel
+
+	AssertNotNil(First, "a lock should have a difficulty")
+	AssertTrue(First >= 1 and First <= 5, "one of the five, never the jammed sixth")
+	AssertEquals(Vehicle.ModDataTransmitted, 1, "and the roll should have been sent")
+
+	Menu(Player, {})
+	AssertEquals(Part:getModData().QolcLockLevel, First, "as hard the second time as the first")
+	AssertEquals(Vehicle.ModDataTransmitted, 1, "and not rolled again")
+end)
+
+Test("the difficulty is shown with the car options", function()
+	local Player = Burglar()
+	local Vehicle = AtVehicle(Player)
+	Vehicle:getPartById("DoorFrontLeft"):getModData().QolcLockLevel = 3
+
+	AssertContains(Names(Menu(Player, {})), getText("IGUI_QoLC_LockLevel3"), "medium")
+end)
+
+Test("sitting in the car offers nothing", function()
+	-- getUseablePart answers nil for a character who is in a vehicle, so the menu never sees
+	-- a part. Worth pinning, because the option would be absurd from the driver's seat.
+	local Player = Burglar()
+	local Vehicle = AtVehicle(Player)
+	Player.InVehicle = Vehicle
+
+	AssertEquals(#Menu(Player, {}).options, 0, "you are already inside it")
+end)
+
+Test("the two switches reach the car as well", function()
+	local Player = Burglar()
+	AtVehicle(Player)
+
+	SandboxVars.QoLC.LockpickingEnabled = false
+	SandboxVars.QoLC.PryingEnabled = true
+
+	local Found = Names(Menu(Player, {}))
+	AssertTrue(string.find(Found, getText(PICK_VEHICLE), 1, true) == nil, "picking is off")
+	AssertContains(Found, getText(FORCE_VEHICLE), "prying is not")
+
+	SandboxVars.QoLC.LockpickingEnabled = true
+	SandboxVars.QoLC.PryingEnabled = false
+
+	Found = Names(Menu(Player, {}))
+	AssertContains(Found, getText(PICK_VEHICLE), "picking is back")
+	AssertTrue(string.find(Found, getText(FORCE_VEHICLE), 1, true) == nil, "prying is off")
+end)
+
+--// Working A Car Lock
+local function VehicleAction(Player, Vehicle, Tool, Second)
+	Player:setPrimaryHandItem(Tool)
+	if Second then Player:setSecondaryHandItem(Second) end
+
+	return Vehicle:getPartById("DoorFrontLeft")
+end
+
+Test("forcing a car lock unlocks it and takes the lock with it", function()
+	-- The jar shows canLockDoor refusing a broken lock, so setting it means the door can
+	-- never be locked again. That is the same thing this already does to a window by perma
+	-- locking the latch: you have taken the lock out of it.
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle, Harness.NewTool("Crowbar"))
+
+	-- BreakLockChance is a one in N roll and a zero is the lock holding, so anything else
+	-- is the lock giving way.
+	Harness.SetRandom({ 1 })
+
+	local Action = QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil)
+	Action:perform()
+
+	AssertFalse(Part:getDoor():isLocked(), "the door should open now")
+	AssertTrue(Part:getDoor():isLockBroken(), "and never lock again")
+	AssertEquals(Vehicle.DoorsTransmitted, 1, "a client keeping that to itself has forced nothing")
+end)
+
+Test("a car lock that holds stays locked", function()
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle, Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 0 })
+
+	QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertTrue(Part:getDoor():isLocked(), "it held")
+	AssertFalse(Part:getDoor():isLockBroken(), "and nothing was broken")
+end)
+
+Test("picking a car lock opens it", function()
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle,
+		Harness.NewTool("Screwdriver"), Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+
+	QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertFalse(Part:getDoor():isLocked(), "picked")
+	AssertFalse(Part:getDoor():isLockBroken(), "and the lock survived")
+	AssertEquals(Vehicle.DoorsTransmitted, 1, "the change has to reach the server")
+end)
+
+Test("failing a car pick wrecks the lock for good", function()
+	-- lockBroken is vanilla's own field, and the jar shows canUnlockDoor refusing it, so the
+	-- key stops working too. That is what a jammed house lock already means here, said in the
+	-- game's own words rather than ours.
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle,
+		Harness.NewTool("Screwdriver"), Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 0, 1, 99 })
+
+	QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertTrue(Part:getDoor():isLocked(), "still shut")
+	AssertTrue(Part:getDoor():isLockBroken(), "and nothing will open it now")
+end)
+
+Test("a multitool and a forged crowbar are accepted by the car actions too", function()
+	-- The menu offers these, so an action that refused them would be worse than no option.
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Player:setPrimaryHandItem(Harness.NewTool("CrowbarForged"))
+	AssertTrue(QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):isValid(), "forged")
+
+	Player:setPrimaryHandItem(Harness.NewTool("Multitool"))
+	Player:setSecondaryHandItem(Harness.NewTool("QolcLockpick"))
+	AssertTrue(QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):isValid(), "multitool")
+end)
+
+Test("dropping either tool stops the car pick", function()
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Player:setPrimaryHandItem(Harness.NewTool("Screwdriver"))
+	local Action = QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil)
+
+	AssertFalse(Action:isValid(), "one hand is empty")
+end)
+
+Test("a lock that is already open stops the car actions", function()
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle({ Locked = false })
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Player:setPrimaryHandItem(Harness.NewTool("Crowbar"))
+
+	AssertFalse(QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):isValid(),
+		"there is nothing left to force")
+end)
+
+Test("the player walks to the door before working on it", function()
+	local Player = Burglar()
+	AtVehicle(Player)
+
+	local Context = Menu(Player, {})
+	local Forcing = nil
+	for _, Option in ipairs(Context.options) do
+		if string.find(Option.name, getText(FORCE_VEHICLE), 1, true) == 1 then Forcing = Option end
+	end
+
+	AssertNotNil(Forcing, "the option should be there to click")
+
+	Harness.ActionQueue = {}
+	Forcing:Click()
+
+	AssertTrue(#Harness.ActionQueue >= 2, "a path and the work")
+	AssertEquals(Harness.ActionQueue[1].Class, "ISPathFindAction", "the path comes first")
+	AssertEquals(Harness.ActionQueue[#Harness.ActionQueue].Name, "QolcBreakVehicleLockAction",
+		"and the work comes last")
+end)

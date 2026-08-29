@@ -76,10 +76,16 @@ local SETS = {
 }
 
 --// Switch
+-- Split the way the feature is split. The first manual teaches making a pick and the
+-- hairpins are what you make one from, so both answer to lockpicking. The second manual
+-- teaches nothing but the crowbar, so it answers to prying.
 QolcLootSwitch.Withhold("LockpickingEnabled", {
 	"Base.QolcLockpickBook1",
-	"Base.QolcLockpickBook2",
 	"Base.QolcHairpin",
+})
+
+QolcLootSwitch.Withhold("PryingEnabled", {
+	"Base.QolcLockpickBook2",
 })
 
 --// Functions

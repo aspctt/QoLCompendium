@@ -85,10 +85,9 @@ end
 
 --// The Action
 function QolcBreakLockAction:isValid()
-	local Primary = self.character:getPrimaryHandItem()
-	if not Primary then return false end
-
-	return Primary:getType() == "Crowbar"
+	-- Whatever counts as a crowbar, not an item literally called one. Build 42 forges its
+	-- own, and the menu offers this for it.
+	return QolcIsCrowbar(self.character:getPrimaryHandItem())
 end
 
 function QolcBreakLockAction:start()
@@ -97,7 +96,9 @@ function QolcBreakLockAction:start()
 	-- a RemoveBarricade variable choosing the height. Setting only the first plays nothing.
 	self:setActionAnim("RemoveBarricade")
 	self:setAnimVariable("RemoveBarricade", self.isWindow and "CrowbarHigh" or "CrowbarMid")
-	self:setOverrideHandModelsString("Crowbar", nil)
+
+	-- The item rather than a model name, so a forged crowbar is drawn as itself.
+	self:setOverrideHandModels(self.character:getPrimaryHandItem(), nil)
 end
 
 function QolcBreakLockAction:stop()

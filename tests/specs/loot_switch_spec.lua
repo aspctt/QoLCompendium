@@ -71,10 +71,33 @@ end)
 Test("turning lockpicking off takes its items back out", function()
 	SetSwitch("LockpickingEnabled", false)
 
-	local Container = Holding(BOOKS[1], BOOKS[2], HAIRPIN)
+	local Container = Holding(BOOKS[1], HAIRPIN)
 	Fill(Container)
 
 	AssertEquals(#Container.Items, 0, "nothing of ours is left: " .. Types(Container))
+end)
+
+Test("the two lockpicking switches take one manual each", function()
+	-- Split the way the feature is split. The first manual teaches making a pick and the
+	-- hairpins are what you make one from, so both answer to lockpicking. The second teaches
+	-- nothing but the crowbar, so it answers to prying, and turning one off has to leave the
+	-- other's manual on the shelf.
+	SetSwitch("LockpickingEnabled", false)
+	SetSwitch("PryingEnabled", true)
+
+	local Container = Holding(BOOKS[1], BOOKS[2], HAIRPIN)
+	Fill(Container)
+
+	AssertEquals(Types(Container), BOOKS[2], "the crowbar manual should still spawn")
+
+	SetSwitch("LockpickingEnabled", true)
+	SetSwitch("PryingEnabled", false)
+
+	local Other = Holding(BOOKS[1], BOOKS[2], HAIRPIN)
+	Fill(Other)
+
+	AssertEquals(#Other.Items, 2, "the pick manual and the hairpin should still spawn")
+	AssertFalse(string.find(Types(Other), BOOKS[2], 1, true) ~= nil, "and the other should not")
 end)
 
 Test("a switch reaches only its own items", function()
@@ -143,6 +166,7 @@ Test("all three features are registered against the one handler", function()
 	AssertEquals(Harness.HandlerCount("OnFillContainer"), 1, "one handler, not one each")
 
 	SetSwitch("LockpickingEnabled", false)
+	SetSwitch("PryingEnabled", false)
 	SetSwitch("SlingEnabled", false)
 	SetSwitch("NutritionistMagEnabled", false)
 

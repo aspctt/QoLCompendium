@@ -382,6 +382,46 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return Walk(self, Predicate, {})[1] ~= nil
 	end
 
+	-- How build 42 asks for a tool. getFirstTagEvalRecurse is what vanilla's own butchering
+	-- menu uses to find a knife, and the Recurse half is the point: a crowbar in a backpack
+	-- is in the bag's container, not this one, so the flat FindAndReturn above never sees it.
+	-- Harness.TagKey rather than the local, which is declared further down the file and so
+	-- is not in scope here. The field is read when this runs, by which point it is set.
+	local function FirstTagged(From, Tag, Predicate, Deep)
+		if not Harness.TagKey(Tag) then return nil end
+
+		for _, Item in ipairs(From.Items) do
+			if Item.hasTag and Item:hasTag(Tag) and (not Predicate or Predicate(Item)) then
+				return Item
+			end
+
+			if Deep then
+				local Inner = Item.getInventory and Item:getInventory()
+				if Inner and Inner.Items then
+					local Found = FirstTagged(Inner, Tag, Predicate, Deep)
+					if Found then return Found end
+				end
+			end
+		end
+
+		return nil
+	end
+
+	function Container:getFirstTag(Tag) return FirstTagged(self, Tag, nil, false) end
+	function Container:getFirstTagRecurse(Tag) return FirstTagged(self, Tag, nil, true) end
+
+	function Container:getFirstTagEval(Tag, Predicate)
+		return FirstTagged(self, Tag, Predicate, false)
+	end
+
+	function Container:getFirstTagEvalRecurse(Tag, Predicate)
+		return FirstTagged(self, Tag, Predicate, true)
+	end
+
+	function Container:containsTagRecurse(Tag)
+		return FirstTagged(self, Tag, nil, true) ~= nil
+	end
+
 	return Container
 end
 
@@ -412,6 +452,17 @@ function Harness.NewPropaneTank(Fraction)
 	return Tank
 end
 
+--// Item Tags
+-- Build 42 asks a container for a tool by tag rather than by name, and the two spellings
+-- have to meet: a script writes base:sharpknife, the constant is SHARP_KNIFE. Strip the
+-- module, drop the underscores, lowercase, and they are the same word.
+local function TagKey(Tag)
+	if type(Tag) ~= "string" then return nil end
+	return Tag:gsub("^.*:", ""):gsub("_", ""):lower()
+end
+
+Harness.TagKey = TagKey
+
 Harness.NextItemId = 1
 
 function Harness.NewInventoryItem(Name, WorldItem)
@@ -439,6 +490,24 @@ function Harness.NewInventoryItem(Name, WorldItem)
 	Item.Favorite = false
 	function Item:isFavorite() return self.Favorite end
 	function Item:getContainer() return self.Container end
+
+	-- The tags the game itself puts on an item of this name, read out of its own scripts by
+	-- the runner rather than listed here. A stub that made them up would agree with whatever
+	-- the code under test expects and disagree with the game, which is the one thing a stub
+	-- must never do. An item the game does not define simply carries none.
+	Item.TagSet = {}
+
+	local Declared = VanillaItemTags and VanillaItemTags[Item.Name]
+	if Declared then
+		for _, Tag in ipairs(Declared) do Item.TagSet[TagKey(Tag)] = true end
+	end
+
+	function Item:addTag(Tag) self.TagSet[TagKey(Tag)] = true end
+
+	function Item:hasTag(Tag)
+		local Key = TagKey(Tag)
+		return Key ~= nil and self.TagSet[Key] == true
+	end
 
 	return Item
 end
@@ -577,6 +646,14 @@ function Harness.NewPlayer(Number, IsLocal)
 		end
 		return Xp
 	end
+
+	-- Which vehicle this character is in, is stood at, and is merely near. Vanilla's own
+	-- vehicle menu asks for the last two in that order and takes the first answer. All three
+	-- are nil unless a spec puts a vehicle there, which is the ordinary case: most of the
+	-- world has no car in it.
+	function Player:getVehicle() return self.InVehicle end
+	function Player:getUseableVehicle() return self.UseableVehicle end
+	function Player:getNearVehicle() return self.NearVehicle end
 
 	-- Nil until a spec places them, the same as a character who is not in the world yet.
 	-- Anything reading it has to cope with that.
@@ -1629,6 +1706,16 @@ Harness.IsServer = false
 
 function isClient() return Harness.IsClient end
 function isServer() return Harness.IsServer end
+
+-- LuaManager.GlobalObject.sendAddItemToContainer. The jar shows it returning immediately
+-- unless GameServer.server, and otherwise handing straight to GameServer, so off a server it
+-- genuinely does nothing. The call is recorded either way, which is observation rather than
+-- behaviour: Sent says whether the real one would have put anything on the wire.
+Harness.SentToContainer = {}
+
+function sendAddItemToContainer(Container, Item)
+	table.insert(Harness.SentToContainer, { Container = Container, Item = Item, Sent = isServer() })
+end
 
 --// Installed Mods
 -- getActivatedMods returns a java ArrayList of mod ids, indexed from zero, the ids being
@@ -2824,6 +2911,30 @@ function Harness.NewObjectSquare(X, Y, Z, Objects)
 		return List
 	end
 
+	-- How the game takes a corpse off the map, and not the same thing as removing any other
+	-- object. Transcribed from IsoGridSquare.removeCorpse rather than guessed: on a client it
+	-- reconciles the body's own container through checkAddedRemovedItems and sends
+	-- RemoveCorpseFromMap to the server, on a server it sends the same out to everyone near
+	-- it, then it invalidates the render chunk, then it does removeFromWorld and
+	-- removeFromSquare, and finally, anywhere but a server, it triggers OnContainerUpdate.
+	--
+	-- The second argument suppresses the packet when true. Vanilla passes false everywhere.
+	Square.CorpsesRemoved = 0
+
+	function Square:removeCorpse(Body, Quiet)
+		self.CorpsesRemoved = self.CorpsesRemoved + 1
+		self.CorpseSynced = not Quiet
+
+		for Index, Held in ipairs(self.Bodies) do
+			if Held == Body then table.remove(self.Bodies, Index) break end
+		end
+
+		Body:removeFromWorld()
+		Body:removeFromSquare()
+
+		triggerEvent("OnContainerUpdate", self)
+	end
+
 	Harness.Squares[tostring(X or 0) .. "," .. tostring(Y or 0) .. "," .. tostring(Z or 0)] = Square
 	return Square
 end
@@ -2883,6 +2994,138 @@ function Harness.NewWindow(Values, Square, Opposite)
 	return AttachSides(Window, Square, Opposite)
 end
 
+--// Vehicles
+-- A car door is a VehicleDoor hanging off a VehiclePart, not an IsoDoor, and none of the
+-- door stubs above describe one. Transcribed from zombie.vehicles.VehicleDoor, which is four
+-- booleans and their accessors and nothing else.
+--
+-- lockBroken is the field that matters: the jar shows BaseVehicle.canUnlockDoor and
+-- canLockDoor both returning false the moment it is set, so a broken lock is a door that
+-- can never be unlocked and never be locked again, depending on which side of it you were
+-- on when it broke.
+function Harness.NewVehicleDoor(Values)
+	Values = Values or {}
+
+	local Door = {}
+	Door.Open = Values.Open and true or false
+	Door.Locked = Values.Locked ~= false
+	Door.LockBroken = Values.LockBroken and true or false
+
+	function Door:isOpen() return self.Open end
+	function Door:setOpen(Value) self.Open = Value and true or false end
+	function Door:isLocked() return self.Locked end
+	function Door:setLocked(Value) self.Locked = Value and true or false end
+	function Door:isLockBroken() return self.LockBroken end
+	function Door:setLockBroken(Value) self.LockBroken = Value and true or false end
+
+	return Door
+end
+
+-- One part of a vehicle. Only the parts a lock cares about are modelled: the id, the area
+-- used for pathing, the door, whether the part is fitted at all, and the mod data, which
+-- VehiclePart.save writes out and so survives a reload.
+function Harness.NewVehiclePart(Id, Values)
+	Values = Values or {}
+
+	local Part = {}
+	Part.ModData = {}
+	Part.Door = Values.Door ~= false and Harness.NewVehicleDoor(Values) or nil
+
+	-- getInventoryItem is nil for a part that is not fitted. Vanilla checks it before
+	-- offering anything on a door, because a missing door has no lock.
+	--
+	-- Written out rather than as an and/or, which cannot express nil: the false branch of
+	-- "a and nil or b" falls straight through to b, so every part came back fitted.
+	if Values.Fitted ~= false then
+		Part.Item = Harness.NewInventoryItem(Id or "DoorFrontLeft")
+	end
+
+	function Part:getId() return Id or "DoorFrontLeft" end
+	function Part:getArea() return Values.Area or "SeatFrontLeft" end
+	function Part:getDoor() return self.Door end
+	function Part:getInventoryItem() return self.Item end
+	function Part:getModData() return self.ModData end
+	function Part:getVehicle() return self.Vehicle end
+	function Part:getSquare() return self.Vehicle and self.Vehicle:getSquare() end
+
+	return Part
+end
+
+-- A vehicle carrying parts. getUseablePart is what vanilla's own radial menu uses to decide
+-- which door the player is stood at: the jar shows it answering nil while the character is
+-- in a vehicle, nil on another floor, nil beyond six tiles, and otherwise the nearest part
+-- that has an area. Distance is not modelled here, so a spec says which part is the useable
+-- one; the rule that is modelled is the one our code depends on, that sitting in a vehicle
+-- answers nil.
+function Harness.NewVehicle(Values)
+	Values = Values or {}
+
+	local Vehicle = {}
+	Vehicle.Class = "BaseVehicle"
+	Vehicle.Parts = {}
+	Vehicle.DoorsTransmitted = 0
+	Vehicle.ModDataTransmitted = 0
+	Vehicle.PartSounds = {}
+	Vehicle.Square = Values.Square
+
+	function Vehicle:getSquare() return self.Square end
+
+	function Vehicle:addPart(Part)
+		Part.Vehicle = self
+		table.insert(self.Parts, Part)
+		if not self.Useable then self.Useable = Part end
+		return Part
+	end
+
+	function Vehicle:getUseablePart(Character)
+		if Character and Character.getVehicle and Character:getVehicle() then return nil end
+		return self.Useable
+	end
+
+	function Vehicle:getPartById(Id)
+		for _, Part in ipairs(self.Parts) do
+			if Part:getId() == Id then return Part end
+		end
+		return nil
+	end
+
+	-- The two sync calls. Counted rather than performed, since there is no wire here, but
+	-- counted so a spec can prove a client is not keeping an unlocked car to itself.
+	function Vehicle:transmitPartDoor(_Part) self.DoorsTransmitted = self.DoorsTransmitted + 1 end
+	function Vehicle:transmitPartModData(_Part) self.ModDataTransmitted = self.ModDataTransmitted + 1 end
+
+	function Vehicle:playPartSound(_Part, _Character, Name)
+		table.insert(self.PartSounds, Name)
+	end
+
+	return Vehicle
+end
+
+-- A vehicle with one locked door on it, which is what nearly every spec here wants.
+function Harness.NewLockedVehicle(Values)
+	Values = Values or {}
+
+	local Vehicle = Harness.NewVehicle(Values)
+	Vehicle:addPart(Harness.NewVehiclePart(Values.PartId or "DoorFrontLeft", Values))
+	Vehicle.Square = Values.Square or Harness.NewObjectSquare(0, 0, 0, {})
+
+	return Vehicle
+end
+
+-- Walking to a part of a vehicle. Vanilla queues this before anything that works on a part,
+-- and it is the only thing in the queue that is not ours, so a spec can count past it.
+ISPathFindAction = ISPathFindAction or {}
+
+function ISPathFindAction:pathToVehicleArea(Character, Vehicle, AreaId)
+	local Action = {}
+	Action.Class = "ISPathFindAction"
+	Action.character = Character
+	Action.vehicle = Vehicle
+	Action.area = AreaId
+
+	return Action
+end
+
 -- A square with special objects on it, which is what LoadGridsquare hands out. Def is
 -- the building this square belongs to, or nil for a square standing outside one.
 function Harness.NewAlarmSquare(Def, Objects, Vehicle)
@@ -2902,10 +3145,15 @@ function Harness.NewAlarmSquare(Def, Objects, Vehicle)
 	return Square
 end
 
---// Vehicles
+--// Alarm Vehicles
 -- Values: Open, Missing. Missing models a window smashed out or a door taken off, which
 -- the game shows as the part having no inventory item on it.
-function Harness.NewVehiclePart(Kind, Values)
+--
+-- Named for the alarm rather than for vehicles in general, because it is not a vehicle part:
+-- it answers three questions and nothing else. It shared the name NewVehiclePart with the
+-- fuller builder above until the two collided, the later definition winning in silence and
+-- taking every method the other one had.
+function Harness.NewAlarmVehiclePart(Kind, Values)
 	Values = Values or {}
 
 	local Openable = {}
