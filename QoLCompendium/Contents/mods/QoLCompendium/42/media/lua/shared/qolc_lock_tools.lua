@@ -60,6 +60,25 @@ local function Find(Inventory, Rule)
 	return nil
 end
 
+--// Switches
+-- Two switches since a player asked for the halves apart. Picking is the pick, the
+-- screwdriver and the recipe; prying is the crowbar. Both default on, so a save that predates
+-- the split keeps what it already had.
+--
+-- Here rather than in each file that wants them. The menu, the reading of the second manual
+-- and the server command all have to agree on what off means, and three copies of the same
+-- three lines is three chances to disagree.
+local function Switch(Name)
+	local Vars = SandboxVars and SandboxVars.QoLC
+	local Value = Vars and Vars[Name]
+
+	if Value ~= nil then return Value and true or false end
+	return true
+end
+
+function QolcPickingEnabled() return Switch("LockpickingEnabled") end
+function QolcPryingEnabled() return Switch("PryingEnabled") end
+
 --// Answers
 function QolcIsCrowbar(Item) return Is(Item, CROWBAR) end
 function QolcIsScrewdriver(Item) return Is(Item, SCREWDRIVER) end

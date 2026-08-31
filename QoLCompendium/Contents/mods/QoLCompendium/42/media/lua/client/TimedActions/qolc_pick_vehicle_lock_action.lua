@@ -65,25 +65,24 @@ function QolcPickVehicleLockAction:perform()
 	local Player = self.character
 	local Part = self.part
 	local Vehicle = self.vehicle
-	local Door = Part:getDoor()
 	local Pick = Player:getSecondaryHandItem()
 	local Level = Player:getPerkLevel(Perks.Lightfoot)
 	local Chance = QolcPickLockChance(Player, Part:getModData().QolcLockLevel)
 
+	-- Whichever way it went, the change goes through the shared request rather than being
+	-- written here. A car door's lock only travels server to client, so a client writing it
+	-- has changed the lock for itself alone and the server's next update puts it back. See
+	-- shared/qolc_vehicle_lock.lua.
 	if ZombRand(Chance) == 0 then
 		-- Wrecked. lockBroken is the game's own word for it, and nothing opens this door
 		-- again, the key included, which is what a jammed house lock already means here.
-		Door:setLockBroken(true)
+		QolcRequestVehicleLock(Player, Part, false, true, false)
 		Vehicle:playPartSound(Part, Player, "IsLocked")
 	else
-		Door:setLocked(false)
+		QolcRequestVehicleLock(Player, Part, true, false, false)
 		Vehicle:playPartSound(Part, Player, "Unlock")
 		Player:getXp():AddXP(Perks.Lightfoot, XP_PER_PICK)
 	end
-
-	-- Whichever way it went the door changed, and a client that keeps that to itself has
-	-- unlocked a car for nobody but itself.
-	Vehicle:transmitPartDoor(Part)
 
 	-- Two separate rolls, as the door action has them: the pick can stick in the lock, or
 	-- snap. Either way it is gone, and a higher Lightfoot makes snapping rarer.

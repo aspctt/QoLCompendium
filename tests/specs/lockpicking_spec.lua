@@ -895,3 +895,225 @@ Test("the player walks to the door before working on it", function()
 	AssertEquals(Harness.ActionQueue[#Harness.ActionQueue].Name, "QolcBreakVehicleLockAction",
 		"and the work comes last")
 end)
+
+--// Asking The Server About A Car Lock
+-- A car door's lock only travels one way. BaseVehicle.transmitPartDoor returns immediately
+-- unless this is the server, and the two packets that carry part state, VehicleUpdate and
+-- VehicleFullUpdate, are both sent from VehicleManager.sendVehicles, which only serverUpdate
+-- calls. clientUpdate sends no part state at all. So a client that unlocks a car door has
+-- unlocked it for itself and the server's next update puts the lock straight back.
+--
+-- A building door is not like this: IsoDoor.syncIsoObject sends upward as well as down, which
+-- is why picking a house has always worked on a server and picking a car did not.
+local LOCK_MODULE = "QoLC"
+local LOCK_COMMAND = "VehicleLock"
+
+Test("forcing a car lock on a client asks the server", function()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle, Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	local Sent = Harness.LastCommand(LOCK_COMMAND)
+	AssertNotNil(Sent, "the server has to be told")
+	AssertEquals(Sent.Module, LOCK_MODULE, "under our own module")
+	AssertEquals(Sent.Request.vehicle, Vehicle:getId(), "which car")
+	AssertEquals(Sent.Request.part, "DoorFrontLeft", "which door")
+	AssertTrue(Sent.Request.unlock, "open it")
+	AssertTrue(Sent.Request.wreck, "and take the lock with it")
+	AssertTrue(Sent.Request.prying, "this was the crowbar")
+end)
+
+Test("picking a car lock on a client asks the server", function()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle,
+		Harness.NewTool("Screwdriver"), Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+	QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	local Sent = Harness.LastCommand(LOCK_COMMAND)
+	AssertNotNil(Sent, "the server has to be told")
+	AssertTrue(Sent.Request.unlock, "open it")
+	AssertFalse(Sent.Request.wreck, "a clean pick leaves the lock alone")
+	AssertFalse(Sent.Request.prying, "this was the pick")
+end)
+
+Test("a wrecked car lock is reported too", function()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle,
+		Harness.NewTool("Screwdriver"), Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 0, 1, 99 })
+	QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	local Sent = Harness.LastCommand(LOCK_COMMAND)
+	AssertNotNil(Sent, "a wrecked lock is a change like any other")
+	AssertFalse(Sent.Request.unlock, "it did not open")
+	AssertTrue(Sent.Request.wreck, "but it is ruined")
+end)
+
+Test("nothing is asked of anyone in singleplayer", function()
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle, Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertNil(Harness.LastCommand(LOCK_COMMAND), "there is nobody to ask")
+	AssertFalse(Part:getDoor():isLocked(), "and it is open all the same")
+end)
+
+Test("the client still sees its own work at once", function()
+	-- Applied locally as well as asked for, so the door reads as forced the moment the job
+	-- finishes rather than a round trip later. The server's copy is the one that lasts.
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle, Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertFalse(Part:getDoor():isLocked(), "no waiting for the answer")
+end)
+
+--// The Server Half
+Test("the server works the lock when a client asks", function()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft",
+		unlock = true, wreck = true, prying = true
+	})
+
+	AssertFalse(Part:getDoor():isLocked(), "open")
+	AssertTrue(Part:getDoor():isLockBroken(), "and ruined")
+	AssertEquals(Vehicle.DoorsTransmitted, 1, "and sent on, which is the whole point")
+end)
+
+Test("the server ignores a request for something that is not there", function()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "NoSuchDoor", unlock = true, prying = true
+	})
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = 9999, part = "DoorFrontLeft", unlock = true, prying = true
+	})
+
+	AssertTrue(Part:getDoor():isLocked(), "neither of those names anything real")
+end)
+
+Test("the server ignores a command that is not ours", function()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Harness.Fire("OnClientCommand", "SomeOtherMod", LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft", unlock = true, prying = true
+	})
+	Harness.Fire("OnClientCommand", LOCK_MODULE, "SomethingElse", Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft", unlock = true, prying = true
+	})
+
+	AssertTrue(Part:getDoor():isLocked(), "neither of those is ours")
+end)
+
+Test("the server refuses the half that is switched off", function()
+	-- A client with the feature on locally, or one still running an older build, should not be
+	-- able to open a car on a server that has said no. Picking and prying are separate
+	-- switches, so the request has to say which it was.
+	SandboxVars.QoLC.PryingEnabled = false
+	SandboxVars.QoLC.LockpickingEnabled = true
+
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft", unlock = true, prying = true
+	})
+	AssertTrue(Part:getDoor():isLocked(), "prying is off here")
+
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft", unlock = true, prying = false
+	})
+	AssertFalse(Part:getDoor():isLocked(), "picking is not")
+end)
+
+Test("what the client sends is what the server answers to", function()
+	-- End to end, because the request and the handler are in different files and a spec that
+	-- only checked one of them would not notice them drifting apart.
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Asked = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Asked, Harness.NewTool("Crowbar"))
+
+	Harness.SetRandom({ 1 })
+	QolcBreakVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	local Sent = Harness.LastCommand(LOCK_COMMAND)
+	AssertNotNil(Sent, "it should have asked")
+
+	Harness.IsClient = false
+
+	-- A second car standing in for the server's own copy, which is the one that was never
+	-- being changed.
+	local Server = Harness.NewLockedVehicle()
+	local Mine = Server:getPartById("DoorFrontLeft")
+
+	local Request = {}
+	for Key, Value in pairs(Sent.Request) do Request[Key] = Value end
+	Request.vehicle = Server:getId()
+
+	Harness.Fire("OnClientCommand", Sent.Module, Sent.Command, Player, Request)
+
+	AssertFalse(Mine:getDoor():isLocked(), "the server's copy opens too")
+	AssertTrue(Mine:getDoor():isLockBroken(), "and its lock is ruined too")
+end)
+
+Test("the difficulty is settled by whoever works the lock first", function()
+	-- Part mod data only travels server to client like everything else on a part, so without
+	-- this every player rolls their own difficulty for the same car and rerolls it on every
+	-- rejoin, which is both inconsistent and a way to shorten the job.
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+		vehicle = Vehicle:getId(), part = "DoorFrontLeft",
+		unlock = true, prying = true, level = 4
+	})
+
+	AssertEquals(Part:getModData().QolcLockLevel, 4, "the server keeps it")
+	AssertEquals(Vehicle.ModDataTransmitted, 1, "and hands it on")
+end)
+
+Test("a difficulty outside the five is thrown away", function()
+	-- It came off the wire, and a level with no name to show would put a raw key on the menu.
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = Vehicle:getPartById("DoorFrontLeft")
+
+	for _, Bad in ipairs({ 0, 6, 99, -3 }) do
+		Harness.Fire("OnClientCommand", LOCK_MODULE, LOCK_COMMAND, Harness.NewPlayer(0, true), {
+			vehicle = Vehicle:getId(), part = "DoorFrontLeft",
+			unlock = true, prying = true, level = Bad
+		})
+	end
+
+	AssertNil(Part:getModData().QolcLockLevel, "none of those is one of the five")
+	AssertFalse(Part:getDoor():isLocked(), "though the door still opened")
+end)

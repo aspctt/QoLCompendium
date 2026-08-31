@@ -3098,6 +3098,15 @@ function Harness.NewVehicle(Values)
 
 	function Vehicle:getSquare() return self.Square end
 
+	-- Vehicles are addressed by id across the wire, which is how a server finds the one a
+	-- client is talking about. Registered here so getVehicleById can answer.
+	Vehicle.Id = Values.Id or (Harness.NextVehicleId or 1)
+	Harness.NextVehicleId = Vehicle.Id + 1
+	Harness.Vehicles = Harness.Vehicles or {}
+	Harness.Vehicles[Vehicle.Id] = Vehicle
+
+	function Vehicle:getId() return self.Id end
+
 	function Vehicle:addPart(Part)
 		Part.Vehicle = self
 		table.insert(self.Parts, Part)
@@ -3138,6 +3147,11 @@ function Harness.NewLockedVehicle(Values)
 	Vehicle.Square = Values.Square or Harness.NewObjectSquare(0, 0, 0, {})
 
 	return Vehicle
+end
+
+-- How a server turns an id off the wire back into a vehicle.
+function getVehicleById(Id)
+	return (Harness.Vehicles or {})[Id]
 end
 
 -- Walking to a part of a vehicle. Vanilla queues this before anything that works on a part,

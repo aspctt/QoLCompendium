@@ -37,25 +37,6 @@ local WINDOW_TIME = 60
 local TIME_FLOOR, TIME_CEILING = 10, 500
 
 --// Functions
-local function GetSandbox(Name, Default)
-	local Vars = SandboxVars and SandboxVars.QoLC
-	local Value = Vars and Vars[Name]
-
-	if Value ~= nil then return Value end
-	return Default
-end
-
--- Two switches rather than one, since a player asked for the halves apart. Picking is the
--- pick, the screwdriver and the recipe; prying is the crowbar. Both default on, so a save
--- that predates the split keeps what it already had.
-local function PickingEnabled()
-	return GetSandbox("LockpickingEnabled", true) and true or false
-end
-
-local function PryingEnabled()
-	return GetSandbox("PryingEnabled", true) and true or false
-end
-
 local function Clamp(Time)
 	if Time < TIME_FLOOR then return TIME_FLOOR end
 	if Time > TIME_CEILING then return TIME_CEILING end
@@ -291,8 +272,8 @@ end
 local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Test)
 	if Test then return end
 
-	local Picking = PickingEnabled()
-	local Prying = PryingEnabled()
+	local Picking = QolcPickingEnabled()
+	local Prying = QolcPryingEnabled()
 	if not Picking and not Prying then return end
 
 	local Player = getSpecificPlayer(PlayerNum)

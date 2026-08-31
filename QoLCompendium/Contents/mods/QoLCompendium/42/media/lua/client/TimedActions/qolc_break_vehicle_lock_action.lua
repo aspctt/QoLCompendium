@@ -68,7 +68,6 @@ function QolcBreakVehicleLockAction:perform()
 	local Player = self.character
 	local Part = self.part
 	local Vehicle = self.vehicle
-	local Door = Part:getDoor()
 	local Square = Part:getSquare()
 	local Weapon = Player:getPrimaryHandItem()
 	local Noise = QolcBreakLockNoise(Player)
@@ -82,9 +81,11 @@ function QolcBreakVehicleLockAction:perform()
 		Shout(Vehicle, Square, NOISE_SUCCESS + Noise)
 
 		-- Unlocked, and the lock left in pieces so it can never be locked again.
-		Door:setLocked(false)
-		Door:setLockBroken(true)
-		Vehicle:transmitPartDoor(Part)
+		--
+		-- Through the shared request rather than written here. A car door's lock only travels
+		-- server to client, so a client writing it has forced the car for itself alone and the
+		-- server's next update puts the lock back. See shared/qolc_vehicle_lock.lua.
+		QolcRequestVehicleLock(Player, Part, true, true, true)
 	end
 
 	local Stats = Player:getStats()
