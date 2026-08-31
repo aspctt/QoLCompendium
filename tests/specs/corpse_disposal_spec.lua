@@ -278,6 +278,152 @@ Test("butchering is worth butchering experience", function()
 	AssertEquals((Player.Xp or {})[Perks.Butchering], 54, "three pieces at the boar rate")
 end)
 
+Test("no piece is lost to the container refusing a repeated id", function()
+	-- Reported in game twice, the second time as meat that could not be dropped or moved.
+	--
+	-- ItemContainer has two AddItem overloads and they do not behave the same way.
+	-- AddItem(InventoryItem) asks containsID first, and if the container already holds an
+	-- item carrying that id it logs "Error, container already has id", hands back the one it
+	-- already had, and adds nothing. AddItem(String) has no such check.
+	--
+	-- A freshly created item's id is zero. InventoryItem.id is written in three places in the
+	-- jar, load, setID and createCloneItem, and none of them runs when an item is made from a
+	-- script. So three fresh pieces handed over by object collide on id zero and two of them
+	-- are dropped in silence.
+	local Player = Harness.NewPlayer(0, true)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Harness.NewObjectSquare(0, 0, 0, {})),
+		Knife, 10):perform()
+
+	AssertEquals(Harness.RefusedDuplicateIds or 0, 0,
+		"a piece was refused for carrying an id the container already had")
+
+	-- Every piece its own item, rather than the same one counted three times, which is what
+	-- the refusing overload hands back.
+	local Seen = {}
+	for _, Item in ipairs(Player:getInventory().Items) do
+		if Item.getFullType and Item:getFullType() == "Base.QolcCorpseFlesh" then
+			AssertFalse(Seen[Item], "the same piece should not be in the inventory twice")
+			Seen[Item] = true
+		end
+	end
+end)
+
+--// Asking The Server
+-- Reported from a self hosted server twice over: the meat could not be dropped or moved, and
+-- it was gone again after a reload. Both are one fault. A client that makes an item and puts
+-- it in its own inventory has made an item the server never heard of, so every transfer is
+-- checked against a server with no such item and refused, and the next handover of the
+-- inventory does not contain it.
+local function Butcher(Player)
+	local Knife = Harness.NewTool("HuntingKnife")
+	Player:getInventory():AddItem(Knife)
+
+	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Harness.NewObjectSquare(0, 0, 0, {})),
+		Knife, 10):perform()
+end
+
+local function FleshHeld(Player)
+	local Count = 0
+	for _, Item in ipairs(Player:getInventory().Items) do
+		if Item.getFullType and Item:getFullType() == "Base.QolcCorpseFlesh" then
+			Count = Count + 1
+		end
+	end
+	return Count
+end
+
+Test("a client asks rather than helping itself", function()
+	Harness.IsClient = true
+
+	local Player = Harness.NewPlayer(0, true)
+	Butcher(Player)
+
+	AssertEquals(FleshHeld(Player), 0, "a client must not make the flesh itself")
+
+	local Sent = Harness.LastCommand("ButcherCorpse")
+	AssertNotNil(Sent, "it should have asked the server instead")
+	AssertEquals(Sent.Module, "QoLC", "under our own module")
+end)
+
+Test("the request carries nothing, so there is nothing to forge", function()
+	-- The count and the item come from the shared file on the server side. A count sent by a
+	-- client is a count a client chose.
+	Harness.IsClient = true
+
+	local Player = Harness.NewPlayer(0, true)
+	Butcher(Player)
+
+	local Sent = Harness.LastCommand("ButcherCorpse")
+	AssertNotNil(Sent, "it should have asked")
+
+	local Count = 0
+	for _ in pairs(Sent.Request or {}) do Count = Count + 1 end
+	AssertEquals(Count, 0, "the request should be empty")
+end)
+
+Test("nothing is asked of anyone in singleplayer", function()
+	-- There is nobody to ask, so the round trip is skipped and the flesh is handed over on
+	-- the spot. The branch exists only to save that trip.
+	local Player = Harness.NewPlayer(0, true)
+	Butcher(Player)
+
+	AssertEquals(FleshHeld(Player), 3, "three pieces, carried")
+	AssertNil(Harness.LastCommand("ButcherCorpse"), "and no command sent")
+end)
+
+Test("the server hands over three pieces when a client asks", function()
+	SetEnabled(true)
+
+	local Player = Harness.NewPlayer(0, true)
+
+	Harness.Fire("OnClientCommand", "QoLC", "ButcherCorpse", Player, {})
+
+	AssertEquals(FleshHeld(Player), 3, "three pieces, from the side that is allowed to")
+end)
+
+Test("the server ignores a command that is not ours", function()
+	local Player = Harness.NewPlayer(0, true)
+
+	Harness.Fire("OnClientCommand", "SomeOtherMod", "ButcherCorpse", Player, {})
+	Harness.Fire("OnClientCommand", "QoLC", "SomethingElse", Player, {})
+
+	AssertEquals(FleshHeld(Player), 0, "neither of those is ours")
+end)
+
+Test("the server refuses when the feature is switched off", function()
+	-- A client with the feature on locally, or an older client, should not be able to ask for
+	-- flesh on a server that has said no.
+	SetEnabled(false)
+
+	local Player = Harness.NewPlayer(0, true)
+	Harness.Fire("OnClientCommand", "QoLC", "ButcherCorpse", Player, {})
+
+	AssertEquals(FleshHeld(Player), 0, "off means off on the server too")
+end)
+
+Test("both halves name the same command", function()
+	-- End to end, because the request and the handler are in different files and a spec that
+	-- only checked one of them would not notice them drifting apart.
+	SetEnabled(true)
+	Harness.IsClient = true
+
+	local Player = Harness.NewPlayer(0, true)
+	Butcher(Player)
+
+	local Sent = Harness.LastCommand("ButcherCorpse")
+	AssertNotNil(Sent, "it should have asked")
+
+	Harness.IsClient = false
+
+	local Receiver = Harness.NewPlayer(1, true)
+	Harness.Fire("OnClientCommand", Sent.Module, Sent.Command, Receiver, Sent.Request)
+
+	AssertEquals(FleshHeld(Receiver), 3, "what was sent is what the server answers to")
+end)
+
 Test("a body with no square is refused rather than throwing", function()
 	local Player = Harness.NewPlayer(0, true)
 	local Knife = Harness.NewTool("HuntingKnife")

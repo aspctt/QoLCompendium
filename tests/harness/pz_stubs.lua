@@ -302,9 +302,37 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return Holder:isInCharacterInventory(Character)
 	end
 
-	function Container:AddItem(Item)
-		table.insert(self.Items, Item)
-		return Item
+	-- Two overloads, and they do not behave the same way. AddItem(String) finds the script
+	-- item, creates one, sets its container, adds it, and sets a food's heat from the
+	-- container. AddItem(InventoryItem) asks containsID first, and if the container already
+	-- holds an item carrying that id it logs "Error, container already has id", returns the
+	-- one it already had, and adds nothing at all.
+	--
+	-- That is not a corner case. A freshly created item's id is zero: InventoryItem.id is
+	-- written in three places in the jar, load, setID and createCloneItem, and none of them
+	-- runs when an item is made from a script. So handing two fresh items to one container by
+	-- object loses the second, in silence but for a line in the log.
+	--
+	-- This used to add whatever it was given and never look, which is how a loop that could
+	-- only ever deliver one piece of meat passed a test asserting three.
+	function Container:AddItem(What)
+		if type(What) == "string" then
+			local Made = instanceItem(What)
+			Made.Container = self
+			table.insert(self.Items, Made)
+			return Made
+		end
+
+		for _, Held in ipairs(self.Items) do
+			if Held.getID and What.getID and Held:getID() == What:getID() then
+				Harness.RefusedDuplicateIds = (Harness.RefusedDuplicateIds or 0) + 1
+				return Held
+			end
+		end
+
+		What.Container = self
+		table.insert(self.Items, What)
+		return What
 	end
 
 	function Container:contains(Item)
@@ -3607,9 +3635,15 @@ function ISContextMenu:getNew() return NewContextMenu() end
 Metabolics = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })
 
 -- A fresh item from its full type, which is how anything spawns one out of thin air.
+--
+-- Id zero, because that is what a freshly created item carries. InventoryItem.id is written
+-- in three places in the jar, load, setID and createCloneItem, and none of them runs here.
+-- Items a spec builds through NewInventoryItem keep a distinct id, standing in for things
+-- that came out of a save or off the ground, which have been given one.
 function instanceItem(FullType)
 	local Item = Harness.NewInventoryItem((FullType or "Base.Thing"):match("[^.]+$"))
 	Item.FullType = FullType
+	Item.Id = 0
 	return Item
 end
 CharacterActionAnims = setmetatable({}, { __index = function(T, K) rawset(T, K, K) return K end })

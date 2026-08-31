@@ -41,6 +41,59 @@ local YIELD = 3
 -- on a hook.
 local XP_PER_PIECE = 18
 
+-- Named so the server command in server/qolc_corpse_commands.lua can hand out the same
+-- three pieces of the same thing. It reads them from here rather than taking a count off
+-- the wire, because a count off the wire is a count a client chose.
+QOLC_CORPSE_FLESH = FLESH
+QOLC_CORPSE_YIELD = YIELD
+
+--// Handing The Flesh Over
+-- Called on whichever side is in charge: directly in singleplayer and on a host, and from
+-- the server command when a client asked. Never on a client.
+--
+-- Handed over rather than dropped. Butchering an animal puts the meat in your hands and this
+-- should not behave differently, and three pieces left in the grass beside a body you have
+-- just removed is easy to walk away from without noticing. The square is the fallback for a
+-- character with no inventory at all, which should not happen but is cheaper to allow for
+-- than to have the flesh vanish if it does.
+--
+-- By type, not by object, and the difference is not cosmetic. ItemContainer has two AddItem
+-- overloads. AddItem(InventoryItem) asks containsID first, and if the container already holds
+-- an item carrying that id it logs "Error, container already has id", returns the item it
+-- already had, and adds nothing. AddItem(String) has no such check, and sets the food's heat
+-- from the container while it is there.
+--
+-- A freshly created item's id is zero. InventoryItem.id is written in exactly three places in
+-- the jar, load, setID and createCloneItem, and none of them runs when an item is made from a
+-- script. So three fresh pieces handed over one after another by object collide on id zero
+-- and only the first survives. Reported as butchering giving one piece.
+--
+-- sendAddItemToContainer after each one, which is what vanilla's own butchering does in
+-- ButcheringUtil.giveItems. It is a no-op unless this is the server, so it costs nothing
+-- where it does not apply and is the whole point where it does.
+function QolcGiveCorpseFlesh(Character, Square)
+	if not Character then return 0 end
+
+	local Inventory = Character:getInventory()
+	Square = Square or (Character.getSquare and Character:getSquare())
+
+	local Given = 0
+	for _ = 1, YIELD do
+		if Inventory then
+			local Flesh = Inventory:AddItem(FLESH)
+			if Flesh then
+				Given = Given + 1
+				if sendAddItemToContainer then sendAddItemToContainer(Inventory, Flesh) end
+			end
+		elseif Square then
+			Square:AddWorldInventoryItem(instanceItem(FLESH), 0, 0, 0)
+			Given = Given + 1
+		end
+	end
+
+	return Given
+end
+
 --// The Action
 function QolcButcherCorpseAction:isValid()
 	if not self.body then return false end
@@ -71,28 +124,24 @@ function QolcButcherCorpseAction:stop()
 end
 
 function QolcButcherCorpseAction:perform()
-	local Inventory = self.character:getInventory()
 	local Square = self.body:getSquare()
 
-	-- Handed over rather than dropped. Butchering an animal puts the meat in your hands and
-	-- this should not behave differently, and three pieces left in the grass beside a body
-	-- you have just removed is easy to walk away from without noticing.
+	-- Asked for on the authoritative side, never done here on a client. Reported twice: the
+	-- meat could not be dropped or moved, and it was gone after a reload. Both are the same
+	-- thing. A client that makes an item and puts it in its own inventory has made an item
+	-- the server never heard of, so every transfer is checked against a server that has no
+	-- such item and refused, and the next time the inventory is handed back the piece is not
+	-- in it. Vanilla does not hit this because butchering an animal is driven from the
+	-- server; this is a context menu action, so it is not.
 	--
-	-- The square is the fallback for a character with no inventory at all, which should not
-	-- happen but is cheaper to allow for than to have the flesh vanish if it does.
-	--
-	-- sendAddItemToContainer after each one, which is what vanilla's own butchering does in
-	-- ButcheringUtil.giveItems. It is a no-op unless GameServer.server, so it costs nothing
-	-- where it does not apply and is correct where it does.
-	for _ = 1, YIELD do
-		local Flesh = instanceItem(FLESH)
-
-		if Inventory then
-			Inventory:AddItem(Flesh)
-			if sendAddItemToContainer then sendAddItemToContainer(Inventory, Flesh) end
-		elseif Square then
-			Square:AddWorldInventoryItem(Flesh, 0, 0, 0)
-		end
+	-- sendClientCommand covers all three shapes on its own. The jar shows it triggering
+	-- OnClientCommand there and then when this is the server, sending to the server when this
+	-- is a client, and going through the singleplayer loopback otherwise. So the branch here
+	-- is only to save a round trip where there is nobody to ask.
+	if isClient() then
+		sendClientCommand(self.character, "QoLC", "ButcherCorpse", {})
+	else
+		QolcGiveCorpseFlesh(self.character, Square)
 	end
 
 	-- getXp():AddXP rather than the addXp global, which is what vanilla's butchering calls.
