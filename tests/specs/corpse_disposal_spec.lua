@@ -275,7 +275,10 @@ Test("butchering is worth butchering experience", function()
 	QolcButcherCorpseAction:new(Player, Harness.NewDeadBody(Harness.NewObjectSquare(0, 0, 0, {})),
 		Knife, 10):perform()
 
-	AssertEquals((Player.Xp or {})[Perks.Butchering], 54, "three pieces at the boar rate")
+	-- Harness.Xp, because the award goes through the game's own addXp now rather than straight
+	-- at the character. That is the whole of the fix: addXp does nothing on a client, so the
+	-- award has to happen on the side that owns the skill.
+	AssertEquals(Harness.Xp[Perks.Butchering], 54, "three pieces at the boar rate")
 end)
 
 Test("no piece is lost to the container refusing a repeated id", function()
@@ -372,6 +375,31 @@ Test("nothing is asked of anyone in singleplayer", function()
 
 	AssertEquals(FleshHeld(Player), 3, "three pieces, carried")
 	AssertNil(Harness.LastCommand("ButcherCorpse"), "and no command sent")
+end)
+
+Test("a client pays itself nothing", function()
+	-- Reported in game: butchering experience appeared and went away again a moment later.
+	-- Skills belong to the server, and addXp does nothing at all on a client for exactly that
+	-- reason, so an award made there is undone by the next sync.
+	Harness.ClearXp()
+	Harness.IsClient = true
+
+	local Player = Harness.NewPlayer(0, true)
+	Butcher(Player)
+
+	AssertEquals(Harness.Xp[Perks.Butchering], nil, "the server pays, not the client")
+end)
+
+Test("the experience comes with the flesh", function()
+	-- One place, one award. The side that hands over the meat is the side that owns the skill,
+	-- so there is no second thing to keep in step with the first.
+	SetEnabled(true)
+	Harness.ClearXp()
+
+	local Player = Harness.NewPlayer(0, true)
+	Harness.Fire("OnClientCommand", "QoLC", "ButcherCorpse", Player, {})
+
+	AssertEquals(Harness.Xp[Perks.Butchering], 54, "paid by the server that gave the flesh")
 end)
 
 Test("the server hands over three pieces when a client asks", function()

@@ -22,9 +22,6 @@ require "TimedActions/ISBaseTimedAction"
 
 QolcPickVehicleLockAction = ISBaseTimedAction:derive("QolcPickVehicleLockAction")
 
---// Tuning
-local XP_PER_PICK = 2
-
 --// The Action
 -- Both hands are checked every tick, because dropping either one mid pick should stop it.
 function QolcPickVehicleLockAction:isValid()
@@ -81,7 +78,10 @@ function QolcPickVehicleLockAction:perform()
 	else
 		QolcRequestVehicleLock(Player, Part, true, false, false)
 		Vehicle:playPartSound(Part, Player, "Unlock")
-		Player:getXp():AddXP(Perks.Lightfoot, XP_PER_PICK)
+
+		-- Asked for rather than taken, the same as the house door action and for the same
+		-- reason. See shared/qolc_lock_xp.lua.
+		QolcRequestPickXp(Player)
 	end
 
 	-- Two separate rolls, as the door action has them: the pick can stick in the lock, or

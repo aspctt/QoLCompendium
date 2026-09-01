@@ -191,7 +191,10 @@ Test("a picked lock opens and pays experience", function()
 	Pick(Player, Door)
 
 	AssertFalse(Door:isLockedByKey(), "the door should be unlocked")
-	AssertTrue((Player.Xp or {})[Perks.Lightfoot] ~= nil, "and Lightfoot should have gone up")
+	-- Harness.Xp, because the award goes through the game's own addXp now rather than straight
+	-- at the character. addXp does nothing on a client, so the award has to happen on the side
+	-- that owns the skill.
+	AssertTrue(Harness.Xp[Perks.Lightfoot] ~= nil, "and Lightfoot should have gone up")
 end)
 
 Test("a failed pick wrecks the lock for good", function()
@@ -1116,4 +1119,116 @@ Test("a difficulty outside the five is thrown away", function()
 
 	AssertNil(Part:getModData().QolcLockLevel, "none of those is one of the five")
 	AssertFalse(Part:getDoor():isLocked(), "though the door still opened")
+end)
+
+--// Paying For A Picked Lock
+-- Reported in game against butchering, and true of every award this mod made from a client.
+-- Skills belong to the server: addXp is LuaManager.GlobalObject.addXp, and the jar shows it
+-- doing nothing at all on a client, so an award made there is undone by the next sync.
+local XP_COMMAND = "PickedLock"
+
+Test("a client picking a house lock pays itself nothing", function()
+	Harness.ClearXp()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	Player:setPrimaryHandItem(Harness.NewTool("Screwdriver"))
+	Player:setSecondaryHandItem(Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+	QolcPickLockAction:new(Player, Harness.NewDoorLock(), 10, nil, nil):perform()
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], nil, "the server pays, not the client")
+	AssertNotNil(Harness.LastCommand(XP_COMMAND), "but it does say it picked one")
+end)
+
+Test("a client picking a car lock pays itself nothing", function()
+	Harness.ClearXp()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	local Vehicle = Harness.NewLockedVehicle()
+	local Part = VehicleAction(Player, Vehicle,
+		Harness.NewTool("Screwdriver"), Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+	QolcPickVehicleLockAction:new(Player, Part, 10, nil, nil):perform()
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], nil, "the server pays, not the client")
+	AssertNotNil(Harness.LastCommand(XP_COMMAND), "but it does say it picked one")
+end)
+
+Test("a wrecked lock is paid nothing", function()
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	Player:setPrimaryHandItem(Harness.NewTool("Screwdriver"))
+	Player:setSecondaryHandItem(Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 0, 1, 99 })
+	QolcPickLockAction:new(Player, Harness.NewDoorLock(), 10, nil, nil):perform()
+
+	AssertNil(Harness.LastCommand(XP_COMMAND), "nothing was picked")
+end)
+
+Test("the server pays for a picked lock", function()
+	Harness.ClearXp()
+
+	Harness.Fire("OnClientCommand", "QoLC", XP_COMMAND, Harness.NewPlayer(0, true), {})
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], 2, "two points, the original's figure")
+end)
+
+Test("the server ignores a payment request that is not ours", function()
+	Harness.ClearXp()
+
+	Harness.Fire("OnClientCommand", "SomeOtherMod", XP_COMMAND, Harness.NewPlayer(0, true), {})
+	Harness.Fire("OnClientCommand", "QoLC", "SomethingElse", Harness.NewPlayer(0, true), {})
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], nil, "neither of those is ours")
+end)
+
+Test("the server pays nothing while picking is switched off", function()
+	Harness.ClearXp()
+	SandboxVars.QoLC.LockpickingEnabled = false
+
+	Harness.Fire("OnClientCommand", "QoLC", XP_COMMAND, Harness.NewPlayer(0, true), {})
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], nil, "off means off on the server too")
+end)
+
+Test("what the client sends is what the server pays for", function()
+	-- End to end, because the request and the handler are in different files and a spec that
+	-- only checked one of them would not notice them drifting apart.
+	Harness.IsClient = true
+
+	local Player = Burglar()
+	Player:setPrimaryHandItem(Harness.NewTool("Screwdriver"))
+	Player:setSecondaryHandItem(Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+	QolcPickLockAction:new(Player, Harness.NewDoorLock(), 10, nil, nil):perform()
+
+	local Sent = Harness.LastCommand(XP_COMMAND)
+	AssertNotNil(Sent, "it should have asked")
+
+	Harness.IsClient = false
+	Harness.ClearXp()
+	Harness.Fire("OnClientCommand", Sent.Module, Sent.Command, Player, Sent.Request)
+
+	AssertEquals(Harness.Xp[Perks.Lightfoot], 2, "what was sent is what the server answers to")
+end)
+
+Test("nothing is asked of anyone in singleplayer", function()
+	Harness.ClearXp()
+
+	local Player = Burglar()
+	Player:setPrimaryHandItem(Harness.NewTool("Screwdriver"))
+	Player:setSecondaryHandItem(Harness.NewTool("QolcLockpick"))
+
+	Harness.SetRandom({ 1, 1, 99 })
+	QolcPickLockAction:new(Player, Harness.NewDoorLock(), 10, nil, nil):perform()
+
+	AssertNil(Harness.LastCommand(XP_COMMAND), "there is nobody to ask")
+	AssertEquals(Harness.Xp[Perks.Lightfoot], 2, "and it is paid all the same")
 end)

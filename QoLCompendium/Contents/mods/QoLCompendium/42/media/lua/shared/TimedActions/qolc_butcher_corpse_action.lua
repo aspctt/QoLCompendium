@@ -91,6 +91,13 @@ function QolcGiveCorpseFlesh(Character, Square)
 		end
 	end
 
+	-- Paid here rather than in the action, because this is the side that owns the skill. addXp
+	-- is the game's own call and the jar shows it handing to GameServer.addXp on a server,
+	-- awarding straight to the character in singleplayer, and doing nothing at all on a
+	-- client. Awarding on the client was reported as butchering experience appearing and then
+	-- going away again a moment later.
+	if Given > 0 then addXp(Character, Perks.Butchering, XP_PER_PIECE * YIELD) end
+
 	return Given
 end
 
@@ -142,16 +149,6 @@ function QolcButcherCorpseAction:perform()
 		sendClientCommand(self.character, "QoLC", "ButcherCorpse", {})
 	else
 		QolcGiveCorpseFlesh(self.character, Square)
-	end
-
-	-- getXp():AddXP rather than the addXp global, which is what vanilla's butchering calls.
-	-- The global is LuaManager.GlobalObject.addXp, and the jar shows it handing off to
-	-- GameServer.addXp when this is the server and otherwise doing nothing at all unless
-	-- GameClient.client is false. Vanilla gets away with it because butchering an animal is
-	-- driven from the server. This is a client queued action, so on a server it would award
-	-- nothing. XP.AddXP takes the local player branch and works on both.
-	if self.character.getXp and Perks and Perks.Butchering then
-		self.character:getXp():AddXP(Perks.Butchering, XP_PER_PIECE * YIELD)
 	end
 
 	-- removeCorpse, not removeFromWorld and removeFromSquare. A corpse is not an ordinary

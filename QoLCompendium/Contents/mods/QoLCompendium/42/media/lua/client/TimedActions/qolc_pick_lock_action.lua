@@ -28,8 +28,6 @@ local JAMMED = 6
 -- Vanilla's own key ids run from zero upwards, so a negative one can never match.
 local NO_KEY = -2
 
-local XP_PER_PICK = 2
-
 --// Functions
 -- Panic is one to a hundred. Every ten points costs a point of chance, as the original
 -- had it, rounded rather than truncated.
@@ -118,7 +116,11 @@ function QolcPickLockAction:perform()
 	else
 		Door:setLockedByKey(false)
 		getSoundManager():PlayWorldSound("UnlockDoor", false, Door:getSquare(), 0, 6, 1, true)
-		Player:getXp():AddXP(Perks.Lightfoot, XP_PER_PICK)
+
+		-- Asked for rather than taken. Skills belong to the server, and addXp does nothing at
+		-- all on a client, so experience awarded here would be undone by the next sync. See
+		-- shared/qolc_lock_xp.lua.
+		QolcRequestPickXp(Player)
 	end
 
 	-- Two separate rolls, as the original had them: the pick can stick in the lock, or
