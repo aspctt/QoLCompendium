@@ -13,22 +13,24 @@ local function NewTank(Fraction)
 	return Harness.NewDrainable(TANK_MAX_USES, Fraction)
 end
 
--- Runs one refill, returning the torch the recipe produced
+-- Runs one refill, returning the torch the recipe produced. The created torch is the same
+-- size as the consumed one, as it is in game, because vanilla's refill is sized from it.
 local function Refill(Torch, Tank)
-	local Created = NewTorch(0)
+	local Created = Harness.NewDrainable(Torch:getMaxUses(), 0)
 	local Data = Harness.NewCraftRecipeData(Created, Torch, Tank)
 	Recipe.OnCreate.QolcRefillBlowTorch(Data, nil)
 	return Created
 end
 
--- Empties a full tank, returning how many complete refills it managed
-local function CountRefillsPerTank()
+-- Empties a full tank, returning how many complete refills it managed. Uses is the size of
+-- the torch being refilled, ours unless a test says otherwise.
+local function CountRefillsPerTank(Uses)
 	local Tank = NewTank(1)
 	local Refills = 0
 
 	for _ = 1, 200 do
 		if Tank:getCurrentUses() <= 0 then break end
-		local Result = Refill(NewTorch(0), Tank)
+		local Result = Refill(Harness.NewDrainable(Uses or TORCH_USES, 0), Tank)
 		if Result:getCurrentUsesFloat() < 0.999 then break end
 		Refills = Refills + 1
 	end
@@ -174,4 +176,61 @@ Test("the recipe hook is registered where the script file points", function()
 	AssertNotNil(Recipe.OnCreate, "Recipe.OnCreate table")
 	AssertEquals(type(Recipe.OnCreate.QolcRefillBlowTorch), "function",
 		"media/scripts/qolc_blowtorch.txt points OnCreate at this function")
+end)
+
+--// Sandbox Numbers
+-- Asked for by a player. Both default to what this feature always shipped, so the tests
+-- above read the defaults and these read a server that changed them.
+Test("the torch takes its uses from the sandbox", function()
+	SandboxVars.QoLC.BlowtorchUses = 25
+	Harness.Fire("OnInitGlobalModData")
+
+	local Item = ScriptManager.instance:getItem("Base.BlowTorch")
+	AssertNear(Item:getUseDelta(), 1 / 25, 0.0000005, "torch UseDelta")
+end)
+
+Test("a tank gives as many refills as the sandbox asks", function()
+	SandboxVars.QoLC.BlowtorchRefills = 12
+	AssertEquals(CountRefillsPerTank(), 12, "refills per tank")
+end)
+
+Test("a save from before the numbers existed keeps sixteen and thirty", function()
+	SandboxVars.QoLC.BlowtorchUses = nil
+	SandboxVars.QoLC.BlowtorchRefills = nil
+	Harness.Fire("OnInitGlobalModData")
+
+	local Item = ScriptManager.instance:getItem("Base.BlowTorch")
+	AssertNear(Item:getUseDelta(), 1 / 16, 0.0000005, "torch UseDelta")
+	AssertEquals(CountRefillsPerTank(), 30, "refills per tank")
+end)
+
+--// Switched Off
+-- Off has to mean vanilla. The hook is named in a script file, so it runs whatever the
+-- switch says, and it used to refill a vanilla torch at our rate: about three hundred
+-- welds a tank against vanilla's seventy one.
+Test("switched off, the torch keeps vanilla's ten uses", function()
+	SandboxVars.QoLC.BlowtorchEnabled = false
+	Harness.Fire("OnInitGlobalModData")
+
+	local Item = ScriptManager.instance:getItem("Base.BlowTorch")
+	AssertEquals(Item:getUseDelta(), 0.1, "the script is left as vanilla wrote it")
+end)
+
+Test("switched off, a refill costs what vanilla charges", function()
+	-- RecipeCodeOnCreate.refillBlowTorch: the torch's uses times 70 tank units each
+	SandboxVars.QoLC.BlowtorchEnabled = false
+
+	local Tank = NewTank(1)
+	Refill(Harness.NewDrainable(10, 0), Tank)
+
+	local Spent = TANK_MAX_USES - (Tank:getCurrentUsesFloat() * TANK_MAX_USES)
+	AssertNear(Spent, 700, 0.001, "ten uses at seventy each")
+	AssertEquals(CountRefillsPerTank(10), 7, "so a tank gives vanilla's seven")
+end)
+
+Test("switched off, the sandbox numbers are ignored", function()
+	SandboxVars.QoLC.BlowtorchEnabled = false
+	SandboxVars.QoLC.BlowtorchRefills = 100
+
+	AssertEquals(CountRefillsPerTank(10), 7, "still vanilla's seven")
 end)

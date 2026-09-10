@@ -457,6 +457,7 @@ end
 -- of the owner's getItems and reachable only by recursing.
 function Harness.NewBag(Name)
 	local Bag = Harness.NewInventoryItem(Name or "Backpack")
+	Bag.Class = "InventoryContainer"
 	Bag.Inventory = Harness.NewContainer("bag", Bag)
 
 	function Bag:getInventory() return self.Inventory end
@@ -1684,18 +1685,33 @@ local CLASS_PARENTS = {
 	IsoMovingObject = "IsoObject",
 	IsoPlayer = "IsoGameCharacter",
 	IsoWindow = "IsoObject",
-	IsoDoor = "IsoObject"
+	IsoDoor = "IsoObject",
+	InventoryContainer = "InventoryItem"
 }
 
+-- rawget, because the real one never indexes the object: LuaManager.GlobalObject.instof asks
+-- the Java class. That is what makes it the one safe question to put to an unexposed object.
 function instanceof(Object, ClassName)
 	if type(Object) ~= "table" then return false end
 
-	local Current = Object.Class
+	local Current = rawget(Object, "Class")
 	while Current do
 		if Current == ClassName then return true end
 		Current = CLASS_PARENTS[Current]
 	end
 	return false
+end
+
+-- A Java object of a class the game never exposed to lua. Kahlua has no methods to offer
+-- for one, so any index into it throws rather than answering nil, with the message players
+-- paste from their console. ItemPickerJava$ItemPickerContainer is one, and some fills hand
+-- it to OnFillContainer in place of a container.
+function Harness.NewUnexposedObject(ClassName)
+	return setmetatable({}, {
+		__index = function(_, Key)
+			error("attempted index: " .. tostring(Key) .. " of non-table: " .. ClassName)
+		end
+	})
 end
 
 --// Events From Java

@@ -22,8 +22,9 @@ size, so you can actually see what you are wearing. Scale it however you like,
 or turn it off.
 
 **Welding Torch Capacity** - A welding torch holds 16 uses instead of 10, and a
-propane tank refills it 30 times instead of 7. Topping up a half full torch only
-costs half a tank's worth, rather than a full charge.
+propane tank refills it 30 times instead of 7. The server can set both numbers.
+Topping up a half full torch only costs half a tank's worth, rather than a full
+charge.
 
 **Cut Up Any Clothing** - Underwear, socks, bras, corsets, tights, swimwear,
 shoes, gloves, holsters, ties, hunting vests, shellsuits, rain ponchos and every
@@ -50,7 +51,10 @@ back with interest once they calm down. Sleep is still the only real fix.
 
 **Weapon Condition** - Each equipped weapon and each hotbar slot fills with
 colour to show how much of it is left, so you can see what is about to break
-without hovering it. Green while healthy, amber under half, red under a quarter.
+without hovering it. It changes colour under half and again under a quarter,
+using the 'Good' and 'Bad' highlight colours from the game's Accessibility
+options, so a colourblind palette set there carries over. One tick box switches
+back to plain green, amber and red.
 
 **Propane From Fuel Pumps** - Refill a propane tank at any working fuel pump.
 The base game has no way to refill one at all, so a spent tank is dead weight

@@ -8,7 +8,9 @@
 local function Bars(Panel)
 	local Found = {}
 	for _, Draw in ipairs(Panel.Drawn) do
-		if Draw.R and Draw.R > 0.1 then
+		-- Any draw with colour in it. Reading red alone missed a healthy fill in the game's
+		-- default 'Good' colour, which is pure green.
+		if (Draw.R or 0) + (Draw.G or 0) + (Draw.B or 0) > 0.1 then
 			local Shape = Draw.Stencil or Draw
 			table.insert(Found, {
 				X = Shape.X, Y = Shape.Y, W = Shape.W, H = Shape.H,
@@ -294,6 +296,82 @@ Test("it is on by default", function()
 	AssertTrue(QolcConditionEnabled(), "should be on unless turned off")
 end)
 
+--// Accessibility Colours
+-- Asked for by a colourblind player: the fill takes the game's own 'Good' and 'Bad'
+-- highlight colours from its Accessibility options. Every test runs in a fresh
+-- environment, so a highlight set here does not leak into the next.
+local function Colour(R, G, B)
+	return {
+		getR = function() return R end,
+		getG = function() return G end,
+		getB = function() return B end
+	}
+end
+
+local function SetHighlights(Good, Bad)
+	local Core = getCore()
+	function Core:getGoodHighlitedColor() return Good end
+	function Core:getBadHighlitedColor() return Bad end
+end
+
+local BLUE = Colour(0.1, 0.3, 0.9)
+local ORANGE = Colour(0.9, 0.6, 0.1)
+
+local function FillOf(Current)
+	local Panel = NewPanel(Harness.NewWeapon(Current, 10))
+	Panel:render()
+	return Bars(Panel)[1]
+end
+
+local function AssertColour(Fill, R, G, B, Label)
+	AssertNear(Fill.R, R, 0.0001, Label .. " red")
+	AssertNear(Fill.G, G, 0.0001, Label .. " green")
+	AssertNear(Fill.B, B, 0.0001, Label .. " blue")
+end
+
+Test("the fill follows the game's good and bad colours by default", function()
+	SetHighlights(BLUE, ORANGE)
+
+	AssertColour(FillOf(10), 0.1, 0.3, 0.9, "healthy takes the good colour,")
+	AssertColour(FillOf(1), 0.9, 0.6, 0.1, "danger takes the bad colour,")
+	AssertColour(FillOf(4), 0.5, 0.45, 0.5, "and warning is halfway between,")
+end)
+
+Test("a colour changed in the options shows on the next frame", function()
+	SetHighlights(BLUE, ORANGE)
+	AssertColour(FillOf(10), 0.1, 0.3, 0.9, "before,")
+
+	SetHighlights(Colour(0.7, 0.7, 0.2), ORANGE)
+	AssertColour(FillOf(10), 0.7, 0.7, 0.2, "after,")
+end)
+
+Test("the hotbar squares take the same colours", function()
+	-- The hotbar draws through the same call, as a rectangle rather than a disc
+	SetHighlights(BLUE, ORANGE)
+
+	local Panel = Harness.NewEquippedItemPanel(Harness.NewPlayer(0, true))
+	Panel.Drawn = {}
+	QolcDrawCondition(Panel, 0, 0, 60, 60, Harness.NewWeapon(10, 10))
+
+	AssertEquals(Panel.Drawn[1].Kind, "rect", "a square slot gets a plain rectangle")
+	AssertColour(Panel.Drawn[1], 0.1, 0.3, 0.9, "in the good colour,")
+end)
+
+Test("turned off, the mod's own green, amber and red come back", function()
+	SetHighlights(BLUE, ORANGE)
+	FindOption("ConditionAccessibleColours"):setValue(false)
+
+	AssertColour(FillOf(10), 0.30, 0.78, 0.30, "healthy is our green,")
+	AssertColour(FillOf(4), 0.85, 0.68, 0.20, "warning our amber,")
+	AssertColour(FillOf(1), 0.85, 0.22, 0.22, "and danger our red,")
+end)
+
+Test("following the accessibility colours is on by default", function()
+	local Option = FindOption("ConditionAccessibleColours")
+	AssertNotNil(Option, "the tick box should be registered")
+	AssertTrue(Option:getValue(), "and start ticked")
+end)
+
 --// Conflicting Mods
 -- Clean HotBar draws its own condition on the same two hand slots and chains
 -- ISEquippedItem.render rather than replacing it, so ours keeps running underneath and
@@ -362,7 +440,9 @@ Test("every option label resolves", function()
 		"UI_options_QoLC_Condition",
 		"UI_options_QoLC_Condition_Desc",
 		"UI_options_QoLC_Condition_Enabled",
-		"UI_options_QoLC_Condition_Enabled_tooltip"
+		"UI_options_QoLC_Condition_Enabled_tooltip",
+		"UI_options_QoLC_Condition_Accessible",
+		"UI_options_QoLC_Condition_Accessible_tooltip"
 	}
 
 	for _, Key in ipairs(Keys) do

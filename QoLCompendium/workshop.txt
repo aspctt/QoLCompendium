@@ -67,7 +67,7 @@ description=[img]https://i.ibb.co/2wC3Ykd/Steam-Workshop-Compatibility-Seperator
 description=
 description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3461263912]Clean HotBar[/url] (condition and reordering stand down)
 description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3437629766]Clean UI[/url] (the container title fix stands down)
-description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3433264162]NeatUI Framework[/url]
+description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3508537032]NeatUI Framework[/url]
 description=　✓ [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2854030563]Moodle Quarters[/url] (ours stands down, theirs draws the stack)
 description=　✓ Any mod that adds skill books, clothing or ammo
 description=　✖ The mods this replaces, listed in the credits

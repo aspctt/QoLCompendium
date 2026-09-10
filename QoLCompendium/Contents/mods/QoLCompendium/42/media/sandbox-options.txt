@@ -218,6 +218,25 @@ option QoLC.BlowtorchEnabled
 }
 
 /*
+ * How far the bigger torch goes, for a host who wants it bigger still or nearer vanilla,
+ * which is 10 uses and about 7 refills a tank. Both are ignored while the torch is off,
+ * because off hands back vanilla's own numbers rather than these.
+ */
+option QoLC.BlowtorchUses
+{
+    type = integer, min = 1, max = 100, default = 16,
+    page = QoLC,
+    translation = QoLC_BlowtorchUses,
+}
+
+option QoLC.BlowtorchRefills
+{
+    type = integer, min = 1, max = 100, default = 30,
+    page = QoLC,
+    translation = QoLC_BlowtorchRefills,
+}
+
+/*
  * Cutting up the garments build 42 never tagged as cuttable: underwear, socks, bandanas,
  * scarves, gloves, hide trousers and shoes. Off returns all ninety two to being uncuttable
  * and leaves everything vanilla already allowed exactly as it was.

@@ -24,8 +24,26 @@
 --// The switch is applied at OnFillContainer instead, which fires after each container is
 --// filled and long after the options are true. Vanilla does the same thing in the same
 --// place: ItemPickerJava calls ItemContainer.Remove on an item it has just rolled when a
---// NEVER_EMPTY container came up empty. Every fill path leads here, room containers,
---// zombies, zombie bags, nested bags and vehicles, so nothing gets past it.
+--// NEVER_EMPTY container came up empty. Room containers, zombies and vehicles all end in
+--// one here, handed the container they have just filled.
+--//
+--// Not every OnFillContainer carries a container, though. When a bag is filled from its
+--// parent's bags list, ItemPickerJava hands over that list instead: of its ten triggers,
+--// three pass an ItemPickerJava$ItemPickerContainer as the third argument. That class is
+--// not exposed, and Kahlua throws on any index into an unexposed object, so even asking
+--// whether it has getItems is the error. Players hit it on every such bag, which is why
+--// the test is instanceof and not a method check. instanceof never indexes the object,
+--// the jar has it asking the Java class.
+--//
+--// The contents of those bags still answer to the switch. When one fires during a room,
+--// zombie or vehicle fill, that fill ends in an event of its own carrying the outer
+--// container with the bag already sitting in it, so bags are swept from there, all the
+--// way down.
+--//
+--// What this cannot reach is a bag a story fills directly. ItemPickerJava.rollContainerItem
+--// fires for containers found inside the bag and never for the bag itself, and the
+--// randomized buildings, dead survivors and vehicle stories call it that way. None of our
+--// items is seeded into a Bag_ definition directly.
 --//
 --// Cost when a feature is on, which is every feature by default, is one sandbox lookup
 --// per registered feature per container. The container itself is only walked when
@@ -70,6 +88,25 @@ local function IsWithheld(FullType)
 	return false
 end
 
+-- Takes a feature's items out of one container, then out of every bag inside it. A bag
+-- filled from a bags list never gets an event carrying its own container, see the header,
+-- so the container holding it is the only place its contents are ever reachable.
+local function Sweep(Container)
+	local Items = Container:getItems()
+	if not Items then return end
+
+	-- Backwards, because removing shortens the list under the index.
+	for Index = Items:size() - 1, 0, -1 do
+		local Item = Items:get(Index)
+		if Item and Item.getFullType and IsWithheld(Item:getFullType()) then
+			Container:Remove(Item)
+		elseif instanceof(Item, "InventoryContainer") then
+			local Inner = Item:getInventory()
+			if Inner then Sweep(Inner) end
+		end
+	end
+end
+
 --// Interface
 QolcLootSwitch = QolcLootSwitch or {}
 
@@ -89,19 +126,12 @@ end
 
 --// Connections
 local function OnFillContainer(_RoomName, _ContainerType, Container)
-	if not Container or not Container.getItems then return end
+	-- instanceof and never Container.getItems, see the header: the loot definition some
+	-- fills pass here is not exposed, and indexing it at all is the error.
+	if not instanceof(Container, "ItemContainer") then return end
 	if not AnythingWithheld() then return end
 
-	local Items = Container:getItems()
-	if not Items then return end
-
-	-- Backwards, because removing shortens the list under the index.
-	for Index = Items:size() - 1, 0, -1 do
-		local Item = Items:get(Index)
-		if Item and Item.getFullType and IsWithheld(Item:getFullType()) then
-			Container:Remove(Item)
-		end
-	end
+	Sweep(Container)
 end
 
 Events.OnFillContainer.Add(OnFillContainer)

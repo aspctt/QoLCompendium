@@ -161,6 +161,75 @@ Test("a container the game hands us empty or missing is not an error", function(
 	AssertTrue(true, "nothing threw")
 end)
 
+Test("a loot definition handed over in place of a container is not an error", function()
+	-- Reported on 42.20.4. Three of ItemPickerJava's triggers pass the bags list a bag was
+	-- filled from, an ItemPickerJava$ItemPickerContainer, and the class is not exposed, so
+	-- the old guard, Container.getItems, was itself the throw. It threw whatever the
+	-- switches said, because it ran before they were read.
+	local Definition = Harness.NewUnexposedObject("zombie.inventory.ItemPickerJava$ItemPickerContainer")
+
+	Harness.Fire("OnFillContainer", "Container", "Bag_Schoolbag", Definition)
+
+	SetSwitch("LockpickingEnabled", false)
+	Harness.Fire("OnFillContainer", "Zombie Bag", "Bag_Schoolbag", Definition)
+
+	AssertTrue(true, "nothing threw")
+end)
+
+--// Bags
+-- A bag filled from a bags list never gets an event carrying its own container, so its
+-- contents are only ever reachable from the container holding it.
+local function Bagged(...)
+	local Bag = Harness.NewBag("Bag_Schoolbag")
+
+	for _, FullType in ipairs({ ... }) do
+		local Item = Harness.NewInventoryItem(FullType:match("[^.]+$"))
+		Item.FullType = FullType
+		table.insert(Bag.Inventory.Items, Item)
+	end
+
+	return Bag
+end
+
+Test("a bag's contents are swept from the container holding it", function()
+	SetSwitch("LockpickingEnabled", false)
+
+	local Bag = Bagged(HAIRPIN, "Base.Pencil")
+	local Container = Holding("Base.Nails")
+	table.insert(Container.Items, Bag)
+
+	Fill(Container)
+
+	AssertEquals(Types(Bag.Inventory), "Base.Pencil", "the hairpin in the bag goes")
+	AssertEquals(#Container.Items, 2, "the bag itself and the nails stay")
+end)
+
+Test("bags inside bags are swept all the way down", function()
+	SetSwitch("LockpickingEnabled", false)
+
+	local Inner = Bagged(HAIRPIN, BOOKS[1], "Base.Pencil")
+	local Outer = Bagged(HAIRPIN)
+	table.insert(Outer.Inventory.Items, Inner)
+
+	local Container = Holding()
+	table.insert(Container.Items, Outer)
+
+	Fill(Container)
+
+	AssertEquals(#Outer.Inventory.Items, 1, "only the inner bag is left in the outer one")
+	AssertEquals(Types(Inner.Inventory), "Base.Pencil", "and the inner one is swept too")
+end)
+
+Test("bags are left alone while every switch is on", function()
+	local Bag = Bagged(HAIRPIN, SLING)
+	local Container = Holding()
+	table.insert(Container.Items, Bag)
+
+	Fill(Container)
+
+	AssertEquals(#Bag.Inventory.Items, 2, "nothing is withheld, so nothing is taken")
+end)
+
 --// Wiring
 Test("all three features are registered against the one handler", function()
 	AssertEquals(Harness.HandlerCount("OnFillContainer"), 1, "one handler, not one each")

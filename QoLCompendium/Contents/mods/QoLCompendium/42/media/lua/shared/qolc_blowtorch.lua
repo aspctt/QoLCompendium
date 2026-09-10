@@ -7,23 +7,27 @@
 --//
 --// Shared rather than server, so a multiplayer client and its server agree on the numbers.
 --// Switched from the sandbox page rather than mod options: this is balance, not
---// cosmetics, and a per client setting would desync from the server.
+--// cosmetics, and a per client setting would desync from the server. Both numbers are set
+--// there too, since a player asked for them.
+--//
+--// Off has to mean vanilla, and for a while it did not. The recipe hook below is named in
+--// a script file, so it replaces vanilla's for good whatever the switch says, and it used
+--// to size every refill at a thirtieth of a tank regardless. Switched off, a vanilla torch
+--// of ten uses was being refilled at our rate, around three hundred welds a tank against
+--// vanilla's seventy one. It now does vanilla's own sum while the feature is off.
 
 --// Tuning
--- 16 uses per torch and 30 refills per tank, so 480 welding uses out of a full tank.
--- Vanilla is 10 uses and roughly 7.1 refills, so 71 uses per tank.
-local REFILLS_PER_TANK = 30
-local TORCH_USES = 16
+-- Defaults for the two sandbox numbers, and what a save that predates them gets. 16 uses
+-- per torch and 30 refills per tank, so 480 welding uses out of a full tank. Vanilla is 10
+-- uses and roughly 7.1 refills, so 71 uses per tank.
+local DEFAULT_TORCH_USES = 16
+local DEFAULT_REFILLS_PER_TANK = 30
 
---// Functions
--- Vanilla stores drainables as a 0 to 1 fraction, so capacity is expressed in tank units.
--- Derived from the tank rather than hard coded, so mods that change propane tank stats,
--- Real Metalworking for one, still get the same number of refills.
-local function GetPropanePerTorch(Tank)
-	local MaxUses = Tank:getMaxUses()
-	if not MaxUses or MaxUses <= 0 then return nil end
-	return MaxUses / REFILLS_PER_TANK
-end
+-- What vanilla charges per torch use, in tank units. RecipeCodeOnCreate.refillBlowTorch
+-- sizes a refill as the torch's getMaxUses times ZomboidGlobals.refillBlowtorchPropaneAmount,
+-- which the jar initialises to 70. The class is not exposed to lua, so it is mirrored here,
+-- and only ever used to hand vanilla's refill back while the feature is off.
+local VANILLA_PROPANE_PER_USE = 70
 
 --// Switch
 -- Server controlled, because this is balance rather than presentation. A per client
@@ -36,13 +40,42 @@ local function QolcEnabled()
 	return true
 end
 
+-- A whole number from the sandbox page, or the default when the save has none. The page
+-- itself never offers less than one.
+local function SandboxNumber(Name, Default)
+	local Vars = SandboxVars and SandboxVars.QoLC
+	local Value = Vars and tonumber(Vars[Name])
+
+	if not Value or Value < 1 then return Default end
+	return Value
+end
+
+--// Functions
+-- How much of the tank one full torch holds. Vanilla stores drainables as a 0 to 1
+-- fraction, so this is in tank units.
+--
+-- On, it is derived from the tank rather than hard coded, so mods that change propane
+-- tank stats, Real Metalworking for one, still get the same number of refills. Off, it is
+-- vanilla's own sum, taken from the torch.
+local function GetPropanePerTorch(Tank, Torch)
+	if not QolcEnabled() then
+		local Uses = Torch:getMaxUses()
+		if not Uses or Uses <= 0 then return nil end
+		return Uses * VANILLA_PROPANE_PER_USE
+	end
+
+	local MaxUses = Tank:getMaxUses()
+	if not MaxUses or MaxUses <= 0 then return nil end
+	return MaxUses / SandboxNumber("BlowtorchRefills", DEFAULT_REFILLS_PER_TANK)
+end
+
 --// Recipe Hooks
 Recipe = Recipe or {}
 Recipe.OnCreate = Recipe.OnCreate or {}
 
--- Mirrors zombie.scripting.logic.RecipeCodeOnCreate.refillBlowTorch, but sized from
--- REFILLS_PER_TANK instead of ZomboidGlobals.refillBlowtorchPropaneAmount, which Lua
--- cannot reach.
+-- Mirrors zombie.scripting.logic.RecipeCodeOnCreate.refillBlowTorch, but sized from the
+-- sandbox's refills per tank instead of ZomboidGlobals.refillBlowtorchPropaneAmount,
+-- which Lua cannot reach.
 function Recipe.OnCreate.QolcRefillBlowTorch(CraftRecipeData, Character)
 	local Created = CraftRecipeData:getAllCreatedItems():get(0)
 	local Consumed = CraftRecipeData:getAllConsumedItems():get(0)
@@ -55,7 +88,7 @@ function Recipe.OnCreate.QolcRefillBlowTorch(CraftRecipeData, Character)
 	Created:setCurrentUsesFloat(Consumed:getCurrentUsesFloat())
 	Created:setCondition(Consumed:getCondition())
 
-	local Capacity = GetPropanePerTorch(Tank)
+	local Capacity = GetPropanePerTorch(Tank, Created)
 	if not Capacity then return end
 
 	-- Kept in floats throughout. Vanilla writes the tank back through setCurrentUses,
@@ -89,7 +122,7 @@ local function OnInitGlobalModData()
 	local Item = ScriptManager.instance:getItem("Base.BlowTorch")
 	if not Item then return end
 
-	local Target = 1 / TORCH_USES
+	local Target = 1 / SandboxNumber("BlowtorchUses", DEFAULT_TORCH_USES)
 	if Item:getUseDelta() ~= Target then
 		Item:DoParam(string.format("UseDelta = %.6f", Target))
 	end

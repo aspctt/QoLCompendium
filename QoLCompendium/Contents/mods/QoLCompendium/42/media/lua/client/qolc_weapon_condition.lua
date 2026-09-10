@@ -56,6 +56,11 @@ local COLOUR_HEALTHY = { r = 0.30, g = 0.78, b = 0.30 }
 local COLOUR_CAUTION = { r = 0.85, g = 0.68, b = 0.20 }
 local COLOUR_DANGER = { r = 0.85, g = 0.22, b = 0.22 }
 
+-- Those three are the fallback. By default the fill takes the game's own 'Good' and 'Bad'
+-- highlight colours from its Accessibility options instead, so a player who has set those
+-- for colour blindness gets the same pair here without setting anything twice. Asked for
+-- by a player, and one tick box brings these three back.
+
 --// Conflicts
 -- Mods that draw their own condition on the same slots. Both would be drawn otherwise,
 -- because Clean HotBar chains ISEquippedItem.render rather than replacing it, so ours
@@ -90,11 +95,43 @@ function QolcConditionFraction(Item)
 	return Fraction
 end
 
-local function ColourFor(Fraction)
-	if Fraction <= LEVEL_DANGER then return COLOUR_DANGER end
-	if Fraction <= LEVEL_CAUTION then return COLOUR_CAUTION end
+local function AccessibleColoursEnabled()
+	if not Options.AccessibleColours then return true end
+	return Options.AccessibleColours:getValue() and true or false
+end
 
-	return COLOUR_HEALTHY
+-- Returns the fill's red, green and blue. Three numbers rather than a table, because this
+-- runs for every drawn slot on every frame.
+local function ColourFor(Fraction)
+	if AccessibleColoursEnabled() then
+		-- Read on every draw rather than kept, so a colour changed in the options shows on
+		-- the next frame. Warning is halfway between the two, the way vanilla shades a
+		-- moveable's health between the same pair in ISMoveableSpriteProps.
+		local Core = getCore()
+		local Good = Core:getGoodHighlitedColor()
+		local Bad = Core:getBadHighlitedColor()
+
+		if Good and Bad then
+			if Fraction <= LEVEL_DANGER then return Bad:getR(), Bad:getG(), Bad:getB() end
+
+			if Fraction <= LEVEL_CAUTION then
+				return (Good:getR() + Bad:getR()) / 2,
+					(Good:getG() + Bad:getG()) / 2,
+					(Good:getB() + Bad:getB()) / 2
+			end
+
+			return Good:getR(), Good:getG(), Good:getB()
+		end
+	end
+
+	local Colour = COLOUR_HEALTHY
+	if Fraction <= LEVEL_DANGER then
+		Colour = COLOUR_DANGER
+	elseif Fraction <= LEVEL_CAUTION then
+		Colour = COLOUR_CAUTION
+	end
+
+	return Colour.r, Colour.g, Colour.b
 end
 
 -- Answered once and remembered. The mod list cannot change without restarting the game,
@@ -140,7 +177,7 @@ function QolcDrawCondition(Panel, X, Y, Width, Height, Item, Round)
 	local Fraction = QolcConditionFraction(Item)
 	if not Fraction then return false end
 
-	local Colour = ColourFor(Fraction)
+	local R, G, B = ColourFor(Fraction)
 
 	if Round and TextureDisc then
 		-- A circle centred in the box, never the box stretched to fit. The off hand's
@@ -159,7 +196,7 @@ function QolcDrawCondition(Panel, X, Y, Width, Height, Item, Round)
 		-- circle filling from the bottom rather than a shrinking dot
 		Panel:setStencilRect(DiscX, DiscY + Diameter - Filled, Diameter, Filled)
 		Panel:drawTextureScaled(TextureDisc, DiscX, DiscY, Diameter, Diameter,
-			FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+			FILL_ALPHA, R, G, B)
 		Panel:clearStencilRect()
 
 		return true
@@ -170,7 +207,7 @@ function QolcDrawCondition(Panel, X, Y, Width, Height, Item, Round)
 	if Filled > Height then Filled = Height end
 	if Filled <= 0 then return false end
 
-	Panel:drawRect(X, Y + Height - Filled, Width, Filled, FILL_ALPHA, Colour.r, Colour.g, Colour.b)
+	Panel:drawRect(X, Y + Height - Filled, Width, Filled, FILL_ALPHA, R, G, B)
 	return true
 end
 
@@ -211,6 +248,7 @@ local function CreateModOptions()
 	ModOptions:addDescription("UI_options_QoLC_Condition_Desc")
 
 	Options.Enabled = ModOptions:addTickBox("ConditionEnabled", "UI_options_QoLC_Condition_Enabled", true, "UI_options_QoLC_Condition_Enabled_tooltip")
+	Options.AccessibleColours = ModOptions:addTickBox("ConditionAccessibleColours", "UI_options_QoLC_Condition_Accessible", true, "UI_options_QoLC_Condition_Accessible_tooltip")
 end
 
 CreateModOptions()
