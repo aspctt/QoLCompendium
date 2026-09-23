@@ -13,11 +13,10 @@
 --// test ISVehiclePartMenu.getNearbyFuelPump uses to find one for refuelling a car.
 --//
 --// Client only. The context menu is a client concern and the timed action it queues is
---// shared, which is where the actual work happens.
+--// shared, which is where the actual work happens. So are the tests for a working pump and
+--// a tank worth filling, because the server asks both again before it fills anything.
 
 --// Tuning
-local TANK_TYPE = "Base.PropaneTank"
-
 -- Roughly the pace of filling a jerry can, scaled by how empty the tank is.
 local FILL_TIME_FULL = 300
 
@@ -30,45 +29,15 @@ local FILL_TIME_FULL = 300
 -- the vehicle's tank rather than testing one square.
 local PUMP_SEARCH = 2
 
---// Switch
--- Server controlled, because this is balance rather than presentation. A per client
--- setting would let one player on a server play to different numbers than the rest.
-local function QolcEnabled()
-	local Vars = SandboxVars and SandboxVars.QoLC
-	local Value = Vars and Vars.PropanePumpEnabled
-
-	if Value ~= nil then return Value and true or false end
-	return true
-end
-
 --// Functions
--- Vanilla's own test for a pump worth using, taken from getNearbyFuelPump. Covers both
--- having power and having fuel left, so nothing else has to be checked.
-local function IsWorkingPump(Object)
-	if not Object or not Object.getPipedFuelAmount then return false end
-	return Object:getPipedFuelAmount() > 0
-end
-
-local function PumpOnSquare(Square)
-	local Objects = Square and Square:getObjects()
-	if not Objects then return nil end
-
-	for Index = 0, Objects:size() - 1 do
-		local Candidate = Objects:get(Index)
-		if IsWorkingPump(Candidate) then return Candidate end
-	end
-
-	return nil
-end
-
 local function FindPump(WorldObjects)
 	local Origin = nil
 
 	for _, Object in ipairs(WorldObjects) do
-		if IsWorkingPump(Object) then return Object end
+		if QolcIsWorkingPump(Object) then return Object end
 
 		local Square = Object.getSquare and Object:getSquare()
-		local Found = PumpOnSquare(Square)
+		local Found = QolcPumpOnSquare(Square)
 		if Found then return Found end
 
 		Origin = Origin or Square
@@ -82,7 +51,7 @@ local function FindPump(WorldObjects)
 
 	for X = -PUMP_SEARCH, PUMP_SEARCH do
 		for Y = -PUMP_SEARCH, PUMP_SEARCH do
-			local Found = PumpOnSquare(Cell:getGridSquare(
+			local Found = QolcPumpOnSquare(Cell:getGridSquare(
 				Origin:getX() + X, Origin:getY() + Y, Origin:getZ()))
 
 			if Found then return Found end
@@ -90,11 +59,6 @@ local function FindPump(WorldObjects)
 	end
 
 	return nil
-end
-
-local function IsFillableTank(Item)
-	if not Item or Item:getFullType() ~= TANK_TYPE then return false end
-	return Item:getCurrentUsesFloat() < 1
 end
 
 -- Recursed, not a walk over getItems. A worn bag is a container of its own and getItems
@@ -112,7 +76,7 @@ local function FindTanks(Player)
 	local Inventory = Player:getInventory()
 	if not Inventory or not Inventory.getAllEvalRecurse then return Found end
 
-	local All = Inventory:getAllEvalRecurse(IsFillableTank)
+	local All = Inventory:getAllEvalRecurse(QolcIsFillableTank)
 	for Index = 0, All:size() - 1 do
 		table.insert(Found, All:get(Index))
 	end
@@ -150,7 +114,7 @@ end
 
 local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Test)
 	if Test then return end
-	if not QolcEnabled() then return end
+	if not QolcPropanePumpEnabled() then return end
 
 	local Player = getSpecificPlayer(PlayerNum)
 	if not Player then return end

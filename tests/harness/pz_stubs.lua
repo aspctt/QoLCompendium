@@ -350,9 +350,16 @@ function Harness.NewContainer(Type, ContainingItem, Parent)
 		return nil
 	end
 
+	-- Into bags as well, as the name says. The jar descends through every InventoryContainer
+	-- it meets by getItemContainer, so a packed item is found as readily as a loose one.
 	function Container:getItemWithIDRecursiv(Id)
 		for _, Item in ipairs(self.Items) do
-			if Item:getID() == Id then return Item end
+			if Item.getID and Item:getID() == Id then return Item end
+
+			if Item.Class == "InventoryContainer" and Item.Inventory then
+				local Found = Item.Inventory:getItemWithIDRecursiv(Id)
+				if Found then return Found end
+			end
 		end
 		return nil
 	end
@@ -2914,8 +2921,15 @@ function Harness.NewFuelPump(Fuel)
 
 	function Pump:getPipedFuelAmount() return self.Fuel end
 	function Pump:setPipedFuelAmount(Value) self.Fuel = Value end
-	function Pump:getSquare() return nil end
+	function Pump:getSquare() return self.Square end
 
+	return Pump
+end
+
+-- A pump standing on a registered square, which is what a server has to find it by
+function Harness.NewPlacedFuelPump(Fuel, X, Y, Z)
+	local Pump = Harness.NewFuelPump(Fuel)
+	Pump.Square = Harness.NewObjectSquare(X, Y, Z, { Pump })
 	return Pump
 end
 

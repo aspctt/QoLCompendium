@@ -398,3 +398,155 @@ Test("the character turns to the pump before filling", function()
 	Player.Turning = false
 	AssertFalse(Harness.ActionQueue[1]:waitToStart(), "then start")
 end)
+
+--// Multiplayer
+-- On a server the fill used to happen on the client and go no further. The action has no
+-- complete, so the server is never told it ran, and SyncItemFieldsPacket.processServer never
+-- takes a drainable's uses from a client. The player held a full tank the server had never
+-- heard of. Found while looking into a report of a full tank weighing less than a used one.
+local PUMP_X, PUMP_Y, PUMP_Z = 30, 10, 0
+
+local function FillAsClient(Player, Pump)
+	Harness.IsClient = true
+
+	local Menu = RightClick(Player, { Pump })
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+	RunQueue()
+
+	Harness.IsClient = false
+	return Harness.LastCommand("FillPropane")
+end
+
+local function Ask(Player, Request)
+	Harness.Fire("OnClientCommand", "QoLC", "FillPropane", Player, Request)
+end
+
+local function RequestFor(Tank)
+	return { tank = Tank:getID(), x = PUMP_X, y = PUMP_Y, z = PUMP_Z }
+end
+
+Test("a client asks the server rather than filling the tank itself", function()
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	local Pump = Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	local Sent = FillAsClient(Player, Pump)
+
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "a client must not fill its own copy")
+	AssertEquals(Pump:getPipedFuelAmount(), 22000, "or drain the pump")
+	AssertNotNil(Sent, "it should have asked the server instead")
+	AssertEquals(Sent.Module, "QoLC", "under our own module")
+	AssertEquals(Sent.Request.tank, Tank:getID(), "naming the tank by its id")
+	AssertEquals(Sent.Request.x, PUMP_X, "and the pump by its square")
+	AssertEquals(Sent.Request.y, PUMP_Y, "and the pump by its square")
+	AssertEquals(Sent.Request.z, PUMP_Z, "and the pump by its square")
+end)
+
+Test("singleplayer fills on the spot and asks nobody", function()
+	local Player = NewPlayerWithTanks(0)
+	local Pump = Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	local Menu = RightClick(Player, { Pump })
+	Menu:Find(TAKE_PROPANE).SubMenu.options[1]:Click()
+	RunQueue()
+
+	AssertNear(Tanks(Player)[1]:getCurrentUsesFloat(), 1, 0.000001, "filled")
+	AssertNil(Harness.LastCommand("FillPropane"), "with no command sent")
+end)
+
+Test("the server fills the tank the client named and tells it so", function()
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	local Pump = Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Ask(Player, RequestFor(Tank))
+
+	AssertNear(Tank:getCurrentUsesFloat(), 1, 0.000001, "the server's tank is full")
+	AssertEquals(Pump:getPipedFuelAmount(), 22000 - SandboxVars.QoLC.PropanePumpCost,
+		"and the server's pump paid for it")
+	AssertTrue(Tank.SyncCount > 0, "synced back to the player who holds it")
+end)
+
+Test("what the client sends is what the server answers to", function()
+	-- Both halves are checked against each other. Two specs that each checked only one of
+	-- them would not notice the two drifting apart.
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	local Pump = Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	local Sent = FillAsClient(Player, Pump)
+	AssertNotNil(Sent, "it should have asked")
+
+	Harness.Fire("OnClientCommand", Sent.Module, Sent.Command, Player, Sent.Request)
+	AssertNear(Tank:getCurrentUsesFloat(), 1, 0.000001, "the request fills the tank it came from")
+end)
+
+Test("the server finds a tank packed in a bag", function()
+	local Player, Tank = NewPlayerWithPackedTank(0)
+	Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Ask(Player, RequestFor(Tank))
+	AssertNear(Tank:getCurrentUsesFloat(), 1, 0.000001, "packed is where a tank usually is")
+end)
+
+Test("the server will not fill somebody else's tank", function()
+	local Sender = NewPlayerWithTanks()
+	local Owner = NewPlayerWithTanks(0)
+	local Tank = Tanks(Owner)[1]
+	Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Ask(Sender, RequestFor(Tank))
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "only the sender's own inventory is searched")
+end)
+
+Test("the server needs a working pump on the square named", function()
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	Harness.NewPlacedFuelPump(0, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Ask(Player, RequestFor(Tank))
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "a dry pump gives nothing")
+
+	Ask(Player, { tank = Tank:getID(), x = 99, y = 99, z = 0 })
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "and nor does a square with no pump")
+end)
+
+Test("the server charges its own price whatever the request says", function()
+	Harness.ResetSandbox()
+	SandboxVars.QoLC.PropanePumpCost = 500
+
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	local Pump = Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	local Request = RequestFor(Tank)
+	Request.cost = 1
+	Request.amount = 1
+	Ask(Player, Request)
+
+	AssertEquals(Pump:getPipedFuelAmount(), 22000 - 500, "the cost never comes off the wire")
+end)
+
+Test("the server reads its own switch", function()
+	-- A client with the feature on locally, or an older one, should not fill a tank on a
+	-- server that has said no.
+	SandboxVars.QoLC.PropanePumpEnabled = false
+
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Ask(Player, RequestFor(Tank))
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "off means off on the server too")
+end)
+
+Test("other modules and commands are left alone", function()
+	local Player = NewPlayerWithTanks(0)
+	local Tank = Tanks(Player)[1]
+	Harness.NewPlacedFuelPump(22000, PUMP_X, PUMP_Y, PUMP_Z)
+
+	Harness.Fire("OnClientCommand", "SomeOtherMod", "FillPropane", Player, RequestFor(Tank))
+	Harness.Fire("OnClientCommand", "QoLC", "SomethingElse", Player, RequestFor(Tank))
+
+	AssertEquals(Tank:getCurrentUsesFloat(), 0, "neither of those is ours")
+end)
