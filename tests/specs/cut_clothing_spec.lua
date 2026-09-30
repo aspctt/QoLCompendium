@@ -239,6 +239,19 @@ Test("wallets are cut by a recipe of their own", function()
 	end
 end)
 
+Test("cutting a wallet hands the strips over", function()
+	-- Reported as the craft going through and no leather appearing. RemoveResultItems makes
+	-- CraftRecipeData.createOutputItems return before it creates anything, which only works
+	-- for vanilla's rip recipes because their OnCreate hands over the real output. This one
+	-- has no OnCreate, so the tag cannot sit on it without one.
+	local Block = Script():match("craftRecipe QolcCutWallet%s*(%b{})")
+	AssertNotNil(Block, "the wallet recipe should be there to read")
+
+	if string.find(Block, "OnCreate", 1, true) then return end
+	AssertFalse(string.find(Block, "RemoveResultItems", 1, true) ~= nil,
+		"without an OnCreate, RemoveResultItems throws the strips away")
+end)
+
 Test("a wallet with anything in it is left alone", function()
 	-- Shredding a wallet with the car keys still inside would be a poor reward for tidying.
 	AssertContains(Script(), "flags[IsEmpty;ItemCount]", "the wallet input must require an empty one")

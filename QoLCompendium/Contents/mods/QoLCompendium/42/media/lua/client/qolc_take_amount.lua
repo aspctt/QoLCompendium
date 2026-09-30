@@ -134,15 +134,19 @@ local function OpenBox(Items, PlayerNum, Max, OnConfirm)
 	Box:initialise()
 	Box:addToUIManager()
 
-	-- Typing a number and pressing enter should confirm, rather than needing the mouse
-	local Ok = nil
-	for _, Child in ipairs(Box.children) do
-		if Child.internal == "OK" then Ok = Child break end
+	-- Typing a number and pressing enter should confirm, rather than needing the mouse.
+	--
+	-- The first version found the button by walking Box.children with ipairs and pressed it
+	-- with triggerClick, and neither half worked, so enter quietly did nothing. addChild keys
+	-- children by element ID rather than position, so ipairs saw none of them, and ISButton
+	-- has no triggerClick at all, only forceClick. ISTextBox keeps its OK button as yes.
+	local Ok = Box.yes
+
+	local function OnCommandEntered()
+		Ok:forceClick()
 	end
 
-	if Ok then
-		Box.entry.onCommandEntered = function() Ok:triggerClick() end
-	end
+	if Ok then Box.entry.onCommandEntered = OnCommandEntered end
 
 	Box.entry:focus()
 

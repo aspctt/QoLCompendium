@@ -3767,17 +3767,37 @@ function ISTextBox:new(_X, _Y, _W, _H, Text, _Default, Target, OnClick, PlayerNu
 	function Box.entry:getText() return Box.Typed end
 	function Box.entry:focus() Box.Focused = true end
 
-	local Ok = { internal = "OK" }
-	function Ok:triggerClick() Box:Confirm() end
-	Box.children = { Ok }
+	-- The Java text entry calls onCommandEntered with itself when enter is pressed
+	function Box.entry:PressEnter()
+		if self.onCommandEntered then self.onCommandEntered(self) end
+	end
+
+	-- The real buttons are ISButtons with ISTextBox.onClick as their handler, which hands
+	-- the box's own onclick the button and its params. forceClick is the only way ISButton
+	-- offers to press one from code; there is no triggerClick.
+	local function NewButton(Internal)
+		local Button = { internal = Internal, parent = Box, target = Box, enable = true }
+
+		function Button:forceClick()
+			if not self.enable then return end
+			self.target.onclick(self.target.target, self,
+				self.target.param1, self.target.param2, self.target.param3)
+		end
+
+		return Button
+	end
+
+	Box.yes = NewButton("OK")
+	Box.no = NewButton("CANCEL")
+
+	-- addChild keys children by element ID, which is a global counter, not by position
+	Box.children = { [1041] = Box.yes, [1042] = Box.no }
 
 	function Box:initialise() end
 	function Box:addToUIManager() Harness.OpenBox = self end
 
-	-- The real one calls onclick(target, button, param1, param2, param3, param4)
 	function Box:Confirm()
-		self.onclick(self.target, { internal = "OK", parent = self },
-			self.param1, self.param2, self.param3)
+		self.yes:forceClick()
 	end
 
 	function Box:Type(Value)

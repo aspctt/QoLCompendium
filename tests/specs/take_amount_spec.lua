@@ -94,6 +94,19 @@ Test("a fraction is rounded down rather than refused", function()
 	AssertEquals(#Take(Context, "3.7"), 3, "three, not four and not nothing")
 end)
 
+Test("pressing enter confirms the amount", function()
+	-- The first version pressed OK with triggerClick, which ISButton does not have, after
+	-- looking for it in Box.children with ipairs, which is keyed by element ID. Enter did
+	-- nothing at all and only the mouse could confirm.
+	local Context = GrabMenu(10)
+	Context:Find(getText(GRAB_AMOUNT)):Click()
+
+	Harness.OpenBox:Type(4)
+	Harness.OpenBox.entry:PressEnter()
+
+	AssertEquals(#Harness.Transfers, 4, "enter should move what was typed")
+end)
+
 Test("cancelling takes nothing", function()
 	local Context = GrabMenu(10)
 	Context:Find(getText(GRAB_AMOUNT)):Click()

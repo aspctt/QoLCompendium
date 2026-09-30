@@ -2128,12 +2128,19 @@ module Base
 	 *
 	 * IsEmpty because a wallet holds things, and shredding one with the car keys still
 	 * inside would be a poor reward for tidying up.
+	 *
+	 * No RemoveResultItems, which the first version copied over from RipDenimClothing
+	 * and which cost every wallet its strips. The tag makes
+	 * CraftRecipeData.createOutputItems return before creating anything, and vanilla
+	 * only uses it on the rip recipes because their OnCreate hands over the real
+	 * output itself. This recipe has no OnCreate, so the declared output is all there
+	 * is: the crafting screen showed it and the craft went through empty handed.
 	 */
 	craftRecipe QolcCutWallet
 	{
 		timedAction = CutClothing,
 		time = 60,
-		Tags = InHandCraft;RemoveResultItems,
+		Tags = InHandCraft,
 		OnTest = Recipe.OnTest.QolcCutClothing,
 		category = Tailoring,
 
