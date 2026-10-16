@@ -8,20 +8,48 @@ local function Reader()
 	return Harness.NewPlayer(0, true)
 end
 
--- A finished read of the given item, the way the queue runs one
-local function Read(Player, FullType)
+local function NewReading(Player, FullType)
 	local Book = Harness.NewInventoryItem("Magazine")
 	function Book:getFullType() return FullType or MAGAZINE end
 	function Book:getNumberOfPages() return 0 end
 	function Book:setJobDelta() end
 
-	local Action = Harness.NewReading(Player, Book)
+	return Harness.NewReading(Player, Book)
+end
+
+-- A finished read of the given item, the way IsoGameCharacter runs one: start, perform,
+-- then complete straight after unless this is a multiplayer client
+local function Read(Player, FullType)
+	local Action = NewReading(Player, FullType)
+	Action:start()
 	Action:perform()
+	if not isClient() then Action:complete() end
+	return Action
+end
+
+-- The same read as a server sees it. NetTimedAction calls serverStart and complete, and
+-- never start or perform.
+local function ServerRead(Player, FullType)
+	Harness.IsServer = true
+	local Action = NewReading(Player, FullType)
+	Action:complete()
 	return Action
 end
 
 local function Knows(Player)
 	return Player:hasTrait(CharacterTrait.NUTRITIONIST2)
+end
+
+-- The packets a server sent the reader carrying their traits, PF_Traits being 0x02
+local function TraitSyncs(Player)
+	local Found = {}
+	for _, Sync in ipairs(Harness.PlayerFieldSyncs) do
+		local CarriesTraits = math.floor(Sync.Fields / 2) % 2 == 1
+		if Sync.Sent and Sync.Character == Player and CarriesTraits then
+			table.insert(Found, Sync)
+		end
+	end
+	return Found
 end
 
 -- A loot table holding cooking magazines, as vanilla ships them
@@ -100,6 +128,83 @@ Test("vanilla's own perform still runs", function()
 	local Action = Read(Player)
 
 	AssertTrue(Action.Performed, "the read has to finish the way vanilla finishes it")
+	AssertTrue(Action.Completed, "and vanilla's complete with it")
+end)
+
+--// Multiplayer
+Test("on a server, finishing the read teaches it", function()
+	-- The first version taught it from perform in a client file, which no server runs, so
+	-- the server's copy of the reader never had the trait
+	local Player = Reader()
+	ServerRead(Player)
+
+	AssertTrue(Knows(Player), "the server's character should hold the trait")
+end)
+
+Test("the server sends the new trait to the reader", function()
+	-- Vanilla's complete syncs traits too, but before ours has added anything. Every later
+	-- sync replaces the client's list wholesale, so the trait has to be in one of them.
+	local Player = Reader()
+	ServerRead(Player)
+
+	local Carried = false
+	for _, Sync in ipairs(TraitSyncs(Player)) do
+		if Sync.Traits[CharacterTrait.NUTRITIONIST2] then Carried = true end
+	end
+
+	AssertTrue(Carried, "a trait sync should carry it to the client")
+end)
+
+Test("a server says nothing out loud", function()
+	-- The line belongs to the reader's own screen, and a server never runs perform
+	local Player = Reader()
+	ServerRead(Player)
+
+	AssertEquals(#Player.Said, 0, "nothing said on the server")
+end)
+
+Test("a multiplayer client leaves the trait to the server", function()
+	-- A client adding it on its own would be overwritten by the next sync anyway, and
+	-- would show the reader a trait the server does not think they have
+	Harness.IsClient = true
+	local Player = Reader()
+	Read(Player)
+
+	AssertFalse(Knows(Player), "only the server teaches it")
+	AssertEquals(#Player.Said, 1, "but the reader still hears about it")
+end)
+
+Test("the line comes even when the server's sync lands first", function()
+	-- The client waits for the server to finish before it performs, so the trait is
+	-- often already there by the time perform runs
+	Harness.IsClient = true
+	local Player = Reader()
+	local Action = NewReading(Player)
+
+	Action:start()
+	Player:getCharacterTraits():add(CharacterTrait.NUTRITIONIST2)
+	Action:perform()
+
+	AssertEquals(#Player.Said, 1, "one line on learning it")
+end)
+
+Test("a reader who already knew hears nothing in multiplayer either", function()
+	Harness.IsClient = true
+	local Player = Reader()
+	Player:getCharacterTraits():add(CharacterTrait.NUTRITIONIST2)
+
+	Read(Player)
+
+	AssertEquals(#Player.Said, 0, "there was nothing to learn")
+end)
+
+Test("a server with the magazine switched off teaches nothing", function()
+	SandboxVars.QoLC.NutritionistMagEnabled = false
+	local Player = Reader()
+	ServerRead(Player)
+
+	AssertFalse(Knows(Player), "the switch holds on the server too")
+	AssertEquals(#TraitSyncs(Player), 1, "vanilla's own sync, and nothing of ours")
 end)
 
 --// Where It Spawns

@@ -33,12 +33,31 @@
 --// the free profession version, so granting it cannot refund the two points the first
 --// one costs. Food.DoTooltip accepts either.
 --//
---// Client only. The tooltip is drawn client side and the trait is the reading player's.
+--// Shared, because the trait has to be taught by whichever side is in charge of the
+--// character. The first version was a client file that added it in perform, which only
+--// ever ran on the reader's machine. In multiplayer the server never learned of it, and
+--// the next trait sync it sent took it away again: every finished read sends one, and
+--// CharacterTraits.read resets the list before filling it from the packet.
+--//
+--// So the teaching moved to complete, which the game only runs on the side in charge.
+--// IsoGameCharacter calls it straight after perform unless GameClient.client, and on a
+--// server NetTimedAction.perform calls it when the reader's action finishes there. The
+--// server then sends the new list itself with PF_Traits. Vanilla's complete already sends
+--// the same packet, but before this has added anything, so it carries the old list.
+--//
+--// A server never calls start or perform, only serverStart and complete, so the line the
+--// character says stays in perform, on the reader's side. Whether there is anything to
+--// learn is settled in start rather than in perform, because in multiplayer the client
+--// waits for the server to finish the action first, and by then the synced trait may
+--// already be there and read as known.
 
 require "TimedActions/ISReadABook"
 
 --// Tuning
 local MAGAZINE = "Base.QolcNutritionistMag"
+
+-- SyncPlayerFieldsPacket.PF_Traits, which writes the reader's whole trait list
+local PF_TRAITS = 0x02
 
 --// Functions
 local function Enabled()
@@ -64,22 +83,57 @@ local function Teach(Character)
 	return true
 end
 
+local function IsTeachingRead(Action)
+	local Item = Action.item
+	if not Item or not Item.getFullType then return false end
+
+	return Enabled() and Item:getFullType() == MAGAZINE
+end
+
 --// Overrides
--- perform rather than update, so the trait lands when the read finishes rather than on
--- the first page. Anything that stops the action part way leaves the reader as they were.
+-- Taken after vanilla's start, which on a multiplayer client swaps the item for the copy
+-- in the reader's own inventory
+local VanillaStart = ISReadABook.start
+
+function ISReadABook:start(...)
+	local Result = VanillaStart(self, ...)
+
+	self.QolcLearnsNutrition = IsTeachingRead(self)
+		and self.character ~= nil
+		and not AlreadyKnows(self.character)
+
+	return Result
+end
+
 local VanillaPerform = ISReadABook.perform
 
 function ISReadABook:perform(...)
-	local Item = self.item
-	local Teachable = Enabled() and Item and Item:getFullType() == MAGAZINE
-
 	-- Vanilla's perform is what consumes or puts back the item, so it goes first and its
 	-- return value is handed straight back
 	local Result = VanillaPerform(self, ...)
 
-	if Teachable and self.character and Teach(self.character) then
+	if self.QolcLearnsNutrition and self.character then
 		self.character:Say(getText("IGUI_QoLC_LearnedNutrition"))
 	end
+
+	return Result
+end
+
+-- complete rather than update, so the trait lands when the read finishes rather than on
+-- the first page. Anything that stops the action part way leaves the reader as they were.
+local VanillaComplete = ISReadABook.complete
+
+function ISReadABook:complete(...)
+	local Result = VanillaComplete(self, ...)
+
+	-- Vanilla bails out of a read the server stopped without syncing anything, so this
+	-- does too
+	if self.forceStopped then return Result end
+	if not self.character or not IsTeachingRead(self) then return Result end
+	if not Teach(self.character) then return Result end
+
+	-- A no-op anywhere but a server, where it goes to the reader alone
+	sendSyncPlayerFields(self.character, PF_TRAITS)
 
 	return Result
 end

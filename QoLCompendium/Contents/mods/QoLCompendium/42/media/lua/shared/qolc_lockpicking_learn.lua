@@ -18,13 +18,30 @@
 --// read, calls ReadLiterature and hands over the recipes; an earlier version of this file
 --// wrapped perform instead and never fired.
 --//
---// Client only. Mod data on the player travels with them.
+--// Shared, because complete only runs on the side in charge of the character. This was a
+--// client file, which worked alone and taught nothing at all in multiplayer: a client
+--// never runs complete, LuaTimedActionNew skips it there, and the server that does run it
+--// never loads client files.
+--//
+--// On a server the flag goes on the server's copy of the reader, then a command carries
+--// it to the reader's own game, where the menu that reads it is drawn. The server could
+--// call transmitModData instead, but that overwrites the client's whole mod data with the
+--// server's copy, hotbar layout included, to deliver one flag.
+--//
+--// The reader's game then sends its mod data back. Every transmitModData from a client
+--// replaces the server's table outright, and the hotbar sends one on every rearrangement.
+--// One landing between the server setting the flag and the command arriving would wipe it
+--// from the server's copy, which is the one that comes back on the next join.
 
 require "TimedActions/ISReadABook"
 
 --// Tuning
 local BOOK = "Base.QolcLockpickBook2"
 local FLAG = "QolcKnowsForcing"
+
+-- The server's word to the reader's game that the second volume was read
+local MODULE = "QoLC"
+local LEARNED_COMMAND = "LearnedForcing"
 
 local PICKING = {
 	"QolcMakeLockpickFromHairpin",
@@ -53,15 +70,29 @@ function QolcLearnForcing(Player)
 	return true
 end
 
+local function Announce(Player)
+	Player:Say(getText("IGUI_QoLC_LearnedForcing"))
+end
+
 --// Overrides
 local VanillaComplete = ISReadABook.complete
 
 function ISReadABook:complete(...)
 	local Result = VanillaComplete(self, ...)
 
-	if QolcPryingEnabled() and self.item and self.character
-		and self.item:getFullType() == BOOK and QolcLearnForcing(self.character) then
-		self.character:Say(getText("IGUI_QoLC_LearnedForcing"))
+	-- Sanity check
+	if self.forceStopped or not QolcPryingEnabled() then return Result end
+	if not self.item or not self.character then return Result end
+	if self.item:getFullType() ~= BOOK then return Result end
+	if not QolcLearnForcing(self.character) then return Result end
+
+	-- Tell the reader's own game, or say it here when this is that game
+	if isServer() then
+		sendServerCommand(self.character, MODULE, LEARNED_COMMAND, {
+			playerOnlineId = self.character:getOnlineID(),
+		})
+	else
+		Announce(self.character)
 	end
 
 	return Result
@@ -93,10 +124,29 @@ local function Grant(Player)
 	if QolcPryingEnabled() then QolcLearnForcing(Player) end
 end
 
+-- Kept to the player's own game, as it was while this was a client file. A server fires
+-- OnNewGame as well, from CreatePlayerPacket, and nothing here was written for that.
 function QolcGrantBurglar(Player)
+	if isServer() then return end
+
 	Grant(Player or getSpecificPlayer(0))
 end
 
 Events.OnGameStart.Add(function() QolcGrantBurglar() end)
 Events.OnNewGame.Add(function(Player) QolcGrantBurglar(Player) end)
 Events.OnCreatePlayer.Add(function(_Index, Player) QolcGrantBurglar(Player) end)
+
+-- The reader's half of a read the server finished. Only ever fires on a client. Sending
+-- the mod data straight back is explained in the header.
+local function OnServerCommand(Module, Command, Args)
+	if Module ~= MODULE or Command ~= LEARNED_COMMAND then return end
+
+	local Player = Args and Args.playerOnlineId and getPlayerByOnlineID(Args.playerOnlineId)
+	if not Player or not Player:isLocalPlayer() then return end
+	if not QolcLearnForcing(Player) then return end
+
+	Player:transmitModData()
+	Announce(Player)
+end
+
+Events.OnServerCommand.Add(OnServerCommand)

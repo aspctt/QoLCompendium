@@ -468,6 +468,115 @@ Test("a door offers forcing once the book is read", function()
 	AssertContains(Names(Menu(Player, { Harness.NewDoorLock() })), getText(FORCE_LOCK), "now offered")
 end)
 
+--// Reading It In Multiplayer
+-- This used to be a client file, and a client never runs complete, so in multiplayer the
+-- book taught nothing at all. The server's copy of the reader and the one on the reader's
+-- screen are different objects in different games, so they are two players here, sharing
+-- an online id. Whichever was made last is the one getPlayerByOnlineID finds.
+local BOOK2 = "Base.QolcLockpickBook2"
+
+local function ServerRead()
+	Harness.IsServer = true
+	local ServerCopy = Harness.NewPlayer(0, false)
+	ReadBook(ServerCopy, BOOK2)
+	Harness.IsServer = false
+	return ServerCopy
+end
+
+-- Hands everything the server sent over to the reader's game, as OnServerCommand would
+local function Deliver()
+	Harness.IsClient = true
+	for _, Command in ipairs(Harness.ServerCommands) do
+		if Command.Sent then
+			Harness.Fire("OnServerCommand", Command.Module, Command.Command, Command.Args)
+		end
+	end
+end
+
+Test("on a server, reading the second volume teaches forcing", function()
+	local ServerCopy = ServerRead()
+
+	AssertTrue(QolcKnowsForcing(ServerCopy), "the server's copy should hold the flag")
+	AssertEquals(#ServerCopy.Said, 0, "and say nothing there")
+end)
+
+Test("the server tells the reader's game", function()
+	ServerRead()
+	local Reader = Harness.NewPlayer(0, true)
+	Deliver()
+
+	AssertTrue(QolcKnowsForcing(Reader), "the menu reads the flag on the reader's side")
+	AssertEquals(#Reader.Said, 1, "and the reader hears about it")
+end)
+
+Test("the reader's game sends the flag back", function()
+	-- A transmitModData from the client replaces the server's table outright, so one that
+	-- crossed the command on the wire would have wiped the flag from the copy that saves
+	ServerRead()
+	local Reader = Harness.NewPlayer(0, true)
+	Deliver()
+
+	AssertEquals(Reader.Transmits, 1, "the server's copy has to end up holding it too")
+end)
+
+Test("a door offers forcing once a server read lands", function()
+	ServerRead()
+	local Reader = Burglar({ PICKING })
+	Deliver()
+
+	AssertContains(Names(Menu(Reader, { Harness.NewDoorLock() })), getText(FORCE_LOCK), "now offered")
+end)
+
+Test("a reader who already knew hears nothing", function()
+	-- A burglar's head start is granted on their own machine, so the server's copy can
+	-- lack the flag that the reader already holds
+	ServerRead()
+	local Reader = Harness.NewPlayer(0, true)
+	QolcLearnForcing(Reader)
+	Deliver()
+
+	AssertEquals(#Reader.Said, 0, "there was nothing to learn")
+	AssertEquals(Reader.Transmits, 0, "and nothing new to send")
+end)
+
+Test("a second read on the server sends nothing", function()
+	Harness.IsServer = true
+	local ServerCopy = Harness.NewPlayer(0, false)
+	ReadBook(ServerCopy, BOOK2)
+	ReadBook(ServerCopy, BOOK2)
+
+	AssertEquals(#Harness.ServerCommands, 1, "one command, for the read that taught it")
+end)
+
+Test("a command naming someone who is not local here is ignored", function()
+	ServerRead()
+	local Remote = Harness.NewPlayer(0, false)
+	Deliver()
+
+	AssertFalse(QolcKnowsForcing(Remote), "only the reader's own game takes it")
+end)
+
+Test("the switch holds on a server", function()
+	SandboxVars.QoLC.PryingEnabled = false
+	local ServerCopy = ServerRead()
+
+	AssertFalse(QolcKnowsForcing(ServerCopy), "prying is off for everyone")
+	AssertEquals(#Harness.ServerCommands, 0, "so there is nothing to tell")
+end)
+
+Test("a server leaves the burglar head start to the player's own game", function()
+	-- A server fires OnNewGame too, from CreatePlayerPacket. Moving this file to shared
+	-- was not meant to start granting there.
+	Harness.IsServer = true
+	local Player = Harness.NewPlayer(0, true)
+	Player:setTrait(CharacterTrait.BURGLAR, true)
+
+	Harness.Fire("OnNewGame", Player)
+
+	AssertFalse(QolcKnowsForcing(Player), "granted on the client, as before")
+	AssertFalse(Player:isRecipeActuallyKnown(PICKING), "recipes included")
+end)
+
 --// Labels
 Test("every label resolves", function()
 	local Keys = {

@@ -618,6 +618,7 @@ function Harness.NewPlayer(Number, IsLocal)
 	Player.Number = Number or 0
 	Player.IsLocal = IsLocal ~= false
 	Player.Username = "Player" .. tostring(Number or 0)
+	Player.OnlineID = Number or 0
 	Player.Asleep = false
 	Player.Transmits = 0
 
@@ -635,6 +636,7 @@ function Harness.NewPlayer(Number, IsLocal)
 	function Player:getPlayerNum() return self.Number end
 	function Player:isAsleep() return self.Asleep end
 	function Player:getUsername() return self.Username end
+	function Player:getOnlineID() return self.OnlineID end
 	function Player:getInventory() return self.Inventory end
 	function Player:transmitModData() self.Transmits = self.Transmits + 1 end
 	function Player:getWornItems() return NewJavaList(self.WornItems) end
@@ -1742,6 +1744,30 @@ function sendClientCommand(Player, Module, Command, Request)
 	})
 end
 
+-- LuaManager.GlobalObject.sendServerCommand, the four argument form: nothing unless
+-- GameServer.server, otherwise the command goes to that player's game alone. Recorded the
+-- same way, Sent saying whether the real one would have gone anywhere. Handing it to the
+-- reader's OnServerCommand is the spec's job, because the two sides are separate games.
+Harness.ServerCommands = {}
+
+function sendServerCommand(Player, Module, Command, Args)
+	table.insert(Harness.ServerCommands, {
+		Player = Player,
+		Module = Module,
+		Command = Command,
+		Args = Args,
+		Sent = isServer(),
+	})
+end
+
+-- Every player this game knows, local or not, found by the id the server gave them
+function getPlayerByOnlineID(OnlineID)
+	for _, Player in pairs(Harness.Players) do
+		if Player.OnlineID == OnlineID then return Player end
+	end
+	return nil
+end
+
 function Harness.LastCommand(Command)
 	for Index = #Harness.ClientCommands, 1, -1 do
 		local Entry = Harness.ClientCommands[Index]
@@ -1766,6 +1792,24 @@ Harness.SentToContainer = {}
 
 function sendAddItemToContainer(Container, Item)
 	table.insert(Harness.SentToContainer, { Container = Container, Item = Item, Sent = isServer() })
+end
+
+-- LuaManager.GlobalObject.sendSyncPlayerFields, the same shape: nothing unless
+-- GameServer.server, otherwise a SyncPlayerFieldsPacket to that player alone. The packet
+-- serialises what the character holds at the moment it is sent, so the traits are copied
+-- here rather than referenced, or a trait added after the send would look as if it went.
+Harness.PlayerFieldSyncs = {}
+
+function sendSyncPlayerFields(Character, Fields)
+	local Traits = {}
+	for Trait, Value in pairs(Character and Character.Traits or {}) do Traits[Trait] = Value end
+
+	table.insert(Harness.PlayerFieldSyncs, {
+		Character = Character,
+		Fields = Fields,
+		Traits = Traits,
+		Sent = isServer(),
+	})
 end
 
 --// Installed Mods
@@ -3902,6 +3946,12 @@ ISReadABook = ISBaseTimedAction:derive("ISReadABook")
 
 function ISReadABook:getJobDelta() return self.JobDelta or 0 end
 
+-- Vanilla's start opens the book, sets the animation and, on a multiplayer client, swaps
+-- the item for the copy in the reader's inventory. Recorded rather than reproduced.
+function ISReadABook:start()
+	self.Started = true
+end
+
 -- Vanilla's perform is what finishes a read: it clears the job bar and puts the item
 -- back or consumes it. Recorded rather than reproduced, so a spec can prove an override
 -- let it run.
@@ -3913,9 +3963,12 @@ end
 
 -- complete is the half that teaches. Vanilla calls ReadLiterature here, which hands the
 -- reader everything in the item's LearnedRecipes, so anything that grants knowledge from
--- a book hooks this rather than perform.
+-- a book hooks this rather than perform. It ends by syncing recipes, traits and books read
+-- to the reader, 0x07, which is reproduced because an override that adds to any of them
+-- afterwards is not covered by it.
 function ISReadABook:complete()
 	self.Completed = true
+	sendSyncPlayerFields(self.character, 0x07)
 	return true
 end
 
