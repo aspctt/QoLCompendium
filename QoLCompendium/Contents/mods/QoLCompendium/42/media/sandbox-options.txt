@@ -175,6 +175,10 @@ option QoLC.LockpickingEnabled
  * it: canLockDoor refuses a broken lock, so the door can never be locked again, which is
  * what perma locking already does to a forced window.
  *
+ * The buildings half only applies before 42.22. That build gave the base game its own
+ * crowbar Force on locked doors and windows, so from then on this is car locks alone, see
+ * qolc_lockpicking_menu.lua. Asked of the build at runtime, not set here.
+ *
  * On by default, so a save that predates this keeps what it already had. Off stops the
  * second manual spawning, takes forcing off doors, windows and vehicles, and stops a
  * burglar starting out knowing how.

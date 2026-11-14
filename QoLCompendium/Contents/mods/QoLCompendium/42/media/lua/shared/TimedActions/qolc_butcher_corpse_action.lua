@@ -33,8 +33,8 @@ local FLESH = "Base.QolcCorpseFlesh"
 -- The original's figure. A body is three pieces of anything worth carrying.
 local YIELD = 3
 
--- Vanilla awards butchering experience per item taken off a carcass, through
--- ButcheringUtil.giveItems, and AnimalPartsDefinitions sets the rate per animal: 25 for a
+-- Vanilla awards butchering experience per item taken off a carcass, in
+-- ButcheringUtil.addAnimalPart, and AnimalPartsDefinitions sets the rate per animal: 25 for a
 -- deer or a grown cow, 18 for a boar or a calf, 10 for a sheep, 7 for a hen. A body is a
 -- boar, near enough, so 18. Three pieces makes 54 for the whole job, against the several
 -- hundred a deer gives, which is right: this is a knife in a field, not a full break down
@@ -69,7 +69,7 @@ QOLC_CORPSE_YIELD = YIELD
 -- and only the first survives. Reported as butchering giving one piece.
 --
 -- sendAddItemToContainer after each one, which is what vanilla's own butchering does in
--- ButcheringUtil.giveItems. It is a no-op unless this is the server, so it costs nothing
+-- ButcheringUtil.addAnimalPart. It is a no-op unless this is the server, so it costs nothing
 -- where it does not apply and is the whole point where it does.
 function QolcGiveCorpseFlesh(Character, Square)
 	if not Character then return 0 end

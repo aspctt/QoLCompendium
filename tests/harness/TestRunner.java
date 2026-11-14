@@ -948,7 +948,18 @@ public class TestRunner {
 		int checked = 0;
 		int intended = 0;
 
-		Map<String, Map<String, String>> theirs = readTileDefDump();
+		// Said once and plainly. Read as an empty build, a missing dump turns into one
+		// "this build does not have" line per tile, which is how the 42.22 move first
+		// showed up, and every one of those lines blamed the wrong file.
+		File dump = findTileDefDump();
+		if (dump == null) {
+			System.out.println("  FAIL  the game's newtiledefinitions.tiles.txt was not found under "
+				+ "media/tile_definitions or media, so " + file.getName() + " cannot be checked");
+			System.out.println();
+			return 1;
+		}
+
+		Map<String, Map<String, String>> theirs = readTileDefDump(dump);
 
 		for (Map.Entry<String, Map<String, String>> e : ours.entrySet()) {
 			Map<String, String> mine = e.getValue();
@@ -1060,11 +1071,25 @@ public class TestRunner {
 		return tiles;
 	}
 
+	/**
+	 * Where the game keeps the readable dump. 42.22 moved every vanilla tile definition into
+	 * media/tile_definitions, while mods still load theirs from media, so the build is asked
+	 * in that order and an older one still works. Null when neither has it.
+	 */
+	private static File findTileDefDump() {
+		for (String path : new String[] {
+			"media/tile_definitions/newtiledefinitions.tiles.txt",
+			"media/newtiledefinitions.tiles.txt",
+		}) {
+			File dump = new File(gameDir, path);
+			if (dump.isFile()) return dump;
+		}
+		return null;
+	}
+
 	/** The same shape, from the readable dump the game ships beside its own binary. */
-	private static Map<String, Map<String, String>> readTileDefDump() throws IOException {
+	private static Map<String, Map<String, String>> readTileDefDump(File dump) throws IOException {
 		Map<String, Map<String, String>> tiles = new LinkedHashMap<String, Map<String, String>>();
-		File dump = new File(gameDir, "media/newtiledefinitions.tiles.txt");
-		if (!dump.isFile()) return tiles;
 
 		BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(dump), "UTF-8"));
 		try {

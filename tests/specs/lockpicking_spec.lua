@@ -878,6 +878,57 @@ Test("the two switches reach the car as well", function()
 	AssertTrue(string.find(Found, getText(FORCE_VEHICLE), 1, true) == nil, "prying is off")
 end)
 
+--// Builds With Their Own Force
+-- 42.22 gave the base game a crowbar Force on locked house doors and windows, queued as
+-- ISForceOpen. Where that exists ours stands down for houses and keeps cars, which the base
+-- game still cannot force. Every other test here runs as an older build, with no ISForceOpen.
+local function WithVanillaForce()
+	ISForceOpen = {}
+end
+
+local function Lacks(Found, Key, Message)
+	AssertTrue(string.find(Found, getText(Key), 1, true) == nil, Message)
+end
+
+Test("the other tests really are an older build", function()
+	AssertNil(ISForceOpen, "the harness must not define it, or nothing tests the old path")
+end)
+
+Test("with vanilla's Force, a door offers picking and none of our forcing", function()
+	WithVanillaForce()
+
+	local Found = Names(Menu(Burglar(), { Harness.NewDoorLock() }))
+	AssertContains(Found, getText(PICK_LOCK), "picking has no vanilla equivalent")
+	Lacks(Found, FORCE_LOCK, "vanilla's Force covers the door")
+end)
+
+Test("with vanilla's Force, a window offers nothing of ours", function()
+	WithVanillaForce()
+	AssertEquals(#Menu(Burglar(), { Harness.NewWindowLock() }).options, 0,
+		"vanilla's Force covers the window")
+end)
+
+Test("with vanilla's Force, a car is still forced our way", function()
+	WithVanillaForce()
+
+	local Player = Burglar()
+	AtVehicle(Player)
+
+	local Found = Names(Menu(Player, { Harness.NewDoorLock() }))
+	AssertContains(Found, getText(FORCE_VEHICLE), "the base game cannot force a car")
+	AssertContains(Found, getText(PICK_VEHICLE), "nor pick one")
+	Lacks(Found, FORCE_LOCK, "while the house door beside it is vanilla's")
+end)
+
+Test("with vanilla's Force, a car still needs the know how", function()
+	WithVanillaForce()
+
+	local Player = Burglar({ PICKING })
+	AtVehicle(Player)
+
+	Lacks(Names(Menu(Player, {})), FORCE_VEHICLE, "the second volume still teaches it")
+end)
+
 --// Working A Car Lock
 local function VehicleAction(Player, Vehicle, Tool, Second)
 	Player:setPrimaryHandItem(Tool)

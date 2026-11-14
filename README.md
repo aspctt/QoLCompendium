@@ -170,8 +170,10 @@ the plainest case, being craftable only from barbed wire, which is craftable onl
 from wire. Sheet metal is left alone, since that one genuinely works.
 
 **Lockpicking** - Pick a locked door with a screwdriver and a lockpick, or lever a
-door or window open with a crowbar. Car doors and boots too, where a wrecked lock
-never works again for anyone, the key included. Failing a pick jams the lock for
+car door or boot open with a crowbar, after which that lock never works again for
+anyone, the key included. Before build 42.22 the crowbar works on house doors and
+windows too. From 42.22 the base game has its own Force option for those, so this
+stands aside rather than adding a second one. Failing a pick jams the lock for
 good, and the pick can stick or snap. Two manuals teach it, and a burglar already
 knows. Hairpins spawn with the make-up. The base game has no lockpicking at all.
 Picking and prying are separate sandbox switches, so a server can have one

@@ -43,8 +43,10 @@ TARGET = 'Flamingo'
 DROP = 'attachedFloor'
 
 # Tile definitions live in a binary .tiles, but the game ships a readable dump of the same
-# data beside it, which is what this reads.
+# data beside it, which is what this reads. 42.22 moved the vanilla ones into
+# media/tile_definitions, while mods still load theirs from media, so both are tried.
 GAME_DUMP = 'newtiledefinitions.tiles.txt'
+DUMP_FOLDERS = (('media', 'tile_definitions'), ('media',))
 
 
 def find_game_dir():
@@ -114,9 +116,11 @@ def encode(width, height, tiles):
 
 
 def main():
-    dump = os.path.join(find_game_dir(), 'media', GAME_DUMP)
-    if not os.path.isfile(dump):
-        raise SystemExit('tile definition dump not found at %s' % dump)
+    game = find_game_dir()
+    candidates = [os.path.join(game, *folder, GAME_DUMP) for folder in DUMP_FOLDERS]
+    dump = next((path for path in candidates if os.path.isfile(path)), None)
+    if not dump:
+        raise SystemExit('tile definition dump not found at %s' % ' or '.join(candidates))
 
     width, height, tiles = read_tileset(dump)
 

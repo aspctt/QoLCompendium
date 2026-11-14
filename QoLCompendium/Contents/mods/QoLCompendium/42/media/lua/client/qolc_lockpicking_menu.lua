@@ -12,6 +12,11 @@
 --// data, so a door is as hard the second time as the first. Level six means jammed,
 --// which is what a failed pick leaves behind.
 --//
+--// Forcing a house door or window is only offered on builds before 42.22. That build gave
+--// the base game its own crowbar Force on both, needing nothing but the crowbar and worked
+--// out on the server, and offering ours beside it put two levers on the same door. Car
+--// locks have nothing like it in the base game, so forcing those stays on every build.
+--//
 --// Client only. The menu is a client concern and the actions it queues are client side.
 
 require "luautils"
@@ -66,6 +71,16 @@ end
 
 local function LevelName(Level)
 	return getText("IGUI_QoLC_LockLevel" .. tostring(Level))
+end
+
+-- Whether the base game forces house doors and windows itself, as it does from 42.22.
+-- Asked of the build rather than of its version number: ISForceOpen is the action
+-- vanilla's Force option queues, so it exists exactly when that option does, and a version
+-- folder would have meant shipping the whole mod twice, since the game loads only one.
+-- Read when the menu opens rather than at load, which is the only time it matters and
+-- leaves no question of which file loaded first.
+local function HasVanillaForce()
+	return ISForceOpen ~= nil
 end
 
 --// Doors
@@ -291,6 +306,9 @@ local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Te
 	local Screwdriver = QolcFindScrewdriver(Inventory)
 	local Lockpick = QolcFindLockpick(Inventory)
 
+	-- Houses only. The car options further down are ours on every build.
+	local CanForceHouses = Prying and not HasVanillaForce()
+
 	if Door and IsPickableDoor(Door, Player) then
 		local Level = LockLevel(Door)
 
@@ -300,7 +318,7 @@ local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Te
 				WorldObjects, PickDoor, Door, Player, Screwdriver, Lockpick)
 		end
 
-		if Prying and Crowbar and QolcKnowsForcing(Player) then
+		if CanForceHouses and Crowbar and QolcKnowsForcing(Player) then
 			Context:addOption(
 				getText("ContextMenu_QoLC_ForceLock") .. " (" .. LevelName(Level) .. ")",
 				WorldObjects, BreakDoor, Door, Player, Crowbar)
@@ -311,7 +329,7 @@ local function OnFillWorldObjectContextMenu(PlayerNum, Context, WorldObjects, Te
 		return instanceof(Object, "IsoWindow")
 	end)
 
-	if Prying and Window and IsForceableWindow(Window) and Crowbar and QolcKnowsForcing(Player) then
+	if CanForceHouses and Window and IsForceableWindow(Window) and Crowbar and QolcKnowsForcing(Player) then
 		Context:addOption(getText("ContextMenu_QoLC_ForceWindow"),
 			WorldObjects, ForceWindow, Window, Player, Crowbar)
 	end
